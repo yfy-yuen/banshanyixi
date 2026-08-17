@@ -56,8 +56,8 @@
   left: 0;
   width: 100%;
   text-align: center;
-  font-size: 72rpx;
-  letter-spacing: 16rpx;
+  font-size: 64rpx;
+  letter-spacing: 14rpx;
   color: #f1d18a;
   font-family: 'STXingkai','行楷-简',KaiTi,serif;
   -webkit-text-stroke: 3rpx #3a160a;
