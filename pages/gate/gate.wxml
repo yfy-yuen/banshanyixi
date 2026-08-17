@@ -25,8 +25,8 @@
     binderror="onVideoError"
   ></video>
 
-  <!-- 覆盖层：cover-view 才能盖住原生 video -->
-  <cover-view class="gate-cover" wx:if="{{!open}}">
+  <!-- 覆盖层：cover-view 才能盖住原生 video；仅在 show=true（视频/兜底就绪）后显示，避免解析完成前误点 -->
+  <cover-view class="gate-cover" wx:if="{{!open && show}}">
     <cover-view class="plaque">半山·一席</cover-view>
     <cover-view class="gate-sub">私人菜馆 · 山坡22号</cover-view>
     <cover-view class="gate-poem">择一席，品一味</cover-view>
@@ -34,7 +34,7 @@
   </cover-view>
 
   <!-- 老板隐藏入口：视频模式下原生组件限制，用 cover-view + 点击触发 -->
-  <cover-view class="boss-seal" bindtap="bindBossEntry" wx:if="{{!open}}">
+  <cover-view class="boss-seal" bindtap="bindBossEntry" wx:if="{{!open && show}}">
     <cover-view class="boss-seal-t">半山</cover-view>
     <cover-view class="boss-seal-t">一席</cover-view>
   </cover-view>

@@ -32,6 +32,8 @@ Page({
     showEdit: false, editId: '__new__', edit: null, cats: CATS, catsIndex: 0,
     tagOptions: ['招牌', '辣', '素', '时令'],
     staffList: [], requests: [],
+    mView: 'dishes',   // 菜品 tab 内的子视图：dishes 菜品 | rooms 包厢
+    mRooms: [],
   },
   onLoad() {
     this.setData({ repDate: new Date().toISOString().slice(0, 10) });
@@ -67,10 +69,41 @@ Page({
     const tabs = this.tabs();
     if (!tabs.find((t) => t[0] === this.data.tab)) this.setData({ tab: 'orders' });
     if (this.data.tab === 'orders') this.renderMOrders();
-    else if (this.data.tab === 'dishes') this.renderMDishes();
+    else if (this.data.tab === 'dishes') this.renderMView();
     else if (this.data.tab === 'report') this.renderReport();
     else if (this.data.tab === 'qr') this.renderQr();
     else if (this.data.tab === 'staff') this.loadStaff();
+  },
+  // 菜品 tab 内的子视图切换（菜品 / 包厢）
+  switchMView(e) {
+    this.setData({ mView: e.currentTarget.dataset.view });
+    this.renderMView();
+  },
+  renderMView() {
+    if (this.data.mView === 'rooms') this.loadRooms();
+    else this.renderMDishes();
+  },
+  async loadRooms() {
+    try {
+      const raw = await callApi('rooms');
+      const map = {};
+      (raw || []).forEach((r) => { const no = String(r.room_no || r.id); map[no] = r; });
+      const mRooms = Object.keys(ROOMS).map((no) => {
+        const r = map[no] || {};
+        const intro = r.intro ? r.intro.replace(/<[^>]+>/g, '').trim().slice(0, 42) : '';
+        return {
+          no,
+          name: ROOMS[no],
+          cover: r.cover || (r.env_photos && r.env_photos[0]) || '',
+          intro,
+        };
+      });
+      this.setData({ mRooms });
+    } catch (e) { wx.showToast({ title: '加载失败', icon: 'none' }); }
+  },
+  openRoomEdit(e) {
+    const no = e.currentTarget.dataset.no;
+    wx.navigateTo({ url: '/pages/roomEdit/roomEdit?room=' + no });
   },
   switchMerchant(e) {
     this.setData({ tab: e.currentTarget.dataset.tab });

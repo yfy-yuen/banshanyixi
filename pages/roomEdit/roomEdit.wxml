@@ -1,0 +1,52 @@
+<view class="page">
+  <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
+
+  <view class="ehead">
+    <view class="etitle">{{roomName}}<text class="esub">{{roomNo}} 号包厢</text></view>
+    <view class="esave" bindtap="save">保存</view>
+  </view>
+
+  <!-- 环境照 -->
+  <view class="sec">
+    <view class="sec-t">环境照<text class="sec-h">上传 / 左右移动排序 / 删除</text></view>
+    <view class="grid">
+      <view class="cell" wx:for="{{envPhotos}}" wx:key="*this">
+        <image src="{{item}}" mode="aspectFill" class="cell-img" />
+        <view class="cell-bar">
+          <view class="mini" data-index="{{index}}" data-dir="left" bindtap="moveEnv">←</view>
+          <view class="mini" data-index="{{index}}" data-dir="right" bindtap="moveEnv">→</view>
+          <view class="mini del" data-index="{{index}}" bindtap="deleteEnv">删</view>
+        </view>
+      </view>
+      <view class="cell add" bindtap="chooseEnv">
+        <view class="plus">＋</view>
+        <view class="plus-t">上传</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 包厢介绍：富文本（支持插图） -->
+  <view class="sec">
+    <view class="sec-t">包厢介绍<text class="sec-h">加粗 / 标题 / 列表 / 对齐 / 插图</text></view>
+    <view class="toolbar">
+      <view class="tb" data-cmd="bold">B</view>
+      <view class="tb" data-cmd="italic">I</view>
+      <view class="tb" data-cmd="underline">U</view>
+      <view class="tb" data-cmd="strike">S</view>
+      <view class="tb" data-cmd="h1">H1</view>
+      <view class="tb" data-cmd="h2">H2</view>
+      <view class="tb" data-cmd="ul">•列</view>
+      <view class="tb" data-cmd="ol">1列</view>
+      <view class="tb" data-cmd="align-left">左</view>
+      <view class="tb" data-cmd="align-center">中</view>
+      <view class="tb" data-cmd="align-right">右</view>
+      <view class="tb img" bindtap="insertImg">图</view>
+      <view class="tb" data-cmd="clear">清</view>
+    </view>
+    <view class="editor-wrap">
+      <editor id="editor" class="editor" placeholder="写一段包厢的介绍…" bindready="editorReady"></editor>
+    </view>
+  </view>
+
+  <view class="bottom-pad"></view>
+</view>

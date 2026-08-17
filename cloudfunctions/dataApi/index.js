@@ -173,6 +173,33 @@ exports.main = async (event) => {
         });
         return { data: { ok: true } };
       }
+      /* ===== 包厢内容（老板专属）：环境照 + 富文本介绍 ===== */
+      case 'roomGet': {
+        if ((await roleOf()) !== 'manager') return { error: '无权限' };
+        const list = (await db.collection('rooms').where({ room_no: p.roomNo }).limit(1).get()).data;
+        rows = normalize(list);
+        break;
+      }
+      case 'saveRoom': {
+        if ((await roleOf()) !== 'manager') return { error: '无权限' };
+        // 仅收 cloud:// 文件ID，杜绝把临时 https 链写库（临时链会过期导致图片失效）
+        const envPhotos = Array.isArray(p.envPhotos)
+          ? p.envPhotos.filter((x) => x && x.indexOf('cloud://') === 0)
+          : [];
+        const intro = typeof p.intro === 'string' ? p.intro : '';
+        const cover = envPhotos[0] || '';
+        const existing = (await db.collection('rooms').where({ room_no: p.roomNo }).limit(1).get()).data;
+        if (existing && existing.length) {
+          await db.collection('rooms').doc(existing[0]._id).update({
+            data: { env_photos: envPhotos, intro, cover, updated_at: db.serverDate() },
+          });
+        } else {
+          await db.collection('rooms').add({
+            data: { room_no: p.roomNo, env_photos: envPhotos, restaurant_photos: [], intro, cover, created_at: db.serverDate() },
+          });
+        }
+        return { data: { ok: true } };
+      }
       case 'saveBooking': {
         if (!(await isStaffOf())) return { error: '无权限' };
         const b = p.booking || {};

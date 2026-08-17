@@ -144,20 +144,44 @@
   background: var(--bg);
 }
 
-/* ===== 进门强光转场 ===== */
-.enter-flash {
+/* ===== 进门暖光帷幔转场 ===== */
+/* 首帧瞬间铺满（无动画）盖住内容，稍候平滑渐隐，与深色木门结尾的暖光自然衔接 */
+.enter-veil {
   position: fixed;
   left: 0; right: 0; top: 0; bottom: 0;
   z-index: 999;
-  background: radial-gradient(circle at 50% 46%, rgba(255, 244, 214, 1) 0%, rgba(255, 214, 150, 0.96) 38%, rgba(255, 196, 124, 0.9) 66%, rgba(255, 188, 120, 0.85) 100%);
   opacity: 0;
+  transform: scale(1);
   pointer-events: none;
+  background: radial-gradient(circle at 50% 46%,
+    rgba(255, 238, 205, 0.97) 0%,
+    rgba(246, 212, 152, 0.95) 42%,
+    rgba(214, 158, 94, 0.9) 70%,
+    rgba(58, 40, 22, 0.92) 100%);
 }
-.enter-flash.show {
-  animation: flashOut 1s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+.enter-veil.show {
+  opacity: 1;            /* 瞬间铺满，消除「先露内容再闪」 */
 }
-@keyframes flashOut {
-  0%   { opacity: 1; transform: scale(1); }
-  55%  { opacity: 0.9; }
-  100% { opacity: 0; transform: scale(1.35); }
+.enter-veil.show.fade {
+  opacity: 0;
+  transform: scale(1.06);
+  transition: opacity 1.2s cubic-bezier(0.22, 0.61, 0.36, 1),
+              transform 1.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* 内容随帷幔渐隐优雅浮现（错落上浮） */
+.rooms-page.entering .rooms-brand,
+.rooms-page.entering .rooms-motto,
+.rooms-page.entering .room-item {
+  animation: riseIn 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.rooms-page.entering .rooms-motto { animation-delay: 0.12s; }
+.rooms-page.entering .room-item:nth-child(1) { animation-delay: 0.20s; }
+.rooms-page.entering .room-item:nth-child(2) { animation-delay: 0.28s; }
+.rooms-page.entering .room-item:nth-child(3) { animation-delay: 0.36s; }
+.rooms-page.entering .room-item:nth-child(4) { animation-delay: 0.44s; }
+.rooms-page.entering .room-item:nth-child(5) { animation-delay: 0.52s; }
+@keyframes riseIn {
+  0%   { opacity: 0; transform: translateY(28rpx); }
+  100% { opacity: 1; transform: translateY(0); }
 }

@@ -31,6 +31,7 @@ Page({
     tab: 'env', // env | order | menu
     orderSub: 'book', // book 订餐菜品 | live 现场下单菜品
     envPhotos: [], restaurantPhotos: [],
+    cover: '', introHtml: '',
     dateLabel: '', typeLabel: '', dishes: [],
     liveOrders: [],
     loading: true,
@@ -63,10 +64,14 @@ Page({
         typeLabel = bookingLabel(pick);
         dishes = pick.dishes || [];
       }
+      const cover = room.cover || (room.env_photos && room.env_photos[0]) || '';
+      let introHtml = room.intro || '';
+      if (introHtml) introHtml = await this.introToDisplay(introHtml); // 富文本插图 cloud:// → 临时链
       const liveOrders = (o || []).map(decorateOrder);
       this.setData({
         envPhotos: room.env_photos || [],
         restaurantPhotos: room.restaurant_photos || [],
+        cover, introHtml,
         dateLabel, typeLabel, dishes, liveOrders,
         loading: false,
       });
@@ -89,5 +94,17 @@ Page({
   },
   switchOrderSub(e) {
     this.setData({ orderSub: e.currentTarget.dataset.sub });
+  },
+  // 富文本插图以 cloud:// 存储（永久），显示时批量换成临时 https 链，rich-text 才能渲染
+  async introToDisplay(html) {
+    const re = /<img[^>]+src=["']([^"']*cloud:\/\/[^"']*)["']/g;
+    const clouds = [];
+    let m;
+    while ((m = re.exec(html)) !== null) clouds.push(m[1]);
+    if (!clouds.length) return html;
+    const uniq = [...new Set(clouds)];
+    const r = await new Promise((res) => wx.cloud.getTempFileURL({ fileList: uniq, success: res, fail: res }));
+    (r.fileList || []).forEach((f) => { if (f.tempFileURL) html = html.split(f.fileID).join(f.tempFileURL); });
+    return html;
   },
 });

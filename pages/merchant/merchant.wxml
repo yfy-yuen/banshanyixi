@@ -59,21 +59,42 @@
       </view>
     </view>
 
-    <!-- 菜品 -->
+    <!-- 菜品 / 包厢（同一入口，子切换） -->
     <view wx:if="{{tab==='dishes'}}">
-      <view class="btn" style="margin-bottom:12px;" bindtap="openEdit" data-id="__new__">+ 新增菜品</view>
-      <view class="card m-row" wx:for="{{mDishes}}" wx:key="id">
-        <image wx:if="{{item.image}}" class="m-pic" src="{{item.image}}" mode="aspectFill" />
-        <view wx:else class="m-pic ph">{{item.ph}}</view>
-        <view class="m-info">
-          <view class="m-name">{{item.name}} <text class="muted" style="font-size:12px;">{{item.category}}</text></view>
-          <view class="price">{{item.priceText}}</view>
-        </view>
-        <view class="m-actions">
-          <view class="m-edit" bindtap="openEdit" data-id="{{item.id}}">改价</view>
-          <view class="m-del" bindtap="deleteDish" data-id="{{item.id}}">删除</view>
-        </view>
+      <view class="subseg">
+        <view class="subseg-btn {{mView==='dishes'?'on':''}}" data-view="dishes" bindtap="switchMView">菜品</view>
+        <view class="subseg-btn {{mView==='rooms'?'on':''}}" data-view="rooms" bindtap="switchMView">包厢</view>
       </view>
+
+      <!-- 菜品 -->
+      <block wx:if="{{mView==='dishes'}}">
+        <view class="btn" style="margin-bottom:12px;" bindtap="openEdit" data-id="__new__">+ 新增菜品</view>
+        <view class="card m-row" wx:for="{{mDishes}}" wx:key="id">
+          <image wx:if="{{item.image}}" class="m-pic" src="{{item.image}}" mode="aspectFill" />
+          <view wx:else class="m-pic ph">{{item.ph}}</view>
+          <view class="m-info">
+            <view class="m-name">{{item.name}} <text class="muted" style="font-size:12px;">{{item.category}}</text></view>
+            <view class="price">{{item.priceText}}</view>
+          </view>
+          <view class="m-actions">
+            <view class="m-edit" bindtap="openEdit" data-id="{{item.id}}">改价</view>
+            <view class="m-del" bindtap="deleteDish" data-id="{{item.id}}">删除</view>
+          </view>
+        </view>
+      </block>
+
+      <!-- 包厢 -->
+      <block wx:else>
+        <view class="card m-row" wx:for="{{mRooms}}" wx:key="no" bindtap="openRoomEdit" data-no="{{item.no}}">
+          <image wx:if="{{item.cover}}" class="m-pic" src="{{item.cover}}" mode="aspectFill" />
+          <view wx:else class="m-pic ph">{{item.name}}</view>
+          <view class="m-info">
+            <view class="m-name">{{item.name}} <text class="muted" style="font-size:12px;">{{item.no}} 号</text></view>
+            <view class="muted" style="font-size:12px;margin-top:4px;">{{item.intro || '尚未填写介绍'}}</view>
+          </view>
+          <view class="m-edit">编辑</view>
+        </view>
+      </block>
     </view>
 
     <!-- 报表 -->

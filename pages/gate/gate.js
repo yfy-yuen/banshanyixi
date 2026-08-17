@@ -10,9 +10,8 @@ Page({
     show: false,
     open: false,
     videoSrc: '',
-    rawSrc: '', // 原始 cloud:// 源，点击推门时重新解析拿新鲜临时链，规避时效导致的黑屏
     videoPoster: '',
-    videoVisible: true,
+    videoVisible: false, // ⚠️ 初始不渲染 video：避免空 src 触发 binderror 误判为视频失败。解析出有效 src 后才置 true。
     fallbackMode: false, // 视频不可用 → 退回 CSS 静态兜底，防黑屏卡死
   },
   onLoad() {
@@ -38,7 +37,6 @@ Page({
       }
       this.setData({
         show: true,
-        rawSrc: raw,
         videoSrc: videoUrl,
         videoPoster: posterUrl || '',
         fallbackMode: false,
@@ -65,21 +63,28 @@ Page({
   enter() {
     if (this.data.open) return;
     wx.setStorageSync('gateShownAt', Date.now());
-    wx.setStorageSync('enterFlash', '1'); // 通知包厢页播放进门强光转场
-    if (this.data.fallbackMode || !this.data.rawSrc) {
+    wx.setStorageSync('enterFlash', '1'); // 通知包厢页播放进门转场
+    if (this.data.fallbackMode) {
+      wx.switchTab({ url: '/pages/rooms/rooms' });
+      return;
+    }
+    if (!this.data.videoSrc) {
+      // 视频源尚未就绪（极少见：onLoad 解析未完成即点击）→ 直接进，避免卡死
       wx.switchTab({ url: '/pages/rooms/rooms' });
       return;
     }
     this.setData({ open: true }); // 隐藏覆盖文字层
-    // 用原始 cloud:// 重新解析，拿新鲜临时链再播，规避临时链时效导致的黑屏
-    const play = () => {
+    // ⚠️ 关键：直接播放 onLoad 已就绪的视频，绝不在点击时改动 videoSrc。
+    // 之前在 enter 里用 rawSrc 重新解析并 setData 改 src，导致 <video> 重新加载、
+    // play() 时机早于新源就绪 → 视频卡在首帧"动不了"。这是本次卡死的真因。
+    const tryPlay = () => {
       const v = wx.createVideoContext('gateVideo', this);
       if (v && typeof v.play === 'function') v.play();
     };
-    this.resolveCloudMedia(this.data.rawSrc, '', (freshUrl) => {
-      if (freshUrl) this.setData({ videoSrc: freshUrl }, play);
-      else play();
-    });
+    tryPlay();
+    // 双保险：个别机型首次 play() 不生效，延迟再触发一次
+    clearTimeout(this._playT);
+    this._playT = setTimeout(tryPlay, 120);
   },
   onVideoEnd() {
     wx.switchTab({ url: '/pages/rooms/rooms' });

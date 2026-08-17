@@ -1,0 +1,124 @@
+.page { padding: 16px 16px 100px; }
+
+.ehead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0 16px;
+}
+.etitle {
+  font-size: 22px;
+  letter-spacing: 4px;
+  color: var(--ink);
+  font-weight: 500;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.esub { font-size: 12px; color: var(--muted); letter-spacing: 1px; }
+.esave {
+  background: var(--cinnabar);
+  color: #f4f0e8;
+  font-size: 14px;
+  letter-spacing: 1px;
+  padding: 9px 22px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(160, 69, 56, 0.28);
+}
+.esave:active { opacity: 0.85; }
+
+.sec { margin-bottom: 26px; }
+.sec-t {
+  font-size: 15px;
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.sec-h { font-size: 12px; color: var(--muted); font-weight: 400; letter-spacing: 0; }
+
+/* 环境照网格 */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--paper);
+}
+.cell-img { width: 100%; height: 100%; }
+.cell-bar {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  justify-content: space-around;
+  background: rgba(40, 36, 30, 0.55);
+  padding: 5px 0;
+}
+.mini {
+  color: #f4f0e8;
+  font-size: 13px;
+  padding: 2px 6px;
+}
+.mini.del { color: #f0c9c0; }
+.cell.add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border);
+  background: var(--card-soft);
+  color: var(--muted);
+}
+.plus { font-size: 30px; line-height: 1; color: var(--gold); }
+.plus-t { font-size: 12px; margin-top: 4px; }
+
+/* 富文本工具栏 */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 10px 10px 0 0;
+}
+.tb {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--ink-light);
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+}
+.tb.img { color: var(--cinnabar); }
+.tb:active { background: var(--card-soft); }
+
+.editor-wrap {
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  background: var(--card);
+}
+.editor {
+  width: 100%;
+  min-height: 260px;
+  padding: 14px;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.bottom-pad { height: 20px; }

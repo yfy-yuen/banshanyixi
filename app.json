@@ -8,7 +8,8 @@
     "pages/reserve/reserve",
     "pages/book/book",
     "pages/merchant/merchant",
-    "pages/orders/orders"
+    "pages/orders/orders",
+    "pages/roomEdit/roomEdit"
   ],
   "window": {
     "navigationBarTitleText": "半山·一席",

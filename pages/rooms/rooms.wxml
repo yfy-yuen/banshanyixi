@@ -1,4 +1,4 @@
-<view class="page rooms-page">
+<view class="page rooms-page {{flash ? 'entering' : ''}}">
   <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
   <view class="brand rooms-brand">
     <image class="seal" src="/assets/images/seal.png" mode="aspectFit" />
@@ -23,6 +23,6 @@
     </view>
   </view>
 
-  <!-- 进门强光转场：由开门页推门入席触发，强光渐隐露出真实页面 -->
-  <view class="enter-flash {{flash ? 'show' : ''}}"></view>
+  <!-- 进门暖光帷幔：开门页推门入席触发，瞬间铺满暖光再平滑渐隐，内容随之浮现 -->
+  <view class="enter-veil {{flash ? 'show' : ''}} {{flashFade ? 'fade' : ''}}"></view>
 </view>

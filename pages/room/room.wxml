@@ -19,17 +19,32 @@
 
   <!-- 环境 -->
   <view wx:if="{{tab==='env'}}" class="pane">
-    <scroll-view wx:if="{{envPhotos.length || restaurantPhotos.length}}" scroll-x class="gallery">
-      <view wx:for="{{envPhotos}}" wx:key="*this" class="gimg">
-        <image src="{{item}}" mode="aspectFill" class="gphoto" />
-        <view class="gcap">{{roomName}}·环境</view>
+    <!-- 封面大图 -->
+    <view wx:if="{{cover}}" class="cover">
+      <image src="{{cover}}" mode="aspectFill" class="cover-img" />
+    </view>
+    <view wx:else class="cover cover-ph">本厢环境照整理中</view>
+
+    <!-- 包厢介绍：富文本 -->
+    <view wx:if="{{introHtml}}" class="intro">
+      <view class="sec-t">包厢介绍</view>
+      <rich-text class="intro-body" nodes="{{introHtml}}"></rich-text>
+    </view>
+
+    <!-- 环境一览 -->
+    <view wx:if="{{envPhotos.length || restaurantPhotos.length}}" class="gallery-sec">
+      <view class="sec-t">环境一览</view>
+      <view class="gal-grid">
+        <view class="gal-cell" wx:for="{{envPhotos}}" wx:key="*this">
+          <image src="{{item}}" mode="aspectFill" class="gal-img" />
+        </view>
+        <view class="gal-cell" wx:for="{{restaurantPhotos}}" wx:key="*this">
+          <image src="{{item}}" mode="aspectFill" class="gal-img" />
+        </view>
       </view>
-      <view wx:for="{{restaurantPhotos}}" wx:key="*this" class="gimg">
-        <image src="{{item}}" mode="aspectFill" class="gphoto" />
-        <view class="gcap">餐厅·公共</view>
-      </view>
-    </scroll-view>
-    <view wx:else class="empty">本厢环境照整理中</view>
+    </view>
+
+    <view wx:if="{{!cover && !introHtml && !envPhotos.length && !restaurantPhotos.length}}" class="empty">本厢内容整理中，敬请期待</view>
   </view>
 
   <!-- 订单 -->

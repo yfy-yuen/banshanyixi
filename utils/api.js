@@ -94,6 +94,15 @@ async function saveQr(ch, url) {
   await callApi('saveQr', { ch, url });
 }
 
+/* ===== 包厢内容（老板专属）：环境照 + 富文本介绍 ===== */
+async function getRoom(roomNo) {
+  const list = (await callApi('roomGet', { roomNo })) || [];
+  return list[0] || null;
+}
+async function saveRoom(roomNo, envPhotos, intro) {
+  return await callApi('saveRoom', { roomNo, envPhotos, intro });
+}
+
 /* ===== 预订系统（场次 + 申请制） ===== */
 // 顾客：开放场次列表
 async function listSessions() {
@@ -145,6 +154,7 @@ module.exports = {
   whoami, bindBoss, ownerBoot,
   getMerchantOrders, settleOrder,
   getDishesAdmin, saveDish, deleteDish, getPaymentQrcodes, saveQr, callApi,
+  getRoom, saveRoom,
   listSessions, sessionDetail, submitReservation, myReservations, cancelReservation,
   publishSession, listReservations, confirmReservation, rejectReservation, closeSession, sessionsAdmin,
 };
