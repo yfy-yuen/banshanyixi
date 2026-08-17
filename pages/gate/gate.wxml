@@ -33,6 +33,12 @@
     <cover-view class="gate-btn" bindtap="enter">推门入席</cover-view>
   </cover-view>
 
+  <!-- 老板隐藏入口：视频模式下原生组件限制，用 cover-view + 点击触发 -->
+  <cover-view class="boss-seal" bindtap="bindBossEntry" wx:if="{{!open && show}}">
+    <cover-view class="boss-seal-t">半山</cover-view>
+    <cover-view class="boss-seal-t">一席</cover-view>
+  </cover-view>
+
   <!-- 预加载 rooms 背景图，消除进场后的白屏 -->
   <image class="preload" src="/assets/images/bg-landscape.jpg"></image>
 </view>
