@@ -103,7 +103,7 @@ Page({
       return;
     }
     wx.showModal({
-      title: '老板注册',
+      title: '半山一席',
       editable: true,
       placeholderText: '请输入解锁码',
       success: async (res) => {
