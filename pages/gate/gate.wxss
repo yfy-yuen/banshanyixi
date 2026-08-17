@@ -61,10 +61,10 @@
   color: #f3d79a;
   font-family: 'STXingkai','行楷-简',KaiTi,serif;
 }
-/* 诗句（行楷，下移到原推门入席位置） */
+/* 诗句（行楷，下移到原推门入席位置，再略下一点） */
 .gate-poem {
   position: absolute;
-  top: 65vh;
+  top: 69vh;
   left: 0;
   width: 100%;
   text-align: center;
