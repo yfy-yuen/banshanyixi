@@ -61,10 +61,10 @@
   color: #f3d79a;
   font-family: 'STXingkai','行楷-简',KaiTi,serif;
 }
-/* 诗句（行楷，位于第2、3排铆钉中间） */
+/* 诗句（行楷，下移到原推门入席位置） */
 .gate-poem {
   position: absolute;
-  top: 54vh;
+  top: 65vh;
   left: 0;
   width: 100%;
   text-align: center;
@@ -78,7 +78,7 @@
   position: absolute;
   left: 245rpx;
   width: 260rpx;
-  top: 65vh;
+  top: 76vh;
   height: 80rpx;
   line-height: 80rpx;
   text-align: center;
