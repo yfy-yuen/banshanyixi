@@ -27,10 +27,13 @@
 
   <!-- 覆盖层：cover-view 才能盖住原生 video；仅在 show=true（视频/兜底就绪）后显示，避免解析完成前误点 -->
   <cover-view class="gate-cover" wx:if="{{!open && show}}">
+    <cover-image class="gate-logo" src="/assets/images/seal.png"></cover-image>
     <cover-view class="plaque">半山·一席</cover-view>
-    <cover-view class="gate-sub">私人菜馆 · 山坡22号</cover-view>
     <cover-view class="gate-poem">择一席，品一味</cover-view>
-    <cover-view class="gate-btn" bindtap="enter">推门入席</cover-view>
+    <cover-view class="gate-btn" bindtap="enter">
+      <cover-view class="gate-btn-breath"></cover-view>
+      <cover-view class="gate-btn-text">推门入席</cover-view>
+    </cover-view>
   </cover-view>
 
   <!-- 老板隐藏入口：视频模式下原生组件限制，用 cover-view + 点击触发 -->

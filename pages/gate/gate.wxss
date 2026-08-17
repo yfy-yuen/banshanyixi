@@ -41,54 +41,66 @@
   position: absolute;
   left: 0; top: 0; right: 0; bottom: 0;
 }
+/* logo 印章（cover-image，压在视频之上） */
+.gate-logo {
+  position: absolute;
+  top: 90rpx;
+  left: 315rpx;
+  width: 120rpx;
+  height: 120rpx;
+}
+/* 品牌大字（行楷，门中间偏上，无框） */
 .plaque {
   position: absolute;
-  top: 64rpx;
-  left: 20%;
-  width: 60%;
-  text-align: center;
-  padding: 14rpx 0;
-  font-size: 40rpx;
-  letter-spacing: 10rpx;
-  color: #f3d79a;
-  background: #1a0e06;
-  border: 3rpx solid #cea256;
-  border-radius: 10rpx;
-}
-.gate-sub {
-  position: absolute;
+  top: 236rpx;
   left: 0;
   width: 100%;
-  bottom: 320rpx;
   text-align: center;
-  font-size: 22rpx;
-  letter-spacing: 4rpx;
-  color: rgba(243,233,214,0.82);
+  font-size: 48rpx;
+  letter-spacing: 14rpx;
+  color: #f3d79a;
+  font-family: 'STXingkai','行楷-简',KaiTi,serif;
 }
+/* 诗句（行楷，居中，字号略收） */
 .gate-poem {
   position: absolute;
   left: 0;
   width: 100%;
-  bottom: 260rpx;
+  bottom: 300rpx;
   text-align: center;
-  font-size: 26rpx;
-  letter-spacing: 8rpx;
-  color: rgba(232,215,170,0.92);
+  font-size: 32rpx;
+  letter-spacing: 10rpx;
+  color: rgba(236,217,168,0.95);
+  font-family: 'STXingkai','行楷-简',KaiTi,serif;
 }
+/* 推门入席：镂空细红框 + 呼吸灯 */
 .gate-btn {
   position: absolute;
   left: 20%;
   width: 60%;
   bottom: 150rpx;
   height: 88rpx;
-  line-height: 88rpx;
+}
+.gate-btn-breath {
+  position: absolute;
+  left: 0; top: 0; right: 0; bottom: 0;
+  border: 2rpx solid #b3321f;
+  border-radius: 44rpx;
+  animation: gateBreathe 2.2s ease-in-out infinite;
+}
+.gate-btn-text {
+  position: absolute;
+  left: 0; top: 0; right: 0; bottom: 0;
   text-align: center;
+  line-height: 88rpx;
   font-size: 30rpx;
   letter-spacing: 10rpx;
-  color: #fbeede;
-  background: #9c2417;
-  border: 2rpx solid #e0b46a;
-  border-radius: 44rpx;
+  color: #e9c7a0;
+  font-family: 'STXingkai','行楷-简',KaiTi,serif;
+}
+@keyframes gateBreathe {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
 }
 
 /* ===== 老板隐藏入口 ===== */
