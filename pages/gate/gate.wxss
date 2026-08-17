@@ -76,18 +76,18 @@
 /* 推门入席：紧凑金框围字 + 边框与文字一起呼吸 */
 .gate-btn {
   position: absolute;
-  left: 245rpx;
-  width: 260rpx;
+  left: 261rpx;
+  width: 228rpx;
   top: 76vh;
-  height: 80rpx;
-  line-height: 80rpx;
+  height: 70rpx;
+  line-height: 70rpx;
   text-align: center;
   font-size: 34rpx;
   letter-spacing: 10rpx;
   color: #e9c7a0;
   font-family: 'STXingkai','行楷-简',KaiTi,serif;
   border: 2rpx solid #cea256;
-  border-radius: 40rpx;
+  border-radius: 35rpx;
   animation: gateBreathe 2.2s ease-in-out infinite;
 }
 @keyframes gateBreathe {
