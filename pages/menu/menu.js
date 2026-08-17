@@ -279,7 +279,7 @@ Page({
   closeBill() { this.setData({ showBill: false }); },
   goOrders() {
     this.setData({ showBill: false });
-    wx.switchTab({ url: '/pages/orders/orders' });
+    wx.navigateTo({ url: '/pages/orders/orders' });
   },
   setPeople() {
     const opts = [];
