@@ -39,10 +39,10 @@ async function loadDishes() {
 }
 
 // 提交订单（走独立 submitOrder 云函数）
-async function submitOrder({ roomNo, roomName, people, items, total }) {
+async function submitOrder({ roomNo, roomName, people, items, total, note }) {
   const { result } = await wx.cloud.callFunction({
     name: 'submitOrder',
-    data: { roomNo, roomName, people, items, total },
+    data: { roomNo, roomName, people, items, total, note },
   });
   if (!result || result.error) throw new Error((result && result.error) || '提交订单失败');
 }

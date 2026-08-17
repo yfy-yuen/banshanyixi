@@ -27,6 +27,7 @@ Page({
     cartCount: 0, cartTotalText: '',
     showSpec: false, spec: null,
     showBill: false, bill: null,
+    showCart: false, showConfirm: false, note: '',
     showSearch: false, searchKeyword: '', searchResults: [],
   },
   onLoad(options) {
@@ -139,11 +140,68 @@ Page({
     const qtyMap = {};
     let count = 0, total = 0;
     cart.forEach((c) => {
-      qtyMap[c.dishId] = (qtyMap[c.dishId] || 0) + c.qty;
-      count += c.qty;
-      total += c.unitPrice * c.qty;
+      const q = c.qty || 1;
+      qtyMap[c.dishId] = (qtyMap[c.dishId] || 0) + q;
+      count += q;
+      total += c.unitPrice * q;
     });
-    this.setData({ cart, qtyMap, cartCount: count, cartTotalText: fmt(total) });
+    // 按 (dishId + 规格) 分组，供购物篮弹窗展示与编辑
+    const gMap = {};
+    const gOrder = [];
+    cart.forEach((c) => {
+      const key = c.dishId + '|' + (buildSelText(c.sel) || '');
+      if (!gMap[key]) {
+        gMap[key] = { key, dishId: c.dishId, name: c.name, selText: buildSelText(c.sel), unitPrice: c.unitPrice, qty: 0 };
+        gOrder.push(key);
+      }
+      gMap[key].qty += (c.qty || 1);
+    });
+    const cartGroups = gOrder.map((k) => {
+      const g = gMap[k];
+      return { ...g, lineTotal: fmt(g.unitPrice * g.qty) };
+    });
+    this.setData({ cart, qtyMap, cartCount: count, cartTotalText: fmt(total), cartGroups });
+  },
+
+  /* ===== 购物篮 / 确认弹窗 ===== */
+  openCart() { if (!this.data.cart.length) return; this.setData({ showCart: true }); },
+  closeCart() { this.setData({ showCart: false }); },
+  goConfirm() { this.setData({ showCart: false, showConfirm: true }); },
+  closeConfirm() { this.setData({ showConfirm: false }); },
+  onNoteInput(e) { this.setData({ note: e.detail.value }); },
+
+  // 找到某分组（dishId + 规格）在 cart 中的全部下标
+  _idxsOf(key) {
+    const out = [];
+    this.data.cart.forEach((c, i) => {
+      const k = c.dishId + '|' + (buildSelText(c.sel) || '');
+      if (k === key) out.push(i);
+    });
+    return out;
+  },
+  incCart(e) {
+    const key = e.currentTarget.dataset.key;
+    const idxs = this._idxsOf(key);
+    if (!idxs.length) return;
+    const cart = this.data.cart.slice();
+    cart.splice(idxs[0] + 1, 0, { ...cart[idxs[0]] }); // 同规格复制一条 → 数量 +1
+    this.updateCart(cart);
+  },
+  decCart(e) {
+    const key = e.currentTarget.dataset.key;
+    const idxs = this._idxsOf(key);
+    if (!idxs.length) return;
+    const cart = this.data.cart.slice();
+    cart.splice(idxs[idxs.length - 1], 1); // 移除该组最后一条 → 数量 -1
+    this.updateCart(cart);
+  },
+  delCart(e) {
+    const key = e.currentTarget.dataset.key;
+    const cart = this.data.cart.slice().filter((c) => {
+      const k = c.dishId + '|' + (buildSelText(c.sel) || '');
+      return k !== key;
+    });
+    this.updateCart(cart);
   },
 
   /* ===== 规格 ===== */
@@ -195,20 +253,22 @@ Page({
   async submitOrder() {
     if (!this.data.cart.length) return;
     const items = this.data.cart.map((c) => ({
-      name: c.name, unitPrice: c.unitPrice, qty: c.qty, sel: c.sel, category: c.category,
+      name: c.name, unitPrice: c.unitPrice, qty: c.qty || 1, sel: c.sel, category: c.category,
       selText: buildSelText(c.sel),
     }));
     const total = items.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+    const note = (this.data.note || '').trim();
     wx.showLoading({ title: '提交中' });
     try {
       await submitOrder({
         roomNo: this.data.roomNo, roomName: this.data.roomName,
-        people: this.data.people, items, total,
+        people: this.data.people, items, total, note,
       });
       this.updateCart([]);
       this.setData({
+        showConfirm: false, showCart: false, note: '',
         showBill: true,
-        bill: { items, totalText: fmt(total), roomName: this.data.roomName, roomNo: this.data.roomNo, people: this.data.people },
+        bill: { items, totalText: fmt(total), roomName: this.data.roomName, roomNo: this.data.roomNo, people: this.data.people, note },
       });
     } catch (e) {
       wx.showToast({ title: '提交失败：' + (e.message || ''), icon: 'none' });

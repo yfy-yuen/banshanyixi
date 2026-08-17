@@ -157,6 +157,43 @@
 .b-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
 .b-items { margin: 8px 0; }
 .total-line { border-top: 1px solid var(--border); margin-top: 6px; padding-top: 10px; }
+.b-note { text-align: right; max-width: 64%; color: var(--ink); }
+
+/* 购物篮 / 确认订单弹窗 */
+.modal-close { float: right; font-size: 16px; color: var(--muted); padding: 2px 6px; margin-top: -2px; }
+.cart-list { max-height: 46vh; margin: 4px 0 6px; }
+.cart-line {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--border-light);
+}
+.cart-line:last-child { border-bottom: none; }
+.cl-info { flex: 1; min-width: 0; padding-right: 10px; }
+.cl-name { font-size: 15px; color: var(--ink); letter-spacing: 1px; }
+.cl-sel { font-size: 12px; color: var(--muted); margin-left: 6px; }
+.cl-unit { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; }
+.cl-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.cl-price { color: var(--cinnabar); font-size: 15px; font-weight: 500; min-width: 54px; text-align: right; }
+.cl-del { font-size: 12px; color: var(--muted); padding: 4px 2px; }
+.cart-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--border);
+}
+.cart-foot-sum { font-size: 14px; color: var(--ink); }
+.cart-foot-sum .price-red { font-size: 20px; margin-left: 4px; }
+.confirm-sum {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 6px; padding: 12px 0; border-top: 1px solid var(--border);
+}
+.cs-label { font-size: 14px; color: var(--muted); letter-spacing: 1px; }
+.confirm-sum .price-red { font-size: 20px; }
+.note-block { margin: 4px 0 14px; }
+.note-label { font-size: 14px; color: var(--muted); letter-spacing: 1px; }
+.note-input {
+  width: 100%; margin-top: 8px; padding: 11px 14px;
+  border: 1px solid var(--border); border-radius: 10px;
+  font-size: 14px; background: var(--card-soft); color: var(--ink);
+  height: 84px; box-sizing: border-box;
+}
 
 /* 搜索浮层（搜索页） */
 .mask {

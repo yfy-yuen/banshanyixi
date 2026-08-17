@@ -6,7 +6,7 @@ const db = cloud.database();
 
 exports.main = async (event) => {
   try {
-    const { roomNo, roomName, people, items, total } = event || {};
+    const { roomNo, roomName, people, items, total, note } = event || {};
     const res = await db.collection('orders').add({
       data: {
         room_no: roomNo,
@@ -14,6 +14,7 @@ exports.main = async (event) => {
         people,
         items,
         total,
+        note: note || '',
         status: 'unpaid',
         created_at: db.serverDate(),
       },
