@@ -1,0 +1,28 @@
+<view class="page rooms-page">
+  <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
+  <view class="brand rooms-brand">
+    <image class="seal" src="/assets/images/seal.png" mode="aspectFit" />
+    <view class="brand-text">
+      <view class="brand-title">半山·一席</view>
+      <view class="brand-sub">私人菜馆 · 山坡22号</view>
+    </view>
+  </view>
+
+  <view class="motto rooms-motto">择一席，品一味</view>
+
+  <view class="room-list">
+    <view class="room-item" wx:for="{{rooms}}" wx:key="no" bindtap="chooseRoom" data-no="{{item.no}}" data-name="{{item.name}}">
+      <view class="room-roof"></view>
+      <view class="room-card">
+        <view class="room-info">
+          <view class="room-name">{{item.name}}</view>
+          <view class="room-no">{{item.no}} 号包厢</view>
+        </view>
+        <view class="room-go">入席</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 进门强光转场：由开门页推门入席触发，强光渐隐露出真实页面 -->
+  <view class="enter-flash {{flash ? 'show' : ''}}"></view>
+</view>

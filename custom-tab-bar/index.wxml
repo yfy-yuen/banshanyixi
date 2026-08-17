@@ -1,0 +1,11 @@
+<view class="ctab">
+  <view
+    wx:for="{{tabs}}"
+    wx:key="key"
+    class="ctab-item {{selectedKey === item.key ? 'on' : ''}}"
+    data-key="{{item.key}}"
+    bindtap="switchTab"
+  >
+    <view class="ctab-text">{{item.text}}</view>
+  </view>
+</view>

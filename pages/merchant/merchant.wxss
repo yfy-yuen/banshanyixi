@@ -1,0 +1,91 @@
+.page { padding: 14px; }
+
+.ipt {
+  width: 100%; margin-top: 10px; padding: 11px 14px;
+  border: 1px solid var(--border); border-radius: 10px; font-size: 14px;
+  background: var(--card-soft); color: var(--ink);
+}
+.ipt.picker { color: #333; }
+
+/* 登录 */
+.login-wrap { display: flex; align-items: center; justify-content: center; min-height: 70vh; }
+.login-card {
+  width: 100%; max-width: 320px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 18px; padding: 26px 22px; text-align: center;
+  box-shadow: 0 6px 22px var(--shadow);
+}
+.login-seal {
+  width: 60px; height: 60px; line-height: 60px;
+  margin: 0 auto 14px;
+  border-radius: 50%; background: var(--cinnabar);
+  color: var(--card); font-size: 20px; font-family: serif; letter-spacing: 2px;
+  box-shadow: 0 3px 10px rgba(160, 69, 56, 0.2);
+}
+.login-title { font-size: 18px; margin-bottom: 14px; color: var(--ink); letter-spacing: 3px; }
+.login-msg { color: var(--cinnabar); font-size: 13px; min-height: 16px; margin-top: 6px; }
+.login-tip { color: var(--muted); font-size: 12px; text-align: center; margin-top: 14px; }
+
+/* 头部 */
+.mhead { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px 14px; }
+.mrole { font-size: 16px; font-weight: 500; color: var(--cinnabar); letter-spacing: 2px; }
+.logout { font-size: 13px; color: var(--muted); }
+.mtabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.mtab {
+  flex: 1; text-align: center; padding: 10px;
+  border-radius: 10px; background: var(--paper);
+  color: var(--ink-light); font-size: 14px;
+  border: 1px solid var(--border);
+}
+.mtab.on { background: var(--ink-light); color: var(--card); border-color: var(--ink-light); }
+
+/* 订单 */
+.o-row { display: flex; justify-content: space-between; align-items: center; }
+.o-items { color: var(--muted); font-size: 13px; margin: 8px 0; line-height: 1.7; }
+
+/* 菜品 */
+.m-row { display: flex; gap: 10px; align-items: center; }
+.m-pic { width: 56px; height: 56px; border-radius: 8px; background: var(--paper); flex-shrink: 0; }
+.m-pic.ph { display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--cinnabar); background: var(--paper); font-weight: 500; }
+.m-info { flex: 1; min-width: 0; }
+.m-name { font-size: 15px; color: var(--ink); letter-spacing: 1px; }
+.m-actions { display: flex; gap: 6px; }
+.m-edit { background: var(--paper); color: var(--ink); padding: 6px 10px; border-radius: 8px; font-size: 13px; border: 1px solid var(--border); }
+.m-del { background: #f2e6e2; color: var(--cinnabar); padding: 6px 10px; border-radius: 8px; font-size: 13px; }
+
+/* 报表 */
+.seg { display: flex; gap: 6px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+.seg-btn { flex: 1; min-width: 56px; text-align: center; border: 1px solid var(--border); background: var(--card); color: var(--ink-light); padding: 8px; border-radius: 10px; font-size: 13px; }
+.seg-btn.on { background: var(--ink-light); color: var(--card); border-color: var(--ink-light); }
+.seg-date { border: 1px solid var(--border); padding: 8px 12px; border-radius: 10px; font-size: 13px; background: var(--card); }
+.kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+.kpi { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; box-shadow: 0 3px 12px var(--shadow); }
+.kpi-v { font-size: 20px; font-weight: 500; color: var(--cinnabar); margin-top: 4px; }
+
+/* 收款码 */
+.qr-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; text-align: center; margin-bottom: 12px; box-shadow: 0 3px 12px var(--shadow); }
+.qr-card .qn { font-size: 16px; font-weight: 500; color: var(--ink); letter-spacing: 1px; }
+.qr-img { width: 160px; height: 160px; margin: 10px auto; }
+.qr-card .qt { color: var(--muted); font-size: 12px; padding: 44px 0; }
+
+/* 无权限文案 */
+.login-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; letter-spacing: 1px; }
+.perm-tip { font-size: 12px; color: var(--muted); line-height: 1.7; margin-bottom: 20px; }
+
+/* 员工管理分区标题 */
+.msec-title {
+  font-size: 15px; color: var(--ink); letter-spacing: 2px;
+  margin: 20px 0 10px; padding-left: 10px;
+  border-left: 3px solid var(--cinnabar);
+}
+
+/* 菜品编辑：标签多选 */
+.edit-tags { margin-top: 12px; }
+.edit-label { display: block; font-size: 13px; color: var(--ink-light); margin-bottom: 8px; letter-spacing: 1px; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-chip {
+  padding: 7px 16px; border-radius: 20px; font-size: 13px;
+  background: var(--card); color: var(--ink-light);
+  border: 1px solid var(--border);
+}
+.tag-chip.on { background: var(--cinnabar); color: #fff; border-color: var(--cinnabar); }

@@ -1,0 +1,158 @@
+<view class="page">
+  <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
+  <!-- 无权限：顾客 -->
+  <view wx:if="{{noPerm}}" class="login-wrap">
+    <view class="login-card">
+      <view class="login-seal">掌柜</view>
+      <view class="login-title">员工专区</view>
+      <view class="login-sub">仅本店员工可进入</view>
+      <view class="perm-tip">向店长申请开通员工权限，审批通过后即可进入员工专区。</view>
+      <view class="btn" bindtap="applyStaff">申请成为员工</view>
+    </view>
+  </view>
+
+  <!-- 已登录：员工 -->
+  <block wx:else>
+    <view class="mhead">
+      <text class="mrole">{{role}}</text>
+    </view>
+    <view class="mtabs">
+      <view class="mtab {{tab==='orders'?'on':''}}" bindtap="switchMerchant" data-tab="orders">订单</view>
+      <view class="mtab {{tab==='dishes'?'on':''}}" wx:if="{{isManager}}" bindtap="switchMerchant" data-tab="dishes">菜品</view>
+      <view class="mtab {{tab==='report'?'on':''}}" wx:if="{{isManager}}" bindtap="switchMerchant" data-tab="report">报表</view>
+      <view class="mtab {{tab==='qr'?'on':''}}" wx:if="{{isManager}}" bindtap="switchMerchant" data-tab="qr">收款码</view>
+      <view class="mtab {{tab==='staff'?'on':''}}" wx:if="{{isManager}}" bindtap="switchMerchant" data-tab="staff">员工</view>
+    </view>
+
+    <!-- 订单 -->
+    <view wx:if="{{tab==='orders'}}">
+      <view class="subseg">
+        <view class="subseg-btn {{orderSub==='book'?'on':''}}" data-sub="book" bindtap="switchOrderSub">订餐菜品</view>
+        <view class="subseg-btn {{orderSub==='live'?'on':''}}" data-sub="live" bindtap="switchOrderSub">现场下单菜品</view>
+      </view>
+
+      <!-- 订餐菜品（预售排席） -->
+      <view wx:if="{{orderSub==='book'}}">
+        <view wx:if="{{mBookings.length===0}}" class="card muted">暂无订餐排席</view>
+        <view class="card" wx:for="{{mBookings}}" wx:key="id">
+          <view class="o-row">
+            <text><text class="price-red">{{item.roomName}}</text> · {{item.date}}</text>
+            <text class="pill">{{item.label}}</text>
+          </view>
+          <view class="o-items">{{item.dishList}}</view>
+          <view class="muted">客人：{{item.guestText}}</view>
+        </view>
+      </view>
+
+      <!-- 现场下单菜品 -->
+      <view wx:if="{{orderSub==='live'}}">
+        <view wx:if="{{mOrders.length===0}}" class="card muted">暂无现场下单</view>
+        <view class="card" wx:for="{{mOrders}}" wx:key="id">
+          <view class="o-row"><text><text class="price-red">{{item.room_name}}</text>（{{item.room_no}}号）</text>
+            <text class="pill {{item.status==='paid'?'paid':'unpaid'}}">{{item.paidText}}</text></view>
+          <view class="o-items"><text wx:for="{{item.items}}" wx:for-item="i" wx:key="k">{{i.name}}{{i.selText}} ×{{i.qty}}　</text></view>
+          <view class="o-row">
+            <text class="price-red">{{item.totalText}}</text>
+            <view wx:if="{{item.status!=='paid'}}" class="btn" style="padding:6px 14px;" bindtap="settleOrder" data-id="{{item.id}}">标记支付</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 菜品 -->
+    <view wx:if="{{tab==='dishes'}}">
+      <view class="btn" style="margin-bottom:12px;" bindtap="openEdit" data-id="__new__">+ 新增菜品</view>
+      <view class="card m-row" wx:for="{{mDishes}}" wx:key="id">
+        <image wx:if="{{item.image}}" class="m-pic" src="{{item.image}}" mode="aspectFill" />
+        <view wx:else class="m-pic ph">{{item.ph}}</view>
+        <view class="m-info">
+          <view class="m-name">{{item.name}} <text class="muted" style="font-size:12px;">{{item.category}}</text></view>
+          <view class="price">{{item.priceText}}</view>
+        </view>
+        <view class="m-actions">
+          <view class="m-edit" bindtap="openEdit" data-id="{{item.id}}">改价</view>
+          <view class="m-del" bindtap="deleteDish" data-id="{{item.id}}">删除</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 报表 -->
+    <view wx:if="{{tab==='report'}}">
+      <view class="seg">
+        <view class="seg-btn {{repMode==='day'?'on':''}}" bindtap="setRep" data-mode="day">按日</view>
+        <view class="seg-btn {{repMode==='period'?'on':''}}" bindtap="setRep" data-mode="period">按时段</view>
+        <picker mode="date" value="{{repDate}}" bindchange="onRepDate"><view class="seg-date">{{repDate}}</view></picker>
+      </view>
+      <block wx:if="{{repMode==='day'}}">
+        <view class="kpi-grid">
+          <view class="kpi"><view class="muted">营业额</view><view class="kpi-v">{{repTotalText}}</view></view>
+          <view class="kpi"><view class="muted">订单数</view><view class="kpi-v">{{repCount}}</view></view>
+        </view>
+        <view class="card" wx:for="{{repRows}}" wx:key="id">
+          <view class="o-row"><text><text class="price-red">{{item.room_name}}</text>（{{item.room_no}}号）</text><text class="price-red">{{item.totalText}}</text></view>
+          <view class="muted">{{item.createdText}}</view>
+        </view>
+        <view wx:if="{{repRows.length===0}}" class="card muted">该日无已支付订单</view>
+      </block>
+      <block wx:else>
+        <view class="kpi-grid">
+          <view class="kpi" wx:for="{{repRows}}" wx:key="k"><view class="muted">{{item.k}}</view><view class="kpi-v">{{item.v}}</view></view>
+        </view>
+        <view class="kpi" style="grid-column:1/3"><view class="muted">{{repDate}} 合计</view><view class="kpi-v">{{repTotalText}}</view></view>
+        <view wx:if="{{repRows.length===0}}" class="card muted">该日无已支付订单</view>
+      </block>
+    </view>
+
+    <!-- 收款码 -->
+    <view wx:if="{{tab==='qr'}}">
+      <view class="qr-card" wx:for="{{['alipay','wechat']}}" wx:for-item="ch" wx:key="*this">
+        <view class="qn">{{ch==='alipay'?'支付宝收款码':'微信收款码'}}</view>
+        <image wx:if="{{qrMap[ch]}}" class="qr-img" src="{{qrMap[ch]}}" mode="aspectFit" />
+        <view wx:else class="qt">未配置</view>
+        <input class="ipt" placeholder="粘贴图片 URL" value="{{qrMap[ch]}}" data-ch="{{ch}}" bindinput="onQrInput" />
+        <view class="btn" style="width:100%;" bindtap="saveQr" data-ch="{{ch}}">保存</view>
+      </view>
+    </view>
+
+    <!-- 员工管理（店长） -->
+    <view wx:if="{{tab==='staff'}}">
+      <view class="msec-title">待审批申请</view>
+      <view wx:if="{{requests.length===0}}" class="card muted">暂无申请</view>
+      <view class="card" wx:for="{{requests}}" wx:key="openid">
+        <view class="o-row">
+          <text>{{item.name}}</text>
+        </view>
+        <view class="btn" style="padding:6px 14px;margin-top:8px;" data-openid="{{item.openid}}" data-name="{{item.name}}" bindtap="approveRequest">审批</view>
+      </view>
+
+      <view class="msec-title">在职员工</view>
+      <view class="card" wx:for="{{staffList}}" wx:key="openid">
+        <view class="o-row">
+          <text>{{item.name}} <text class="muted">{{item.role==='manager'?'店长':'店员'}}</text></text>
+          <view class="m-del" data-openid="{{item.openid}}" bindtap="removeStaff">移除</view>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>
+
+<!-- 菜品编辑弹窗 -->
+<view class="mask" wx:if="{{showEdit}}" bindtap="closeEdit">
+  <view class="modal" catchtap="noop">
+    <view class="modal-title">编辑菜品</view>
+    <input class="ipt" placeholder="菜名" value="{{edit.name}}" data-field="name" bindinput="onEditInput" />
+    <picker mode="selector" range="{{cats}}" value="{{catsIndex}}" bindchange="onCatPick">
+      <view class="ipt picker">{{edit.category}}</view>
+    </picker>
+    <input class="ipt" placeholder="价格" type="digit" value="{{edit.price}}" data-field="price" bindinput="onEditInput" />
+    <input class="ipt" placeholder="图片 URL" value="{{edit.image}}" data-field="image" bindinput="onEditInput" />
+    <input class="ipt" placeholder="描述" value="{{edit.description}}" data-field="description" bindinput="onEditInput" />
+    <view class="edit-tags">
+      <text class="edit-label">标签</text>
+      <view class="tag-row">
+        <view wx:for="{{tagOptions}}" wx:key="*this" class="tag-chip {{edit.tags.indexOf(item) >= 0 ? 'on' : ''}}" data-tag="{{item}}" bindtap="onTagToggle">{{item}}</view>
+      </view>
+    </view>
+    <view class="btn" style="width:100%;" bindtap="saveDish">保存</view>
+  </view>
+</view>

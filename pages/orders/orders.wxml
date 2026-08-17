@@ -1,0 +1,36 @@
+<view class="page">
+  <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
+  <view wx:if="{{needRoom}}" class="empty">
+    <view class="empty-seal">席</view>
+    <view class="empty-text">尚未择席</view>
+    <view class="empty-sub">请先选择包厢，再查看本席订单</view>
+    <view class="btn" bindtap="goRooms">去选择包厢</view>
+  </view>
+
+  <block wx:else>
+    <view class="hero">
+      <view class="hero-title">{{roomName}}</view>
+      <view class="hero-sub">本席订单 · 一席一味</view>
+    </view>
+
+    <view class="btn" style="width:100%;margin-bottom:12px;" bindtap="goMenu">去加菜</view>
+
+    <view wx:if="{{list.length===0}}" class="card muted">本包厢还没有订单</view>
+
+    <view class="order-card" wx:for="{{list}}" wx:key="id">
+      <view class="o-row">
+        <text class="oid">订单 {{item.id}}</text>
+        <text class="pill {{item.status==='paid'?'paid':'unpaid'}}">{{item.status==='paid'?'已结账':'未结账'}}</text>
+      </view>
+      <view class="divider"></view>
+      <view class="o-items">
+        <text wx:for="{{item.items}}" wx:for-item="i" wx:key="k">{{i.name}}{{i.selText}} ×{{i.qty}}　</text>
+      </view>
+      <view class="divider"></view>
+      <view class="o-row">
+        <text class="muted">{{item.createdText}}</text>
+        <text class="price-red">{{item.totalText}}</text>
+      </view>
+    </view>
+  </block>
+</view>

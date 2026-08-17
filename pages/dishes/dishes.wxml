@@ -1,0 +1,78 @@
+<view class="page">
+  <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
+
+  <!-- 顶栏 -->
+  <view class="topbar">
+    <view class="tb-left">
+      <view class="tb-name">半山·一席</view>
+      <view class="tb-sub">时令菜单 · 仅供浏览</view>
+    </view>
+    <view class="tb-search" bindtap="openSearch">
+      <text class="tb-search-ic">⌕</text>
+      <text class="tb-search-tx">搜索菜品</text>
+    </view>
+  </view>
+
+  <!-- 左栏 + 右分区 -->
+  <view class="body">
+    <scroll-view class="rail" scroll-y>
+      <view wx:for="{{cats}}" wx:key="*this"
+            class="rail-item {{activeCat===item?'on':''}}"
+            bindtap="setCat" data-cat="{{item}}">{{item}}</view>
+    </scroll-view>
+
+    <scroll-view class="panel" scroll-y scroll-into-view="{{scrollIntoId}}" scroll-with-animation
+                 bindscroll="onPanelScroll">
+      <view class="sec" wx:for="{{sections}}" wx:key="cat" wx:for-index="si" id="dsec-{{si}}">
+        <view class="sec-title"><text>{{item.cat}}</text><view class="sec-line"></view></view>
+        <view class="card" wx:for="{{item.items}}" wx:for-item="d" wx:key="id">
+          <image wx:if="{{d.image}}" class="pic" src="{{d.image}}" mode="aspectFill" lazy-load />
+          <view wx:else class="pic seal">{{d.ph}}</view>
+          <view class="info">
+            <view class="ttl">{{d.name}}</view>
+            <view class="badges" wx:if="{{d.badges.length}}">
+              <text wx:for="{{d.badges}}" wx:for-item="b" wx:key="label" class="badge {{b.cls}}">{{b.label}}</text>
+            </view>
+            <view class="desc">{{d.description || (d.specs && d.specs.length ? '可选规格' : '')}}</view>
+            <view class="bottom">
+              <text class="price-red">¥{{d.price}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="sec-foot"></view>
+      <view class="tip">本页仅供查看，点单请进入「包厢」选择厢房后操作。</view>
+    </scroll-view>
+  </view>
+</view>
+
+<!-- 搜索浮层（只读） -->
+<view class="mask search-mask" wx:if="{{showSearch}}" bindtap="closeSearch">
+  <view class="search-page" catchtap="noop">
+    <view class="search-bar">
+      <text class="sb-ic">⌕</text>
+      <input class="sb-input" placeholder="输入菜名，模糊搜索" value="{{searchKeyword}}"
+             bindinput="onSearchInput" focus="{{showSearch}}" confirm-type="search" />
+      <text class="sb-close" bindtap="closeSearch">取消</text>
+    </view>
+    <scroll-view class="search-res" scroll-y>
+      <view wx:if="{{!searchKeyword}}" class="s-empty">输入菜名试试，如「东坡」「醉」</view>
+      <view wx:elif="{{searchResults.length===0}}" class="s-empty">没有找到「{{searchKeyword}}」</view>
+      <view class="card" wx:for="{{searchResults}}" wx:key="id">
+        <image wx:if="{{item.image}}" class="pic" src="{{item.image}}" mode="aspectFill" lazy-load />
+        <view wx:else class="pic seal">{{item.ph}}</view>
+        <view class="info">
+          <view class="ttl">{{item.name}}</view>
+          <view class="badges" wx:if="{{item.badges.length}}">
+            <text wx:for="{{item.badges}}" wx:for-item="b" wx:key="label" class="badge {{b.cls}}">{{b.label}}</text>
+          </view>
+          <view class="desc">{{item.description || (item.specs && item.specs.length ? '可选规格' : '')}}</view>
+          <view class="bottom">
+            <text class="price-red">¥{{item.price}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="sec-foot"></view>
+    </scroll-view>
+  </view>
+</view>

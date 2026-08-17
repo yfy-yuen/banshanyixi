@@ -1,0 +1,156 @@
+/* 半山·一席 水墨画全局样式 */
+page {
+  --bg: #e2ded6;           /* 青灰宣纸背景 */
+  --paper: #ebe7de;        /* 浅宣纸 */
+  --card: #f4f0e8;         /* 米白宣纸卡片 */
+  --card-soft: #f9f6f0;    /* 更柔的宣纸 */
+  --ink: #3d3d3d;          /* 淡墨 */
+  --ink-light: #6a655d;    /* 中墨（选中底） */
+  --muted: #8a857d;        /* 灰墨 */
+  --border: #c9c4ba;       /* 淡墨线 */
+  --border-light: #dad6cc; /* 更淡的线 */
+  --gold: #a68b62;         /* 古金 */
+  --gold-light: #c4b595;   /* 浅金 */
+  --cinnabar: #a04538;     /* 朱砂 */
+  --shadow: rgba(45, 40, 30, 0.05);
+  background-color: var(--bg);
+  font-family: "PingFang SC", "Noto Serif SC", "Source Han Serif SC", SimSun, serif;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+view, text, scroll-view, input { box-sizing: border-box; }
+
+/* 通用容器 */
+.page { position: relative; z-index: 1; padding: 16px 16px 100px; }
+
+/* 卡片：宣纸底 + 淡墨线 + 水墨晕染阴影 */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 18px var(--shadow);
+}
+
+/* 文字层级 */
+.muted { color: var(--muted); font-size: 13px; }
+.price { color: var(--cinnabar); font-weight: 500; }
+.price-red { color: var(--cinnabar); font-size: 17px; font-weight: 500; }
+
+/* 按钮：宣纸底 + 墨线 */
+.btn {
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 11px 24px;
+  font-size: 15px;
+  text-align: center;
+  letter-spacing: 1px;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+.btn[disabled] { opacity: 0.45; }
+
+/* 状态标签 */
+.pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: var(--paper);
+  color: var(--ink-light);
+  border: 1px solid var(--border-light);
+}
+.pill.paid { background: #e8ede4; color: #4a6b4a; border-color: #d4e0cd; }
+.pill.unpaid { background: #f2e6e2; color: var(--cinnabar); border-color: #ead5ce; }
+
+/* 嵌套分段（订单页：订餐菜品 / 现场下单菜品） */
+.subseg { display: flex; background: var(--paper); border: 1px solid var(--border); border-radius: 999px; padding: 4px; margin-bottom: 16px; }
+.subseg-btn { flex: 1; text-align: center; padding: 9px 0; font-size: 13px; color: var(--muted); border-radius: 999px; letter-spacing: 1px; }
+.subseg-btn.on { color: var(--card); background: var(--ink-light); font-weight: 500; }
+
+.loading { text-align: center; color: var(--muted); padding: 40px; font-size: 14px; }
+
+/* 印章 logo */
+.seal {
+  width: 48px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+/* 中式标题区 */
+.hero {
+  padding: 10px 4px 22px;
+}
+.hero-title {
+  font-size: 24px;
+  color: var(--ink);
+  letter-spacing: 4px;
+  font-weight: 500;
+}
+.hero-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
+  letter-spacing: 1px;
+}
+
+/* 分隔线：两头淡去，像水墨笔触 */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border) 40%, var(--border) 60%, transparent);
+  margin: 14px 0;
+}
+
+/* 模态层 */
+.mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(55, 52, 46, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.modal {
+  background: var(--card);
+  border-radius: 18px;
+  padding: 22px;
+  width: 86%;
+  max-height: 86vh;
+  overflow: auto;
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 30px rgba(45, 40, 30, 0.1);
+}
+.modal-title { font-size: 18px; margin-bottom: 14px; color: var(--ink); letter-spacing: 2px; }
+
+/* 输入框 */
+.ipt {
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  background: var(--card-soft);
+  color: var(--ink);
+}
+
+/* ===== 全局水墨背景层（用 <image> 组件，本地路径生效，gate 页不使用） ===== */
+.app-bg {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}

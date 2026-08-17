@@ -1,0 +1,9 @@
+{
+  "name": "submitOrder",
+  "version": "1.0.0",
+  "description": "提交包厢订单（cloud1 文档库版）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

@@ -1,0 +1,144 @@
+<view class="page">
+  <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
+  <block wx:if="{{noPerm}}">
+    <view class="perm">
+      <view class="perm-title">员工店务专区</view>
+      <view class="perm-sub">仅本店员工可进入</view>
+      <view class="perm-uid">我的身份ID：{{uid}}</view>
+      <view class="perm-tip">将此 ID 交给店长，由店长在「商家 → 员工管理」中加入白名单即可。</view>
+      <view class="btn" bindtap="applyStaff">申请成为员工</view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="shop-bar">
+      <view class="shop-title">店务管理</view>
+      <view class="btn-sm" bindtap="openPublish">+ 发席</view>
+    </view>
+    <view class="cal-head">
+      <view class="cal-nav" bindtap="prevMonth">‹</view>
+      <view class="cal-title">{{year}}年{{month}}月</view>
+      <view class="cal-nav" bindtap="nextMonth">›</view>
+    </view>
+    <view class="cal-week">
+      <text wx:for="{{['日','一','二','三','四','五','六']}}" wx:key="*this" class="cal-wd">{{item}}</text>
+    </view>
+    <view class="cal-grid">
+      <view wx:for="{{cells}}" wx:key="index"
+        class="cal-cell {{item.isSel?'sel':''}} {{item.empty?'empty':''}}"
+        data-date="{{item.dateStr}}" bindtap="pickDay">
+        <text wx:if="{{item.day}}">{{item.day}}</text>
+      </view>
+    </view>
+
+    <view class="mtitle">{{selected}} 排席</view>
+    <view class="matrix">
+      <view class="mrow" wx:for="{{rooms}}" wx:key="no" wx:for-item="rm">
+        <view class="mroom">{{rm.name}}</view>
+        <view class="mslot {{matrix[rm.no].lunch ? 'busy':''}}" data-room="{{rm.no}}" data-slot="lunch" bindtap="openCell">
+          <block wx:if="{{matrix[rm.no].lunch}}">
+            <view class="mslot-lbl">{{matrix[rm.no].lunch.type==='game'?(matrix[rm.no].lunch.slot==='lunch'?'午间棋牌':'晚间棋牌'):(matrix[rm.no].lunch.slot==='lunch'?'午餐订餐':'晚餐订餐')}}</view>
+            <view class="mslot-acts">
+              <view class="mbtn" catchtap="editBooking" data-room="{{rm.no}}" data-slot="lunch">改期</view>
+              <view class="mbtn del" catchtap="cancelBooking" data-id="{{matrix[rm.no].lunch.id}}">取消</view>
+            </view>
+          </block>
+          <block wx:else>空闲</block>
+        </view>
+        <view class="mslot {{matrix[rm.no].dinner ? 'busy':''}}" data-room="{{rm.no}}" data-slot="dinner" bindtap="openCell">
+          <block wx:if="{{matrix[rm.no].dinner}}">
+            <view class="mslot-lbl">{{matrix[rm.no].dinner.type==='game'?(matrix[rm.no].dinner.slot==='lunch'?'午间棋牌':'晚间棋牌'):(matrix[rm.no].dinner.slot==='lunch'?'午餐订餐':'晚餐订餐')}}</view>
+            <view class="mslot-acts">
+              <view class="mbtn" catchtap="editBooking" data-room="{{rm.no}}" data-slot="dinner">改期</view>
+              <view class="mbtn del" catchtap="cancelBooking" data-id="{{matrix[rm.no].dinner.id}}">取消</view>
+            </view>
+          </block>
+          <block wx:else>空闲</block>
+        </view>
+      </view>
+    </view>
+
+    <view class="mtitle">已发场次</view>
+    <view wx:if="{{!sessions.length}}" class="r-empty">尚未发席，点右上角「+ 发席」开放顾客订位</view>
+    <view wx:for="{{sessions}}" wx:key="id" class="sess">
+      <view class="sess-top">
+        <view class="sess-date">{{item.date}} · {{item.mealTime === 'dinner' ? '晚市' : '午市'}}</view>
+        <view class="sess-state {{item.status === 'open' ? 'ok' : 'off'}}">{{item.status === 'open' ? '开放中' : '已关场'}}</view>
+      </view>
+      <view class="sess-info">座位上限 {{item.capacity}} · 已订 {{item.reservedSeats}}{{item.note ? ' · ' + item.note : ''}}</view>
+      <view wx:if="{{isManager && item.status === 'open'}}" class="sess-acts">
+        <view class="mbtn del" data-id="{{item.id}}" bindtap="closeSession">关场</view>
+      </view>
+    </view>
+
+    <view class="mtitle">顾客订位申请</view>
+    <view wx:if="{{!applications.length}}" class="r-empty">暂无待确认的顾客订位申请</view>
+    <view wx:for="{{applications}}" wx:key="id" class="appr">
+      <view class="appr-top">
+        <view class="appr-date">{{item.date}} · {{item.meal}}</view>
+        <view class="appr-people">{{item.partySize}} 人</view>
+      </view>
+      <view class="appr-info">手机 {{item.contactPhone}}</view>
+      <view wx:if="{{item.note}}" class="appr-note">备注：{{item.note}}</view>
+      <view class="appr-acts">
+        <view class="mbtn" catchtap="confirmApp" data-id="{{item.id}}">确认</view>
+        <view class="mbtn del" catchtap="rejectApp" data-id="{{item.id}}">婉拒</view>
+      </view>
+    </view>
+  </block>
+
+  <view class="mask" wx:if="{{showModal}}" bindtap="closeModal">
+    <view class="modal" catchtap="noop">
+      <view class="modal-title">{{form.id ? '改期 · ' : ''}}{{form.roomName}} · {{form.slot==='lunch'?'午餐':'晚餐'}}</view>
+
+      <picker mode="date" value="{{form.date}}" bindchange="onDate">
+        <view class="ipt picker">{{form.date || '选择日期'}}</view>
+      </picker>
+
+      <view class="seg2">
+        <view class="seg2-btn {{form.type==='meal'?'on':''}}" data-type="meal" bindtap="setType">用餐</view>
+        <view class="seg2-btn {{form.type==='game'?'on':''}}" data-type="game" bindtap="setType">棋牌</view>
+      </view>
+      <view class="seg2">
+        <view class="seg2-btn {{form.slot==='lunch'?'on':''}}" data-slot="lunch" bindtap="setSlot">午餐</view>
+        <view class="seg2-btn {{form.slot==='dinner'?'on':''}}" data-slot="dinner" bindtap="setSlot">晚餐</view>
+      </view>
+
+      <view class="dl">选择菜品</view>
+      <view class="dlist">
+        <view wx:for="{{dishes}}" wx:key="id"
+          class="dopt {{form.dishIds.indexOf(item.id)>=0?'on':''}}" data-id="{{item.id}}" bindtap="toggleDish">
+          <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" class="dopt-img" />
+          <view wx:else class="dopt-img ph">{{item.name}}</view>
+          <view class="dopt-name">{{item.name}}</view>
+        </view>
+      </view>
+      <input class="ipt" placeholder="客人姓名" data-field="guest_name" value="{{form.guest_name}}" bindinput="onField" />
+      <input class="ipt" placeholder="客人电话（选填）" data-field="guest_phone" value="{{form.guest_phone}}" bindinput="onField" />
+      <input class="ipt" placeholder="备注（选填）" data-field="note" value="{{form.note}}" bindinput="onField" />
+      <view class="btn" style="width:100%;margin-top:14px;" bindtap="save">{{form.id?'保存改期':'保存排席'}}</view>
+      <view wx:if="{{form.id}}" class="btn-del" style="width:100%;margin-top:10px;" bindtap="cancelBooking" data-id="{{form.id}}">删除此预定</view>
+    </view>
+  </view>
+
+  <view class="mask" wx:if="{{showPub}}" bindtap="closePub">
+    <view class="modal" catchtap="noop">
+      <view class="modal-title">发布场次</view>
+      <view class="dl">日期</view>
+      <picker mode="date" value="{{pub.date}}" bindchange="onPubDate">
+        <view class="ipt picker">{{pub.date || '选择日期'}}</view>
+      </picker>
+      <view class="dl">餐段</view>
+      <view class="seg2">
+        <view class="seg2-btn {{pub.mealTime === 'lunch' ? 'on' : ''}}" data-meal="lunch" bindtap="setPubMeal">午市</view>
+        <view class="seg2-btn {{pub.mealTime === 'dinner' ? 'on' : ''}}" data-meal="dinner" bindtap="setPubMeal">晚市</view>
+      </view>
+      <view class="dl">座位上限</view>
+      <input class="ipt" type="number" value="{{pub.capacity}}" data-field="capacity" bindinput="onPubInput" placeholder="可订座位数" />
+      <view class="dl">备注（选填）</view>
+      <input class="ipt" value="{{pub.note}}" data-field="note" bindinput="onPubInput" placeholder="如 主理人私宴" />
+      <view class="btn" style="width:100%;margin-top:14px;" bindtap="savePub">发布并开放订位</view>
+      <view class="btn-del" style="width:100%;margin-top:10px;" bindtap="closePub">取消</view>
+    </view>
+  </view>
+</view>

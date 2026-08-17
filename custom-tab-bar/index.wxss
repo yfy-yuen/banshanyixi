@@ -1,0 +1,24 @@
+.ctab {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  background: #6a655d;
+  border-top: 1px solid rgba(0, 0, 0, 0.3);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 100;
+}
+.ctab-item {
+  flex: 1;
+  text-align: center;
+  padding: 9px 0 8px;
+  color: #c4b595;
+  font-size: 13px;
+  letter-spacing: 2px;
+}
+.ctab-item.on { color: #f4f0e8; }
+.ctab-text {
+  display: inline-block;
+  padding-bottom: 2px;
+  border-bottom: 2px solid transparent;
+}
+.ctab-item.on .ctab-text { border-bottom-color: #a04538; }

@@ -1,0 +1,188 @@
+.page {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+/* 顶栏 */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.tb-name { font-size: 16px; color: var(--ink); letter-spacing: 2px; font-weight: 500; }
+.tb-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.link { color: var(--cinnabar); }
+.tb-search {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--paper); border: 1px solid var(--border);
+  border-radius: 999px; padding: 7px 14px; color: var(--muted); font-size: 13px;
+}
+.tb-search-ic { font-size: 16px; }
+
+/* 左栏 + 右分区 */
+.body { flex: 1; display: flex; min-height: 0; }
+.rail {
+  width: 64px;
+  background: var(--paper);
+  border-right: 1px solid var(--border);
+  padding: 8px 0;
+}
+.rail-item {
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-light);
+  padding: 13px 2px;
+  letter-spacing: 1px;
+}
+.rail-item.on {
+  color: var(--cinnabar);
+  font-weight: 500;
+  background: var(--card);
+  border-left: 3px solid var(--cinnabar);
+}
+.panel { flex: 1; padding: 10px 12px 110px; }
+
+/* 分区标题（墨笔分隔） */
+.sec { margin-bottom: 6px; }
+.sec-title { display: flex; align-items: center; gap: 10px; padding: 6px 2px 10px; }
+.sec-title text { font-size: 15px; color: var(--ink); letter-spacing: 2px; font-weight: 500; }
+.sec-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+.sec-foot { height: 20px; }
+
+/* 菜品卡 */
+.card {
+  display: flex;
+  gap: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 3px 12px var(--shadow);
+}
+.pic {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  background: var(--paper);
+  flex-shrink: 0;
+}
+.pic.seal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cinnabar);
+  color: #f4f0e8;
+  font-size: 26px;
+  font-weight: 500;
+}
+.info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ttl { font-size: 15px; font-weight: 500; color: var(--ink); letter-spacing: 1px; }
+.badges { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
+.badge { font-size: 11px; padding: 1px 8px; border-radius: 999px; border: 1px solid; }
+.b-sign { color: var(--cinnabar); border-color: var(--cinnabar); }
+.b-spicy { color: #b5562f; border-color: #b5562f; }
+.b-veg { color: #4a6b4a; border-color: #4a6b4a; }
+.b-season { color: var(--gold); border-color: var(--gold); }
+.desc { font-size: 12px; color: var(--muted); margin-top: 5px; }
+.bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+
+/* 加减步进 */
+.step { display: flex; align-items: center; gap: 10px; }
+.step .minus, .step .plus {
+  width: 26px; height: 26px; border-radius: 50%; text-align: center; line-height: 26px; font-size: 16px;
+}
+.step .minus { border: 1px solid var(--border); color: var(--ink); background: var(--paper); }
+.step .plus { background: var(--ink-light); color: var(--card); }
+.step .n { min-width: 20px; text-align: center; font-size: 14px; }
+
+/* 底部购物车 */
+.cartbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; background: var(--card);
+  box-shadow: 0 -2px 14px rgba(45, 40, 30, 0.08);
+  border-top: 1px solid var(--border);
+}
+.cart-left { display: flex; align-items: center; gap: 12px; }
+.bag {
+  position: relative;
+  width: 46px; height: 46px;
+  background: var(--paper); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--ink); letter-spacing: 1px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.bag-badge {
+  position: absolute; top: -4px; right: -4px;
+  background: var(--cinnabar); color: #fff;
+  font-size: 11px; border-radius: 999px; padding: 2px 7px;
+}
+.cart-total { color: var(--cinnabar); font-size: 18px; font-weight: 500; display: block; }
+.cart-count { color: var(--muted); font-size: 12px; }
+.btn-checkout {
+  background: var(--ink-light); color: var(--card);
+  border-radius: 999px; padding: 12px 26px;
+  font-size: 15px; letter-spacing: 1px;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+/* 规格 / 账单弹窗 */
+.spec-group { margin: 14px 0; }
+.g-name { font-size: 14px; margin-bottom: 8px; color: var(--muted); }
+.spec-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.spec-chip {
+  padding: 6px 12px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--card);
+  font-size: 13px; color: var(--ink);
+}
+.spec-chip.on { background: var(--ink-light); color: var(--card); border-color: var(--ink-light); }
+.spec-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+.qty-stepper { display: flex; align-items: center; gap: 12px; }
+.qs {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--paper); color: var(--ink);
+  text-align: center; line-height: 30px; font-size: 18px;
+  border: 1px solid var(--border);
+}
+.spec-preview { color: var(--cinnabar); font-weight: 500; font-size: 16px; }
+.b-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+.b-items { margin: 8px 0; }
+.total-line { border-top: 1px solid var(--border); margin-top: 6px; padding-top: 10px; }
+
+/* 搜索浮层（搜索页） */
+.mask {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 50;
+}
+.search-mask { background: rgba(55, 52, 46, 0.48); }
+.search-page {
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+.search-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; background: var(--card); border-bottom: 1px solid var(--border);
+}
+.sb-ic { font-size: 16px; color: var(--muted); }
+.sb-input {
+  flex: 1; background: var(--paper); border: 1px solid var(--border);
+  border-radius: 999px; height: 36px; line-height: 36px;
+  padding: 0 14px; font-size: 14px; color: var(--ink);
+  box-sizing: border-box;
+}
+.sb-close { font-size: 13px; color: var(--muted); padding: 4px 6px; }
+.search-res { flex: 1; padding: 12px 14px 110px; }
+.s-empty { text-align: center; color: var(--muted); padding: 40px; font-size: 14px; }

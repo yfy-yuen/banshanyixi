@@ -1,0 +1,9 @@
+{
+  "name": "backfillTags",
+  "version": "1.0.0",
+  "description": "回填菜品标签（招牌/辣/素/时令）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

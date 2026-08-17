@@ -1,0 +1,89 @@
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  padding: 28rpx 32rpx calc(56px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* 加载占位：避免刷新场次/我的订位时白屏 */
+.loading-mask {
+  position: fixed; inset: 0; z-index: 60;
+  background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.spinner {
+  width: 44rpx; height: 44rpx; border-radius: 50%;
+  border: 4rpx solid var(--border); border-top-color: var(--cinnabar);
+  animation: spin 0.8s linear infinite;
+}
+.loading-tip { margin-top: 20rpx; font-size: 26rpx; color: var(--muted); letter-spacing: 2rpx; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.r-head { margin: 8rpx 0 24rpx; }
+.r-title { font-size: 44rpx; font-weight: 700; color: var(--ink); letter-spacing: 4rpx; }
+.r-sub { margin-top: 8rpx; font-size: 24rpx; color: var(--muted); letter-spacing: 2rpx; }
+.r-sec {
+  margin: 26rpx 4rpx 14rpx; font-size: 28rpx; color: var(--ink-light);
+  letter-spacing: 3rpx; border-left: 6rpx solid var(--cinnabar); padding-left: 16rpx;
+}
+.r-empty {
+  padding: 36rpx 20rpx; text-align: center; color: var(--muted);
+  font-size: 26rpx; background: var(--card); border-radius: 16rpx; border: 1rpx solid var(--border);
+}
+
+/* 场次卡 */
+.rcard {
+  background: var(--card); border: 1rpx solid var(--border); border-radius: 18rpx;
+  padding: 24rpx 26rpx; margin-bottom: 20rpx; box-shadow: 0 6rpx 20rpx var(--shadow);
+}
+.rcard-top { display: flex; align-items: center; }
+.rcard-date { font-size: 32rpx; font-weight: 700; color: var(--ink); letter-spacing: 2rpx; }
+.rcard-meal { margin-left: 16rpx; font-size: 24rpx; color: var(--gold); }
+.rcard-state {
+  margin-left: auto; font-size: 24rpx; padding: 4rpx 18rpx; border-radius: 999rpx;
+  border: 1rpx solid var(--border);
+}
+.rcard-state.ok { color: var(--cinnabar); border-color: var(--cinnabar); }
+.rcard-state.full { color: var(--muted); }
+.rcard-note { margin-top: 12rpx; font-size: 25rpx; color: var(--muted); }
+.rcard-foot { margin-top: 14rpx; font-size: 23rpx; color: var(--muted); letter-spacing: 1rpx; }
+
+/* 我的预订 */
+.mcard {
+  background: var(--card); border: 1rpx solid var(--border); border-radius: 18rpx;
+  padding: 22rpx 26rpx; margin-bottom: 18rpx;
+}
+.mcard-top { display: flex; align-items: center; }
+.mcard-date { font-size: 30rpx; font-weight: 700; color: var(--ink); }
+.badge {
+  margin-left: auto; font-size: 23rpx; padding: 4rpx 16rpx; border-radius: 999rpx;
+  border: 1rpx solid var(--border); color: var(--muted);
+}
+.badge-pending { color: #b5832f; border-color: #b5832f; }
+.badge-confirmed { color: var(--cinnabar); border-color: var(--cinnabar); }
+.badge-rejected, .badge-cancelled { color: var(--muted); }
+.mcard-info { margin-top: 10rpx; font-size: 25rpx; color: var(--ink-light); }
+.mcard-note { margin-top: 6rpx; font-size: 23rpx; color: var(--muted); }
+.mcard-cancel {
+  margin-top: 14rpx; align-self: flex-end; font-size: 24rpx; color: var(--cinnabar);
+  border: 1rpx solid var(--cinnabar); border-radius: 999rpx; padding: 6rpx 22rpx; display: inline-block;
+}
+
+/* 详情弹窗内菜单 */
+.menu-scroll { max-height: 360rpx; margin: 6rpx 0 6rpx; }
+.dish { display: flex; align-items: center; padding: 12rpx 0; border-bottom: 1rpx solid var(--border-light); }
+.dish-img { width: 84rpx; height: 84rpx; border-radius: 12rpx; flex: 0 0 auto; background: var(--card-soft); }
+.dish-img.ph {
+  display: flex; align-items: center; justify-content: center; font-size: 22rpx;
+  color: var(--muted); text-align: center; padding: 4rpx;
+}
+.dish-info { margin-left: 18rpx; flex: 1; min-width: 0; }
+.dish-name { font-size: 27rpx; color: var(--ink); }
+.dish-desc { font-size: 22rpx; color: var(--muted); margin-top: 4rpx; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dish-price { font-size: 24rpx; color: var(--cinnabar); margin-top: 4rpx; }
+.modal-note { font-size: 24rpx; color: var(--muted); margin-bottom: 8rpx; }
+.btn-dis {
+  text-align: center; padding: 22rpx; border-radius: 12rpx; background: var(--card-soft);
+  color: var(--muted); border: 1rpx solid var(--border); font-size: 28rpx;
+}
+.dl { margin: 16rpx 0 8rpx; font-size: 25rpx; color: var(--ink-light); letter-spacing: 2rpx; }

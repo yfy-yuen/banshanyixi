@@ -1,0 +1,236 @@
+const { CATS, ROOMS, fmt } = require('../../utils/config');
+const { loadDishes, submitOrder } = require('../../utils/api');
+const { classifyError } = require('../../utils/cloudbase');
+const app = getApp();
+
+// 徽章：菜品文档 tags 数组 -> 展示元数据；无 tags 时优雅降级（不渲染）
+const TAG_META = {
+  '招牌': { label: '招牌', cls: 'b-sign' },
+  '辣':   { label: '辣',   cls: 'b-spicy' },
+  '素':   { label: '素',   cls: 'b-veg' },
+  '时令': { label: '时令', cls: 'b-season' },
+};
+
+function buildSelText(sel) {
+  if (!sel || !Object.keys(sel).length) return '';
+  return '（' + Object.values(sel).join('/') + '）';
+}
+
+Page({
+  data: {
+    roomNo: '', roomName: '', people: 1,
+    cats: [], sections: [], activeCat: '',
+    scrollIntoId: '',
+    dishes: [],
+    cart: [],
+    qtyMap: {},
+    cartCount: 0, cartTotalText: '',
+    showSpec: false, spec: null,
+    showBill: false, bill: null,
+    showSearch: false, searchKeyword: '', searchResults: [],
+  },
+  onLoad(options) {
+    let roomNo = options.roomNo || app.globalData.roomNo;
+    if (!roomNo) {
+      wx.showToast({ title: '请先选择包厢', icon: 'none' });
+      setTimeout(() => { wx.switchTab({ url: '/pages/rooms/rooms' }); }, 800);
+      return;
+    }
+    const roomName = ROOMS[roomNo] || '';
+    app.globalData.roomNo = roomNo;
+    app.globalData.roomName = roomName;
+    wx.setStorageSync('roomNo', roomNo);
+    wx.setStorageSync('roomName', roomName);
+    this.setData({ roomNo, roomName, people: app.globalData.people || 1 });
+    this.loadMenu();
+  },
+  async loadMenu() {
+    wx.showLoading({ title: '加载菜单' });
+    try {
+      const raw = await loadDishes();
+      const dishes = raw.map((d) => {
+        const tags = d.tags || [];
+        const badges = tags.map((t) => TAG_META[t]).filter(Boolean);
+        return { ...d, ph: (d.name || '?').charAt(0), badges };
+      });
+      const present = CATS.filter((c) => dishes.some((d) => d.category === c));
+      const sections = present.map((cat) => ({ cat, items: dishes.filter((d) => d.category === cat) }));
+      this.setData({ dishes, cats: present, sections, activeCat: present[0] || '' });
+      wx.hideLoading();
+    } catch (e) {
+      console.error('[menu] 菜单加载失败:', e);
+      const d = classifyError(e);
+      console.warn('[menu] 诊断:', JSON.stringify(d));
+      wx.hideLoading();
+      const content = String(d.msg).slice(0, 400) + (d.hint ? '\n\n排查建议：\n' + d.hint : '');
+      wx.showModal({
+        title: '菜单加载失败（' + d.category + '）',
+        content,
+        confirmText: '重试',
+        cancelText: '知道了',
+        success: (res) => { if (res.confirm) this.loadMenu(); },
+      });
+    }
+  },
+  setCat(e) {
+    const cat = e.currentTarget.dataset.cat;
+    const idx = this.data.cats.indexOf(cat);
+    this.setData({ activeCat: cat, scrollIntoId: 'sec-' + idx });
+  },
+  onPanelScroll() {
+    const query = wx.createSelectorQuery().in(this);
+    query.selectAll('.sec').boundingClientRect();
+    query.exec((res) => {
+      const rects = res[0];
+      if (!rects || !rects.length) return;
+      let current = this.data.cats[0];
+      for (let i = 0; i < rects.length; i++) {
+        if (rects[i].top <= 150) current = this.data.cats[i];
+      }
+      if (current && current !== this.data.activeCat) {
+        this.setData({ activeCat: current });
+      }
+    });
+  },
+  noop() {},
+
+  /* ===== 搜索 ===== */
+  openSearch() { this.setData({ showSearch: true, searchKeyword: '', searchResults: [] }); },
+  closeSearch() { this.setData({ showSearch: false, searchKeyword: '', searchResults: [] }); },
+  onSearchInput(e) {
+    const raw = e.detail.value || '';
+    const kw = raw.trim().toLowerCase();
+    this.setData({ searchKeyword: raw });
+    this.runSearch(kw);
+  },
+  runSearch(kw) {
+    if (!kw) { this.setData({ searchResults: [] }); return; }
+    const res = this.data.dishes.filter((d) =>
+      (d.name || '').toLowerCase().includes(kw) ||
+      (d.tags || []).join(',').toLowerCase().includes(kw) ||
+      (d.description || '').toLowerCase().includes(kw)
+    );
+    this.setData({ searchResults: res });
+  },
+
+  /* ===== 购物车 ===== */
+  addDish(e) {
+    const id = e.currentTarget.dataset.id;
+    const d = this.data.dishes.find((x) => x.id === id);
+    if (!d) return;
+    if (d.specs && d.specs.length) { this.openSpec(id); return; }
+    this.addToCart({ dishId: id, name: d.name, basePrice: d.price, category: d.category, sel: {}, unitPrice: d.price, qty: 1 });
+  },
+  decDish(e) {
+    const id = e.currentTarget.dataset.id;
+    const cart = this.data.cart.slice();
+    let idx = -1;
+    for (let i = cart.length - 1; i >= 0; i--) { if (cart[i].dishId === id) { idx = i; break; } }
+    if (idx < 0) return;
+    if (cart[idx].qty > 1) cart[idx].qty -= 1; else cart.splice(idx, 1);
+    this.updateCart(cart);
+  },
+  addToCart(item) {
+    const cart = this.data.cart.slice();
+    cart.push(item);
+    this.updateCart(cart);
+  },
+  updateCart(cart) {
+    const qtyMap = {};
+    let count = 0, total = 0;
+    cart.forEach((c) => {
+      qtyMap[c.dishId] = (qtyMap[c.dishId] || 0) + c.qty;
+      count += c.qty;
+      total += c.unitPrice * c.qty;
+    });
+    this.setData({ cart, qtyMap, cartCount: count, cartTotalText: fmt(total) });
+  },
+
+  /* ===== 规格 ===== */
+  openSpec(id) {
+    const d = this.data.dishes.find((x) => x.id === id);
+    if (!d) return;
+    const picked = {};
+    (d.specs || []).forEach((g) => { picked[g.group] = g.options[0] ? g.options[0].label : ''; });
+    this.setData({ showSpec: true, spec: this.buildSpec(d, picked, 1) });
+  },
+  buildSpec(d, picked, qty) {
+    let total = d.price;
+    (d.specs || []).forEach((g) => {
+      const opt = g.options.find((o) => o.label === picked[g.group]);
+      if (opt) total += (opt.delta || 0);
+    });
+    return { dish: d, picked, qty, totalText: fmt(total * qty), groups: d.specs || [] };
+  },
+  pickSpec(e) {
+    const { group, label } = e.currentTarget.dataset;
+    const spec = this.data.spec;
+    spec.picked[group] = label;
+    this.setData({ spec: this.buildSpec(spec.dish, spec.picked, spec.qty) });
+  },
+  specQty(e) {
+    const d = Number(e.currentTarget.dataset.d);
+    const spec = this.data.spec;
+    const qty = Math.max(1, spec.qty + d);
+    this.setData({ spec: this.buildSpec(spec.dish, spec.picked, qty) });
+  },
+  confirmSpec() {
+    const spec = this.data.spec;
+    const d = spec.dish;
+    const sel = {};
+    let unit = d.price;
+    (d.specs || []).forEach((g) => {
+      sel[g.group] = spec.picked[g.group];
+      const opt = g.options.find((o) => o.label === spec.picked[g.group]);
+      if (opt) unit += (opt.delta || 0);
+    });
+    for (let i = 0; i < spec.qty; i++) {
+      this.addToCart({ dishId: d.id, name: d.name, basePrice: d.price, category: d.category, sel, unitPrice: unit, qty: 1 });
+    }
+    this.setData({ showSpec: false, spec: null });
+  },
+  closeSpec() { this.setData({ showSpec: false, spec: null }); },
+
+  /* ===== 提交订单 ===== */
+  async submitOrder() {
+    if (!this.data.cart.length) return;
+    const items = this.data.cart.map((c) => ({
+      name: c.name, unitPrice: c.unitPrice, qty: c.qty, sel: c.sel, category: c.category,
+      selText: buildSelText(c.sel),
+    }));
+    const total = items.reduce((s, i) => s + i.unitPrice * i.qty, 0);
+    wx.showLoading({ title: '提交中' });
+    try {
+      await submitOrder({
+        roomNo: this.data.roomNo, roomName: this.data.roomName,
+        people: this.data.people, items, total,
+      });
+      this.updateCart([]);
+      this.setData({
+        showBill: true,
+        bill: { items, totalText: fmt(total), roomName: this.data.roomName, roomNo: this.data.roomNo, people: this.data.people },
+      });
+    } catch (e) {
+      wx.showToast({ title: '提交失败：' + (e.message || ''), icon: 'none' });
+    } finally {
+      wx.hideLoading();
+    }
+  },
+  closeBill() { this.setData({ showBill: false }); },
+  goOrders() {
+    this.setData({ showBill: false });
+    wx.switchTab({ url: '/pages/orders/orders' });
+  },
+  setPeople() {
+    const opts = [];
+    for (let i = 1; i <= 12; i++) opts.push(i + ' 人');
+    wx.showActionSheet({
+      itemList: opts,
+      success: (res) => {
+        const p = res.tapIndex + 1;
+        app.globalData.people = p;
+        this.setData({ people: p });
+      },
+    });
+  },
+});

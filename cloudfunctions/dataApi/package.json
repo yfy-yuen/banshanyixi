@@ -1,0 +1,9 @@
+{
+  "name": "dataApi",
+  "version": "1.0.0",
+  "description": "半山一席通用数据库代理云函数（cloud1 文档库版）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

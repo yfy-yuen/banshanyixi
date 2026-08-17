@@ -1,0 +1,36 @@
+{
+  "pages": [
+    "pages/gate/gate",
+    "pages/rooms/rooms",
+    "pages/room/room",
+    "pages/menu/menu",
+    "pages/dishes/dishes",
+    "pages/reserve/reserve",
+    "pages/book/book",
+    "pages/merchant/merchant",
+    "pages/orders/orders"
+  ],
+  "window": {
+    "navigationBarTitleText": "半山·一席",
+    "navigationBarBackgroundColor": "#6a655d",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#e2ded6",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#c4b595",
+    "selectedColor": "#f4f0e8",
+    "backgroundColor": "#6a655d",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/rooms/rooms", "text": "包厢" },
+      { "pagePath": "pages/dishes/dishes", "text": "菜单" },
+      { "pagePath": "pages/reserve/reserve", "text": "订位" },
+      { "pagePath": "pages/book/book", "text": "店务" },
+      { "pagePath": "pages/merchant/merchant", "text": "商家" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

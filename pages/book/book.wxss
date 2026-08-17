@@ -1,0 +1,65 @@
+.page { padding: 16px 16px 100px; }
+
+.perm { text-align: center; padding: 60px 24px; }
+.perm-title { font-size: 22px; letter-spacing: 4px; color: var(--ink); }
+.perm-sub { font-size: 13px; color: var(--muted); margin-top: 10px; }
+.perm-uid { font-size: 12px; color: var(--gold); margin-top: 20px; word-break: break-all; }
+.perm-tip { font-size: 12px; color: var(--muted); margin-top: 12px; line-height: 1.7; }
+.perm .btn { margin-top: 22px; display: inline-block; padding: 11px 28px; }
+
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.cal-nav { width: 36px; height: 36px; line-height: 34px; text-align: center; border: 1px solid var(--border); border-radius: 50%; color: var(--ink); background: var(--card); }
+.cal-title { font-size: 16px; letter-spacing: 2px; color: var(--ink); }
+.cal-week { display: flex; }
+.cal-wd { flex: 1; text-align: center; font-size: 12px; color: var(--muted); padding: 6px 0; }
+.cal-grid { display: flex; flex-wrap: wrap; margin-top: 4px; }
+.cal-cell { width: 14.28%; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--ink); }
+.cal-cell.empty { visibility: hidden; }
+.cal-cell.sel { background: var(--cinnabar); color: #fff; border-radius: 10px; }
+
+.mtitle { font-size: 14px; color: var(--ink-light); margin: 18px 0 10px; letter-spacing: 1px; }
+.shop-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.shop-title { font-size: 16px; letter-spacing: 2px; color: var(--ink); }
+.btn-sm { font-size: 13px; padding: 7px 14px; border-radius: 999px; background: var(--cinnabar); color: #fff; }
+.sess { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+.sess-top { display: flex; align-items: center; }
+.sess-date { font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: 1px; }
+.sess-state { margin-left: auto; font-size: 12px; padding: 3px 10px; border-radius: 999px; }
+.sess-state.ok { color: var(--gold); background: #f5ecdf; }
+.sess-state.off { color: var(--muted); background: var(--paper); }
+.sess-info { font-size: 12px; color: var(--ink-light); margin-top: 6px; }
+.sess-acts { display: flex; justify-content: flex-end; margin-top: 10px; }
+.matrix { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.mrow { display: flex; align-items: center; border-bottom: 1px solid var(--border-light); }
+.mrow:last-child { border-bottom: none; }
+.mroom { width: 84px; padding: 14px 10px; font-size: 15px; color: var(--ink); border-right: 1px solid var(--border-light); }
+.mslot { flex: 1; text-align: center; padding: 14px 0; font-size: 13px; color: var(--muted); border-right: 1px solid var(--border-light); }
+.mslot:last-child { border-right: none; }
+.mslot.busy { color: var(--cinnabar); font-weight: 500; background: #f7efec; }
+.mslot-lbl { font-size: 13px; color: var(--cinnabar); font-weight: 500; }
+.mslot-acts { display: flex; gap: 8px; justify-content: center; margin-top: 6px; }
+.mbtn { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--card-soft); border: 1px solid var(--border); color: var(--ink-light); }
+.mbtn.del { color: var(--cinnabar); border-color: #ead5ce; background: #f2e6e2; }
+.btn-del { text-align: center; color: var(--cinnabar); border: 1px solid #ead5ce; background: #f2e6e2; border-radius: 999px; padding: 11px 24px; font-size: 15px; letter-spacing: 1px; }
+
+.seg2 { display: flex; background: var(--paper); border: 1px solid var(--border-light); border-radius: 999px; padding: 4px; margin-bottom: 14px; }
+.seg2-btn { flex: 1; text-align: center; padding: 9px 0; font-size: 14px; color: var(--muted); border-radius: 999px; }
+.seg2-btn.on { background: var(--cinnabar); color: #fff; font-weight: 500; }
+
+.dl { font-size: 13px; color: var(--muted); margin: 6px 0 10px; }
+.dlist { display: flex; flex-wrap: wrap; gap: 10px; max-height: 220px; overflow: auto; }
+.dopt { width: 30%; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--card-soft); }
+.dopt.on { border-color: var(--cinnabar); box-shadow: 0 0 0 1px var(--cinnabar); }
+.dopt-img { width: 100%; height: 64px; background: var(--paper); }
+.dopt-img.ph { display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--muted); }
+.dopt-name { font-size: 12px; color: var(--ink); text-align: center; padding: 5px 2px; }
+
+/* 顾客预订申请审批 */
+.r-empty { padding: 18px; text-align: center; color: var(--muted); font-size: 13px; background: var(--card); border-radius: 12px; border: 1px solid var(--border); }
+.appr { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+.appr-top { display: flex; align-items: center; }
+.appr-date { font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: 1px; }
+.appr-people { margin-left: auto; font-size: 13px; color: var(--cinnabar); }
+.appr-info { font-size: 13px; color: var(--ink-light); margin-top: 6px; }
+.appr-note { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.appr-acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }

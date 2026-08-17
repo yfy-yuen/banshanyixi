@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>半山·一席 开门页预览</title>
+<style>
+  html,body{margin:0;background:#333;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Songti SC','STSong',serif;}
+  #stage{width:750px;height:1334px;transform-origin:top center;position:relative;overflow:hidden;}
+  .gate{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:80px 40px 40px;box-sizing:border-box;}
+  .wall{position:absolute;left:0;top:0;right:0;bottom:0;z-index:0;background:radial-gradient(140% 80% at 50% 0%, rgba(255,255,255,0.55) 0%, transparent 55%),radial-gradient(120% 70% at 50% 100%, rgba(180,160,130,0.18) 0%, transparent 55%),linear-gradient(180deg, #f4efe6 0%, #ece6da 50%, #e3dcd0 100%);}
+  .gate-header{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;padding-top:20px;}
+  .seal{width:120px;height:150px;margin-bottom:18px;}
+  .gate-title{font-size:58px;letter-spacing:14px;color:#5a4632;font-weight:600;text-shadow:0 2px 10px rgba(255,255,255,0.55);}
+  .doorway{position:relative;z-index:3;width:650px;height:660px;transform-style:preserve-3d;}
+  .seam{position:absolute;z-index:1;left:50%;top:4%;bottom:4%;width:5px;transform:translateX(-50%);background:linear-gradient(180deg,rgba(255,230,175,0.22) 0%,rgba(255,225,160,0.98) 48%,rgba(255,230,175,0.22) 100%);box-shadow:0 0 28px 8px rgba(255,205,130,0.7);}
+  .door{position:absolute;z-index:3;top:0;bottom:0;width:50%;overflow:hidden;transform-style:preserve-3d;transition:transform 2.8s cubic-bezier(0.22, 0.61, 0.36, 1);}
+  .door-l{left:0;transform-origin:left center;}
+  .door-r{right:0;transform-origin:right center;}
+  .doorway.open .door-l{transform:rotateY(-105deg);}
+  .doorway.open .door-r{transform:rotateY(105deg);}
+  .door-half{position:relative;width:100%;height:100%;}
+  .door-img{position:absolute;top:0;width:200%;height:100%;object-fit:cover;}
+  .door-l .door-img{left:0;}
+  .door-r .door-img{left:-100%;}
+  .door-btn{position:absolute;z-index:5;left:50%;bottom:12%;transform:translateX(-50%);padding:18px 74px;border:2.5px solid rgba(255,250,240,0.92);border-radius:999px;color:#fff8ef;font-size:32px;letter-spacing:8px;font-weight:500;text-shadow:0 2px 8px rgba(80,50,20,0.55);background:rgba(80,55,35,0.22);box-shadow:0 6px 24px rgba(0,0,0,0.28);cursor:pointer;animation:breathe 2.4s ease-in-out infinite;}
+  @keyframes breathe{0%,100%{border-color:rgba(255,250,240,0.92);box-shadow:0 6px 24px rgba(0,0,0,0.28),0 0 0 rgba(255,210,140,0);}50%{border-color:rgba(255,235,195,1);box-shadow:0 6px 24px rgba(0,0,0,0.28),0 0 26px rgba(255,210,140,0.55);}}
+  .gate-footer{position:relative;z-index:5;text-align:center;padding-bottom:10px;}
+  .gate-sub{font-size:24px;color:#6a5a46;letter-spacing:2px;font-weight:500;}
+  .gate-motto{font-size:26px;color:#7a6a56;margin-top:10px;letter-spacing:4px;font-weight:500;}
+  .glow{position:absolute;z-index:2;left:0;right:0;top:0;bottom:0;background:radial-gradient(ellipse 70% 80% at 50% 50%,rgba(255,220,150,0) 30%,transparent 75%);opacity:0;transition:opacity 1.6s ease 0.2s;pointer-events:none;}
+  .doorway.open+.glow{opacity:1;background:radial-gradient(ellipse 78% 86% at 50% 50%,rgba(255,230,165,0.55),rgba(255,200,120,0.26) 50%,transparent 78%);}
+  #hint{position:fixed;bottom:14px;left:0;right:0;text-align:center;color:#eee;font-size:13px;}
+  #toggle{position:absolute;left:0;right:0;top:0;bottom:0;z-index:9;cursor:pointer;}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="gate" id="gate">
+    <div class="wall"></div>
+    <div class="gate-header">
+      <img class="seal" src="/assets/images/seal.png"/>
+      <div class="gate-title">半山·一席</div>
+    </div>
+    <div class="doorway" id="doorway">
+      <div class="seam"></div>
+      <div class="door door-l"><div class="door-half"><img class="door-img" src="/assets/images/gate-door.jpg"/></div></div>
+      <div class="door door-r"><div class="door-half"><img class="door-img" src="/assets/images/gate-door.jpg"/></div></div>
+      <div class="door-btn" id="btn">推门入席</div>
+    </div>
+    <div class="gate-footer">
+      <div class="gate-sub">私人菜馆 · 山坡22号</div>
+      <div class="gate-motto">择一席，品一味</div>
+    </div>
+    <div class="glow"></div>
+    <div id="toggle"></div>
+  </div>
+</div>
+<div id="hint">点击任意处预览开门动画（再次点击复位）</div>
+<script>
+  function fit(){var s=document.getElementById('stage');var sc=Math.min(window.innerWidth/750,window.innerHeight/1334);s.style.transform='scale('+sc+')';}
+  window.addEventListener('resize',fit);fit();
+  var open=false;
+  document.getElementById('toggle').addEventListener('click',function(){open=!open;document.getElementById('doorway').classList.toggle('open',open);});
+</script>
+</body>
+</html>

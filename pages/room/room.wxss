@@ -1,0 +1,71 @@
+.page { padding: 16px 16px 100px; }
+.rhead { padding: 8px 0 18px; position: relative; }
+.rname { font-size: 26px; letter-spacing: 6px; color: var(--ink); font-weight: 500; }
+.rsub { font-size: 12px; color: var(--muted); margin-top: 6px; letter-spacing: 1px; }
+.room-cta {
+  position: absolute; top: 10px; right: 0;
+  background: var(--cinnabar); color: #f4f0e8;
+  font-size: 14px; letter-spacing: 1px;
+  padding: 9px 20px; border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(163, 53, 38, 0.28);
+}
+.room-cta:active { opacity: 0.85; }
+
+.seg {
+  display: flex;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px;
+  margin-bottom: 18px;
+}
+.seg-btn {
+  flex: 1; text-align: center; padding: 10px 0;
+  font-size: 14px; color: var(--muted); border-radius: 999px;
+}
+.seg-btn.on { color: var(--card); background: var(--cinnabar); font-weight: 500; }
+
+.gallery { white-space: nowrap; }
+.gimg { display: inline-block; width: 240px; margin-right: 12px; vertical-align: top; }
+.gphoto {
+  width: 240px; height: 150px; border-radius: 14px;
+  border: 1px solid var(--border); background: var(--paper);
+}
+.gcap { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+.order-bar {
+  font-size: 13px; color: var(--ink-light);
+  background: var(--paper); border: 1px solid var(--border-light);
+  border-radius: 999px; padding: 8px 14px; display: inline-block; margin-bottom: 14px;
+}
+.dish-row { display: flex; gap: 14px; align-items: center; }
+.dish-img {
+  width: 56px; height: 56px; border-radius: 10px;
+  background: var(--paper); border: 1px solid var(--border); flex-shrink: 0;
+}
+.dish-img.ph { display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--muted); }
+.dish-name { font-size: 15px; color: var(--ink); font-weight: 500; }
+.dish-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+.empty { text-align: center; color: var(--muted); padding: 50px 0; font-size: 14px; }
+
+/* 加载占位 */
+.loading-mask {
+  position: fixed;
+  left: 0; right: 0; top: 0; bottom: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(250, 246, 238, 0.78);
+}
+.spinner {
+  width: 44rpx; height: 44rpx;
+  border: 5rpx solid rgba(184, 83, 63, 0.25);
+  border-top-color: var(--cinnabar);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-tip { margin-top: 18rpx; font-size: 13px; color: var(--muted); letter-spacing: 2px; }

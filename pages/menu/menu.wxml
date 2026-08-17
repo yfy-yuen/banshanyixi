@@ -1,0 +1,144 @@
+<view class="page">
+  <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
+
+  <!-- 顶栏 -->
+  <view class="topbar">
+    <view class="tb-left">
+      <view class="tb-name">半山·一席</view>
+      <view class="tb-sub">{{roomName}} · <text class="link" bindtap="setPeople">{{people}}人</text></view>
+    </view>
+    <view class="tb-search" bindtap="openSearch">
+      <text class="tb-search-ic">⌕</text>
+      <text class="tb-search-tx">搜索菜品</text>
+    </view>
+  </view>
+
+  <!-- 左栏 + 右分区 -->
+  <view class="body">
+    <scroll-view class="rail" scroll-y>
+      <view wx:for="{{cats}}" wx:key="*this"
+            class="rail-item {{activeCat===item?'on':''}}"
+            bindtap="setCat" data-cat="{{item}}">{{item}}</view>
+    </scroll-view>
+
+    <scroll-view class="panel" scroll-y scroll-into-view="{{scrollIntoId}}" scroll-with-animation bindscroll="onPanelScroll">
+      <view class="sec" wx:for="{{sections}}" wx:key="cat" wx:for-index="si" id="sec-{{si}}">
+        <view class="sec-title"><text>{{item.cat}}</text><view class="sec-line"></view></view>
+        <view class="card" wx:for="{{item.items}}" wx:for-item="d" wx:key="id">
+          <image wx:if="{{d.image}}" class="pic" src="{{d.image}}" mode="aspectFill" lazy-load />
+          <view wx:else class="pic seal">{{d.ph}}</view>
+          <view class="info">
+            <view class="ttl">{{d.name}}</view>
+            <view class="badges" wx:if="{{d.badges.length}}">
+              <text wx:for="{{d.badges}}" wx:for-item="b" wx:key="label" class="badge {{b.cls}}">{{b.label}}</text>
+            </view>
+            <view class="desc">{{d.description || (d.specs && d.specs.length ? '可选规格' : '')}}</view>
+            <view class="bottom">
+              <text class="price-red">¥{{d.price}}</text>
+              <view class="step">
+                <view wx:if="{{qtyMap[d.id]}}" class="minus" bindtap="decDish" data-id="{{d.id}}">−</view>
+                <text wx:if="{{qtyMap[d.id]}}" class="n">{{qtyMap[d.id]}}</text>
+                <view class="plus" bindtap="addDish" data-id="{{d.id}}">+</view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="sec-foot"></view>
+    </scroll-view>
+  </view>
+
+  <!-- 底部购物车 -->
+  <view class="cartbar" wx:if="{{cartCount>0}}">
+    <view class="cart-left">
+      <view class="bag">篮<view wx:if="{{cartCount>0}}" class="bag-badge">{{cartCount}}</view></view>
+      <view class="cart-sum">
+        <text class="cart-total">{{cartTotalText}}</text>
+        <text class="cart-count">共 {{cartCount}} 件</text>
+      </view>
+    </view>
+    <view class="btn-checkout" bindtap="submitOrder">去结算</view>
+  </view>
+</view>
+
+<!-- 规格弹窗 -->
+<view class="mask" wx:if="{{showSpec}}" bindtap="closeSpec">
+  <view class="modal" catchtap="noop">
+    <view class="modal-title">{{spec.dish.name}}</view>
+    <view wx:for="{{spec.groups}}" wx:key="group" class="spec-group">
+      <view class="g-name">{{item.group}}</view>
+      <view class="spec-chips">
+        <view wx:for="{{item.options}}" wx:for-item="opt" wx:key="label"
+              class="spec-chip {{spec.picked[item.group]===opt.label?'on':''}}"
+              bindtap="pickSpec" data-group="{{item.group}}" data-label="{{opt.label}}">
+          {{opt.label}}<text wx:if="{{opt.delta}}"> (+{{opt.delta}})</text>
+        </view>
+      </view>
+    </view>
+    <view class="spec-foot">
+      <view class="qty-stepper">
+        <view class="qs" bindtap="specQty" data-d="-1">−</view>
+        <text>{{spec.qty}}</text>
+        <view class="qs" bindtap="specQty" data-d="1">+</view>
+      </view>
+      <text class="spec-preview">{{spec.totalText}}</text>
+    </view>
+    <view class="btn" style="width:100%;margin-top:16px;" bindtap="confirmSpec">加入购物车</view>
+  </view>
+</view>
+
+<!-- 结账单 -->
+<view class="mask" wx:if="{{showBill}}" bindtap="closeBill">
+  <view class="modal" catchtap="noop">
+    <view class="modal-title">下单成功</view>
+    <view class="b-row"><text>包厢</text><text>{{bill.roomName}}（{{bill.roomNo}}号）</text></view>
+    <view class="b-row"><text>人数</text><text>{{bill.people}} 人</text></view>
+    <view class="b-items">
+      <view class="b-row" wx:for="{{bill.items}}" wx:key="idx">
+        <text>{{item.name}}{{item.selText}} ×{{item.qty}}</text>
+        <text>{{item.unitPrice * item.qty}}</text>
+      </view>
+    </view>
+    <view class="b-row total-line">
+      <text>合计</text><text class="price-red">{{bill.totalText}}</text>
+    </view>
+    <view class="btn" style="width:100%;margin-top:12px;" bindtap="closeBill">完成</view>
+    <view class="btn btn-ghost" style="width:100%;margin-top:8px;" bindtap="goOrders">查看我的订单</view>
+  </view>
+</view>
+
+<!-- 搜索浮层（搜索页） -->
+<view class="mask search-mask" wx:if="{{showSearch}}" bindtap="closeSearch">
+  <view class="search-page" catchtap="noop">
+    <view class="search-bar">
+      <text class="sb-ic">⌕</text>
+      <input class="sb-input" placeholder="输入菜名，模糊搜索" value="{{searchKeyword}}"
+             bindinput="onSearchInput" focus="{{showSearch}}" confirm-type="search" />
+      <text class="sb-close" bindtap="closeSearch">取消</text>
+    </view>
+    <scroll-view class="search-res" scroll-y>
+      <view wx:if="{{!searchKeyword}}" class="s-empty">输入菜名试试，如「东坡」「醉」</view>
+      <view wx:elif="{{searchResults.length===0}}" class="s-empty">没有找到「{{searchKeyword}}」</view>
+      <view class="card" wx:for="{{searchResults}}" wx:key="id">
+        <image wx:if="{{item.image}}" class="pic" src="{{item.image}}" mode="aspectFill" lazy-load />
+        <view wx:else class="pic seal">{{item.ph}}</view>
+        <view class="info">
+          <view class="ttl">{{item.name}}</view>
+          <view class="badges" wx:if="{{item.badges.length}}">
+            <text wx:for="{{item.badges}}" wx:for-item="b" wx:key="label" class="badge {{b.cls}}">{{b.label}}</text>
+          </view>
+          <view class="desc">{{item.description || (item.specs && item.specs.length ? '可选规格' : '')}}</view>
+          <view class="bottom">
+            <text class="price-red">¥{{item.price}}</text>
+            <view class="step">
+              <view wx:if="{{qtyMap[item.id]}}" class="minus" bindtap="decDish" data-id="{{item.id}}">−</view>
+              <text wx:if="{{qtyMap[item.id]}}" class="n">{{qtyMap[item.id]}}</text>
+              <view class="plus" bindtap="addDish" data-id="{{item.id}}">+</view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="sec-foot"></view>
+    </scroll-view>
+  </view>
+</view>

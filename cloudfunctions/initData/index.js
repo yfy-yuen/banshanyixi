@@ -1,0 +1,1607 @@
+// 初始化真实菜单数据（cloud1 文档数据库版）
+// 部署后在微信开发者工具「云开发 → 云函数 → initData → 测试」调用一次即可。
+// 用 set 覆盖写，重复调用幂等（不会重复叠加）。
+const cloud = require('wx-server-sdk');
+cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
+const db = cloud.database();
+
+// 根据分类/名称/描述推断标签（招牌/辣/素/时令），与 backfillTags 保持一致
+function inferTags(d) {
+  const tags = [];
+  const cat = d.category || '';
+  const name = d.name || '';
+  const desc = d.description || '';
+  if (cat === '招牌') tags.push('招牌');
+  if (cat === '素菜') tags.push('素');
+  if (name.indexOf('辣') >= 0 || name.indexOf('椒') >= 0 || desc.indexOf('辣') >= 0) tags.push('辣');
+  if (name.indexOf('时令') >= 0 || desc.indexOf('时令') >= 0 || desc.indexOf('当季') >= 0) tags.push('时令');
+  return tags;
+}
+
+const dishes = [
+  {
+    "_id": "d_latiao",
+    "name": "辣条",
+    "category": "招牌",
+    "price": 278,
+    "description": "口味/姜辣，按斤计价",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_zhushu",
+    "name": "红烧竹鼠",
+    "category": "招牌",
+    "price": 268,
+    "description": "按斤计价",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_tujiayu",
+    "name": "汉寿土甲鱼",
+    "category": "招牌",
+    "price": 198,
+    "description": "红烧/清炖/胡椒清蒸，按斤计价",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_zhanchi",
+    "name": "展翅高飞",
+    "category": "招牌",
+    "price": 188,
+    "description": "椒盐鹅翅",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_meiganfangrou",
+    "name": "梅干菜方肉",
+    "category": "招牌",
+    "price": 188,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_bawangzhouzi",
+    "name": "霸王肘子",
+    "category": "招牌",
+    "price": 238,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_liangbanmuer",
+    "name": "凉拌木耳",
+    "category": "凉菜",
+    "price": 38,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_liangbanbingcai",
+    "name": "凉拌冰菜",
+    "category": "凉菜",
+    "price": 48,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_paihuanggua",
+    "name": "拍黄瓜",
+    "category": "凉菜",
+    "price": 28,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_liangbanqiezi",
+    "name": "凉拌茄子",
+    "category": "凉菜",
+    "price": 48,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_youzhahuasheng",
+    "name": "油炸花生米",
+    "category": "凉菜",
+    "price": 28,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_qiukui",
+    "name": "秋葵",
+    "category": "凉菜",
+    "price": 48,
+    "description": "凉拌/冰镇",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_liangbanyaopian",
+    "name": "凉拌腰片",
+    "category": "凉菜",
+    "price": 98,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_liangbanerjian",
+    "name": "凉拌耳尖",
+    "category": "凉菜",
+    "price": 88,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_liangbanlurou",
+    "name": "凉拌卤牛肉",
+    "category": "凉菜",
+    "price": 128,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_guoqiaoniurou",
+    "name": "过桥牛肉",
+    "category": "凉菜",
+    "price": 128,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_liangbangongcai",
+    "name": "凉拌贡菜",
+    "category": "凉菜",
+    "price": 28,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_luoshixia",
+    "name": "罗氏虾",
+    "category": "海鲜",
+    "price": 298,
+    "description": "芥末/白灼/蒜蓉/菠萝蜜烧",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_suanronghaosheng",
+    "name": "蒜蓉粉丝蒸生蚝",
+    "category": "海鲜",
+    "price": 0,
+    "description": "时价，请咨询店员",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_laozhisanwenyu",
+    "name": "捞汁三文鱼",
+    "category": "海鲜",
+    "price": 198,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_jiangcongshengzi",
+    "name": "姜葱圣子王",
+    "category": "海鲜",
+    "price": 0,
+    "description": "时价，请咨询店员",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_chishenpinpan",
+    "name": "海鲜赤身拼盘",
+    "category": "海鲜",
+    "price": 0,
+    "description": "时价，请咨询店员",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_bolong",
+    "name": "波龙",
+    "category": "海鲜",
+    "price": 0,
+    "description": "蒜蓉粉丝蒸/椒盐，时价请咨询店员",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_diwangxie",
+    "name": "帝王蟹",
+    "category": "海鲜",
+    "price": 0,
+    "description": "时价，请咨询店员",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_dongxingban",
+    "name": "砂锅东星斑",
+    "category": "海鲜",
+    "price": 0,
+    "description": "时价，请咨询店员",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_moyouzi",
+    "name": "墨鱼仔",
+    "category": "海鲜",
+    "price": 98,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_ganbianyouyu",
+    "name": "干煸鱿鱼须",
+    "category": "海鲜",
+    "price": 128,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_lajiaochaobaoyu",
+    "name": "樟树港辣椒炒鲍鱼",
+    "category": "海鲜",
+    "price": 188,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_yaozhushouban",
+    "name": "瑶柱手掰豆腐",
+    "category": "海鲜",
+    "price": 58,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_xiongkouyoubaopian",
+    "name": "干煸胸口油鲍片",
+    "category": "海鲜",
+    "price": 188,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_xiaren",
+    "name": "贵妃木耳西兰花虾仁",
+    "category": "海鲜",
+    "price": 128,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_zishuchaobeirou",
+    "name": "三椒紫苏炒扇贝肉",
+    "category": "海鲜",
+    "price": 168,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_laozhihualuo",
+    "name": "捞汁花螺",
+    "category": "海鲜",
+    "price": 0,
+    "description": "时价，请咨询店员",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_laozhishenghao",
+    "name": "捞汁生蠔",
+    "category": "海鲜",
+    "price": 0,
+    "description": "时价，请咨询店员",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_jianglabaoyu",
+    "name": "姜辣鲍鱼",
+    "category": "海鲜",
+    "price": 238,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_guzhishengzi",
+    "name": "豉汁圣子王",
+    "category": "海鲜",
+    "price": 0,
+    "description": "时价，请咨询店员",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_dabaidiao",
+    "name": "大白刁",
+    "category": "河鲜",
+    "price": 168,
+    "description": "豆辣/清蒸/香煎",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_guiyu",
+    "name": "桂鱼",
+    "category": "河鲜",
+    "price": 168,
+    "description": "红烧/黄焖/香煎/清蒸",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_damingxia",
+    "name": "大明虾",
+    "category": "河鲜",
+    "price": 168,
+    "description": "蒜蓉粉丝蒸/口味/白灼/秘制",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_tushanyu",
+    "name": "乡里土鳝鱼",
+    "category": "河鲜",
+    "price": 168,
+    "description": "红烧/黄焖/青椒炒/特色爆炒",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_quanshuihuoyu",
+    "name": "泉水煮活鱼",
+    "category": "河鲜",
+    "price": 168,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_xiangsunenzi",
+    "name": "香酥嫩子鱼",
+    "category": "河鲜",
+    "price": 98,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_qingzhengsunkaoyu",
+    "name": "清蒸笋壳鱼",
+    "category": "河鲜",
+    "price": 0,
+    "description": "时价，请咨询店员",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_doulazhengliuyangyu",
+    "name": "豆辣蒸浏阳手撕鱼",
+    "category": "河鲜",
+    "price": 98,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_qingjiaoshanhu",
+    "name": "青椒鳝鱼炒鲍片",
+    "category": "河鲜",
+    "price": 188,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_paoshanji",
+    "name": "茶园跑山鸡",
+    "category": "家禽",
+    "price": 288,
+    "description": "黄闷/清炖",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_qingjiaomenshuiya",
+    "name": "青椒焖水鸭",
+    "category": "家禽",
+    "price": 168,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_xiangweilatianji",
+    "name": "湘味腊田鸡",
+    "category": "家禽",
+    "price": 128,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_xianrouwanzhengshuiya",
+    "name": "鲜肉丸蒸水鸭",
+    "category": "家禽",
+    "price": 188,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_jianglajichaoji",
+    "name": "酱辣椒炒鸡",
+    "category": "家禽",
+    "price": 168,
+    "description": "茶油豆辣醋蒸鸡",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_zirandiaolong",
+    "name": "孜然吊龙",
+    "category": "热菜",
+    "price": 128,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_tangguoniurou",
+    "name": "烫锅牛肉",
+    "category": "热菜",
+    "price": 168,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_tangguoyaopian",
+    "name": "烫锅腰片",
+    "category": "热菜",
+    "price": 128,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_tangguomaodu",
+    "name": "烫锅毛肚",
+    "category": "热菜",
+    "price": 128,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_lajiaochaorou",
+    "name": "樟树港辣椒炒肉",
+    "category": "热菜",
+    "price": 78,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_zisutiluorou",
+    "name": "紫苏田螺肉",
+    "category": "热菜",
+    "price": 78,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_hongshaozhuti",
+    "name": "红烧猪蹄",
+    "category": "热菜",
+    "price": 128,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_lanhuaganzhuti",
+    "name": "兰花干烧猪蹄",
+    "category": "热菜",
+    "price": 128,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_suanniuyanlarou",
+    "name": "大蒜叶腊牛肉",
+    "category": "热菜",
+    "price": 98,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_qincaigangchang",
+    "name": "芹菜米糠肠",
+    "category": "热菜",
+    "price": 88,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_baochaotianji",
+    "name": "爆炒田鸡",
+    "category": "热菜",
+    "price": 168,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_roumowosun",
+    "name": "肉沫莴笋丝",
+    "category": "热菜",
+    "price": 48,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_qingjiaoxiangchang",
+    "name": "青椒唐人神香肠",
+    "category": "热菜",
+    "price": 98,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_hongshaodoupian",
+    "name": "红烧肚片",
+    "category": "热菜",
+    "price": 128,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_suanxiangpaigu",
+    "name": "蒜香排骨",
+    "category": "热菜",
+    "price": 98,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_huobaoyaohua",
+    "name": "火爆腰花",
+    "category": "热菜",
+    "price": 88,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_xiaochaotuhuangniu",
+    "name": "小炒土黄牛肉",
+    "category": "热菜",
+    "price": 98,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_wuhuarouchaoxianggan",
+    "name": "五花肉炒酱香干",
+    "category": "热菜",
+    "price": 48,
+    "description": "攸县香干",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_guifeimuerchaorou",
+    "name": "贵妃木耳炒肉",
+    "category": "热菜",
+    "price": 88,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_guifeimuerchaotuji",
+    "name": "贵妃木耳炒土鸡",
+    "category": "热菜",
+    "price": 138,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_pianzaihuangyezhurou",
+    "name": "片仔癀叶煮肉片",
+    "category": "热菜",
+    "price": 78,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_lurouniaguo",
+    "name": "卤牛肉下锅",
+    "category": "热菜",
+    "price": 148,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_doulazhengpaigu",
+    "name": "豆辣蒸排骨",
+    "category": "热菜",
+    "price": 98,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_furuzhengrou",
+    "name": "自家腐乳蒸肉",
+    "category": "热菜",
+    "price": 98,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_tudoushaoshoudaniuwan",
+    "name": "土豆烧手打牛丸",
+    "category": "热菜",
+    "price": 98,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_hongluobochaocelery",
+    "name": "乡里红萝卜炒芹菜",
+    "category": "素菜",
+    "price": 38,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_suanjiangrounichaodou",
+    "name": "酸豆角肉泥炒藕丁",
+    "category": "素菜",
+    "price": 48,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_doulakongxincai",
+    "name": "豆辣空心菜梗",
+    "category": "素菜",
+    "price": 38,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_zisutudoupian",
+    "name": "紫苏土豆片",
+    "category": "素菜",
+    "price": 38,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_qingchaotudousi",
+    "name": "清炒土豆丝",
+    "category": "素菜",
+    "price": 38,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_jiangzhihuaiyao",
+    "name": "酱汁淮山",
+    "category": "素菜",
+    "price": 68,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_kouweihuacai",
+    "name": "口味花菜",
+    "category": "素菜",
+    "price": 58,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_taojiaochaotudan",
+    "name": "桃胶炒土鸡蛋",
+    "category": "素菜",
+    "price": 128,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_hongshufen",
+    "name": "乡里手工红薯粉",
+    "category": "素菜",
+    "price": 48,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_qingjiaoyangdujun",
+    "name": "青椒炒羊肚菌",
+    "category": "素菜",
+    "price": 188,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_sigualurou",
+    "name": "丝瓜焖瘦肉",
+    "category": "素菜",
+    "price": 78,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_qingchaosigua",
+    "name": "清炒丝瓜",
+    "category": "素菜",
+    "price": 48,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_ganbiansijidou",
+    "name": "干煸四季豆",
+    "category": "素菜",
+    "price": 58,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_suanrongpianzaihuang",
+    "name": "蒜蓉片仔癀叶",
+    "category": "素菜",
+    "price": 48,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_qingchaonanguasi",
+    "name": "清炒南瓜丝",
+    "category": "素菜",
+    "price": 58,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_ganbianjizongjun",
+    "name": "干煸鸡枞菌",
+    "category": "素菜",
+    "price": 98,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_suancaiyugua",
+    "name": "酸菜苦瓜",
+    "category": "素菜",
+    "price": 48,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_qingjiaolianmi",
+    "name": "青椒炒莲米",
+    "category": "素菜",
+    "price": 78,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_baihezhengnangua",
+    "name": "百合蒸南瓜",
+    "category": "素菜",
+    "price": 68,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_meigancailianmi",
+    "name": "梅干菜炒莲米",
+    "category": "素菜",
+    "price": 78,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_lianouhuaishengpaigu",
+    "name": "莲藕花生炖排骨",
+    "category": "汤品",
+    "price": 148,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_moyudunrou",
+    "name": "墨鱼炖肉",
+    "category": "汤品",
+    "price": 198,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_wuzhimaotaoaozhegu",
+    "name": "五指毛桃煲鹧鸪",
+    "category": "汤品",
+    "price": 228,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_shihuchaocaohuashuiya",
+    "name": "石斛虫草花水鸭汤",
+    "category": "汤品",
+    "price": 288,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_qingdunquanniu",
+    "name": "清炖全牛",
+    "category": "汤品",
+    "price": 188,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_yumihuaishanpaigu",
+    "name": "玉米/淮山排骨汤",
+    "category": "汤品",
+    "price": 128,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_hanjunmoyudunrou",
+    "name": "寒菌墨鱼炖肉",
+    "category": "汤品",
+    "price": 268,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_hanjundunrou",
+    "name": "寒菌炖肉",
+    "category": "汤品",
+    "price": 188,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_yunnanxianzajundunrou",
+    "name": "云南鲜杂菌炖肉",
+    "category": "汤品",
+    "price": 198,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_wuzhimaotaoyangdujunzhegu",
+    "name": "五指毛桃羊肚菌煲鹧鸪汤",
+    "category": "汤品",
+    "price": 68,
+    "description": "按位",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_qiziyuanroudunyanzhan",
+    "name": "杞子圆肉炖燕盏",
+    "category": "汤品",
+    "price": 168,
+    "description": "按位",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_yeshengmakashihuashuiya",
+    "name": "野生玛卡石斛水鸭汤",
+    "category": "汤品",
+    "price": 68,
+    "description": "按位",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_ganbaoyaozhutujitang",
+    "name": "干鲍瑶柱土鸡汤",
+    "category": "汤品",
+    "price": 88,
+    "description": "按位",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_shihuchaocaohuashuiya_wei",
+    "name": "石斛虫草花水鸭汤（位）",
+    "category": "汤品",
+    "price": 58,
+    "description": "按位",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_huaqishenwujitang",
+    "name": "花旗参乌鸡汤",
+    "category": "汤品",
+    "price": 38,
+    "description": "按位",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_rongguyaoazhutujitang",
+    "name": "松茸菇瑶柱土鸡汤",
+    "category": "汤品",
+    "price": 48,
+    "description": "按位",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_huajiaoyangdujuntujitang",
+    "name": "花胶羊肚菌土鸡汤",
+    "category": "汤品",
+    "price": 168,
+    "description": "按位",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_yangdujunxiangluopiaotuji",
+    "name": "羊肚菌响螺片土鸡汤",
+    "category": "汤品",
+    "price": 68,
+    "description": "按位",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_ganbaoshihuqiangzhegu",
+    "name": "干鲍石斛鹧鸪汤",
+    "category": "汤品",
+    "price": 88,
+    "description": "按位",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_huajiaoxiangluotuji",
+    "name": "花胶响螺土鸡汤",
+    "category": "汤品",
+    "price": 88,
+    "description": "按位",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_suancaidaichaofan",
+    "name": "酸菜蛋炒饭",
+    "category": "点心",
+    "price": 28,
+    "description": "每份",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_shuijiao",
+    "name": "自家手工水饺",
+    "category": "点心",
+    "price": 48,
+    "description": "每份",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_jiarououpian",
+    "name": "夹肉藕饼",
+    "category": "点心",
+    "price": 48,
+    "description": "6个/份",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_xianroubao",
+    "name": "手工鲜肉包",
+    "category": "点心",
+    "price": 48,
+    "description": "6个/份",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_shuijingjiao",
+    "name": "鲜虾水晶饺",
+    "category": "点心",
+    "price": 48,
+    "description": "6粒",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_shaomai",
+    "name": "蟹籽鱼肉烧卖",
+    "category": "点心",
+    "price": 48,
+    "description": "6粒",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_meishi",
+    "name": "美式",
+    "category": "饮品",
+    "price": 25,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_kabuqinuo",
+    "name": "卡布奇诺",
+    "category": "饮品",
+    "price": 30,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_suiyibingka",
+    "name": "随意冰咖",
+    "category": "饮品",
+    "price": 38,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_xiannaikafei",
+    "name": "鲜奶咖啡",
+    "category": "饮品",
+    "price": 38,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_meiguitianjiuxiannai",
+    "name": "玫瑰甜酒鲜奶饮",
+    "category": "饮品",
+    "price": 38,
+    "description": "每杯",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_bohesangshenjiubing",
+    "name": "薄荷桑葚果酒冰",
+    "category": "饮品",
+    "price": 38,
+    "description": "每杯",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_mochalatie",
+    "name": "抹茶拿铁",
+    "category": "饮品",
+    "price": 30,
+    "description": "每杯",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_chennianpuer",
+    "name": "陈年普洱",
+    "category": "饮品",
+    "price": 198,
+    "description": "每壶配3只杯",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_laobaicha",
+    "name": "老白茶",
+    "category": "饮品",
+    "price": 168,
+    "description": "每壶配3只杯",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_heicha",
+    "name": "黑茶",
+    "category": "饮品",
+    "price": 168,
+    "description": "每壶配3只杯",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_tieguanyin",
+    "name": "铁观音",
+    "category": "饮品",
+    "price": 168,
+    "description": "每壶配3只杯",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_hongcha",
+    "name": "红茶",
+    "category": "饮品",
+    "price": 148,
+    "description": "每壶配3个杯",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_juhuagouqicha",
+    "name": "菊花枸杞茶",
+    "category": "饮品",
+    "price": 98,
+    "description": "每壶配3个杯，送小食2份，加杯10元/个",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_meiguihuacha",
+    "name": "玫瑰花茶",
+    "category": "饮品",
+    "price": 98,
+    "description": "每壶配3个杯，送小食2份，加杯10元/个",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_kele",
+    "name": "可乐",
+    "category": "饮品",
+    "price": 5,
+    "description": "每厅",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_xuebi",
+    "name": "雪碧",
+    "category": "饮品",
+    "price": 5,
+    "description": "每厅",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_yenai",
+    "name": "椰奶",
+    "category": "饮品",
+    "price": 6,
+    "description": "每厅",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_kuangquanshui",
+    "name": "矿泉水",
+    "category": "饮品",
+    "price": 5,
+    "description": "每瓶",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_xuehuazhapi",
+    "name": "啤酒雪花扎啤",
+    "category": "饮品",
+    "price": 30,
+    "description": "每厅",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_xili",
+    "name": "喜力",
+    "category": "饮品",
+    "price": 15,
+    "description": "每厅",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_quchenshisuda",
+    "name": "屈臣氏苏打水",
+    "category": "饮品",
+    "price": 6,
+    "description": "每厅",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_xianlaoru",
+    "name": "鲜酪乳",
+    "category": "饮品",
+    "price": 20,
+    "description": "每瓶",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_guopan_xiao",
+    "name": "果盘（小份）",
+    "category": "饮品",
+    "price": 88,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_guopan_da",
+    "name": "果盘（大份）",
+    "category": "饮品",
+    "price": 168,
+    "description": "",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_tianjiu",
+    "name": "纯手工自酿甜酒",
+    "category": "酒水",
+    "price": 40,
+    "description": "玫瑰/桂花/桑葚，二斤装/桶",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_mijiu_xiao",
+    "name": "纯手工自酿米酒",
+    "category": "酒水",
+    "price": 30,
+    "description": "玫瑰/桂花/桑葚，小瓶",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_mijiu_da",
+    "name": "纯手工自酿米酒（2斤装）",
+    "category": "酒水",
+    "price": 55,
+    "description": "玫瑰/桂花/桑葚，2斤装/瓶",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_banshanbaijiu",
+    "name": "半山一席专供白酒",
+    "category": "酒水",
+    "price": 288,
+    "description": "原价588，体验价288",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_boerduobai",
+    "name": "波尔多两海之间混酿白葡",
+    "category": "酒水",
+    "price": 188,
+    "description": "每瓶",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_xiaolafei",
+    "name": "2013年的右岸小拉菲",
+    "category": "酒水",
+    "price": 288,
+    "description": "有拉菲家族五支箭标志，每瓶",
+    "specs": [],
+    "image": "",
+    "available": true
+  },
+  {
+    "_id": "d_furlana",
+    "name": "弗尔拉娜红葡萄酒",
+    "category": "酒水",
+    "price": 188,
+    "description": "每瓶",
+    "specs": [],
+    "image": "/assets/images/wines/wine_furlana.jpg",
+    "available": true
+  },
+  {
+    "_id": "d_leizang",
+    "name": "雷让科比埃杜霍庄园红葡萄酒",
+    "category": "酒水",
+    "price": 268,
+    "description": "每瓶",
+    "specs": [],
+    "image": "/assets/images/wines/wine_leizang.jpg",
+    "available": true
+  },
+  {
+    "_id": "d_pavie",
+    "name": "柏菲圆月红葡萄酒",
+    "category": "酒水",
+    "price": 588,
+    "description": "每瓶",
+    "specs": [],
+    "image": "/assets/images/wines/wine_pavie.jpg",
+    "available": true
+  },
+  {
+    "_id": "d_soleil",
+    "name": "法国圣爱美隆太阳园酒庄干红",
+    "category": "酒水",
+    "price": 488,
+    "description": "每瓶",
+    "specs": [],
+    "image": "/assets/images/wines/wine_soleil.jpg",
+    "available": true
+  },
+  {
+    "_id": "d_bentley",
+    "name": "宾利·名门干红葡萄酒",
+    "category": "酒水",
+    "price": 198,
+    "description": "每瓶",
+    "specs": [],
+    "image": "/assets/images/wines/wine_bentley.jpg",
+    "available": true
+  }
+];
+
+const rooms = [
+  { _id: '1', no: '1', name: '谷山玥' },
+  { _id: '2', no: '2', name: '满仓' },
+  { _id: '3', no: '3', name: '枕山' },
+  { _id: '5', no: '5', name: '云起' },
+  { _id: '6', no: '6', name: '知来' },
+];
+
+exports.main = async () => {
+  try {
+    for (const d of dishes) {
+      const { _id, ...rest } = d;
+      await db.collection('dishes').doc(_id).set({ data: { ...rest, tags: inferTags(rest), created_at: db.serverDate() } });
+    }
+    for (const r of rooms) {
+      const { _id, ...rest } = r;
+      await db.collection('rooms').doc(_id).set({ data: rest });
+    }
+    return { data: { ok: true, dishes: dishes.length, rooms: rooms.length } };
+  } catch (e) {
+    console.error('[initData]', e.message);
+    return { error: e.message };
+  }
+};

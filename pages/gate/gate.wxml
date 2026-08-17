@@ -1,0 +1,44 @@
+<view class="gate">
+  <!-- CSS 老木门静态兜底（视频未就绪/出错时可见，防黑屏） -->
+  <view wx:if="{{fallbackMode}}" class="gate-fallback">
+    <view class="fb-plaque">半山·一席</view>
+  </view>
+
+  <!-- 全屏开门视频（原生组件，覆盖层必须用 cover-view） -->
+  <video
+    wx:if="{{videoVisible}}"
+    id="gateVideo"
+    class="gate-video"
+    src="{{videoSrc}}"
+    poster="{{videoPoster}}"
+    object-fit="cover"
+    autoplay="{{false}}"
+    loop="{{false}}"
+    controls="{{false}}"
+    show-play-btn="{{false}}"
+    show-center-play-btn="{{false}}"
+    show-fullscreen-btn="{{false}}"
+    enable-progress-gesture="{{false}}"
+    muted="{{false}}"
+    bindtap="enter"
+    bindended="onVideoEnd"
+    binderror="onVideoError"
+  ></video>
+
+  <!-- 覆盖层：cover-view 才能盖住原生 video -->
+  <cover-view class="gate-cover" wx:if="{{!open}}">
+    <cover-view class="plaque">半山·一席</cover-view>
+    <cover-view class="gate-sub">私人菜馆 · 山坡22号</cover-view>
+    <cover-view class="gate-poem">择一席，品一味</cover-view>
+    <cover-view class="gate-btn" bindtap="enter">推门入席</cover-view>
+  </cover-view>
+
+  <!-- 老板隐藏入口：视频模式下原生组件限制，用 cover-view + 点击触发 -->
+  <cover-view class="boss-seal" bindtap="bindBossEntry" wx:if="{{!open}}">
+    <cover-view class="boss-seal-t">半山</cover-view>
+    <cover-view class="boss-seal-t">一席</cover-view>
+  </cover-view>
+
+  <!-- 预加载 rooms 背景图，消除进场后的白屏 -->
+  <image class="preload" src="/assets/images/bg-landscape.jpg"></image>
+</view>
