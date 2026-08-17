@@ -86,7 +86,7 @@
   letter-spacing: 10rpx;
   color: #e9c7a0;
   font-family: 'STXingkai','行楷-简',KaiTi,serif;
-  border: 3rpx solid #cea256;
+  border: 2rpx solid #cea256;
   border-radius: 40rpx;
   animation: gateBreathe 2.2s ease-in-out infinite;
 }
