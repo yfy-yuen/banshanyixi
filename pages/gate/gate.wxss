@@ -49,18 +49,17 @@
   width: 120rpx;
   height: 120rpx;
 }
-/* 品牌大字（款1 描金厚重横排：行楷 + 加大字号 + 深褐描边 + 拉大字距） */
+/* 品牌大字（冻结定稿：行楷 56rpx 无框 原金 #f3d79a，位置 top:40vh） */
 .plaque {
   position: absolute;
   top: 40vh;
   left: 0;
   width: 100%;
   text-align: center;
-  font-size: 64rpx;
+  font-size: 56rpx;
   letter-spacing: 14rpx;
-  color: #f1d18a;
+  color: #f3d79a;
   font-family: 'STXingkai','行楷-简',KaiTi,serif;
-  -webkit-text-stroke: 3rpx #3a160a;
 }
 /* 诗句（行楷，下移到原推门入席位置，再略下一点） */
 .gate-poem {
