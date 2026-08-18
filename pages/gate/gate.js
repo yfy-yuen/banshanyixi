@@ -114,10 +114,11 @@ Page({
     wx.switchTab({ url: '/pages/rooms/rooms' });
   },
   onVideoError() {
-    // 视频加载/播放失败 → 退回静态兜底并直接进入，避免黑屏/无入口卡死
+    // 视频加载/播放失败 → 退回静态木门兜底（带「推门而入」按钮），绝不自动跳走。
+    // ⚠️ 之前曾改为直接 switchTab 进房间，结果真机任何非致命 error（临时链首请求慢、解码初始化）
+    // 都会 binderror 触发 → 门直接消失、开门动画"没了"。改回 fallback：至少看得到门、且有入口、不会卡死。
     clearTimeout(this._safeT);
-    this.setData({ fallbackMode: true, videoVisible: false, _jumped: true });
-    wx.switchTab({ url: '/pages/rooms/rooms' });
+    this.setData({ fallbackMode: true, videoVisible: false });
   },
   // 隐藏老板注册入口：视频模式下原生组件限制，由"长按"改为"点击"触发（功能不变）。
   bindBossEntry() {
