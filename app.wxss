@@ -78,6 +78,11 @@ view, text, scroll-view, input { box-sizing: border-box; }
 .subseg-btn { flex: 1; text-align: center; padding: 9px 0; font-size: 13px; color: var(--muted); border-radius: 999px; letter-spacing: 1px; }
 .subseg-btn.on { color: var(--card); background: var(--ink-light); font-weight: 500; }
 
+/* 双选项分段切换（全局，reserve/book 通用） */
+.seg2 { display: flex; background: var(--paper); border: 1px solid var(--border-light); border-radius: 999px; padding: 4px; }
+.seg2-btn { flex: 1; text-align: center; padding: 9px 0; font-size: 14px; color: var(--muted); border-radius: 999px; }
+.seg2-btn.on { background: var(--cinnabar); color: #fff; font-weight: 500; }
+
 .loading { text-align: center; color: var(--muted); padding: 40px; font-size: 14px; }
 
 /* 印章 logo */
@@ -111,27 +116,27 @@ view, text, scroll-view, input { box-sizing: border-box; }
   margin: 14px 0;
 }
 
-/* 模态层 */
+/* 模态层：加深遮罩、做实弹窗底，避免浅山水背景透出导致文字看不清 */
 .mask {
   position: fixed;
   inset: 0;
-  background: rgba(55, 52, 46, 0.48);
+  background: rgba(30, 28, 24, 0.72);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 50;
 }
 .modal {
-  background: var(--card);
+  background: rgba(253, 251, 246, 0.98);
   border-radius: 18px;
   padding: 22px;
   width: 86%;
   max-height: 86vh;
   overflow: auto;
   border: 1px solid var(--border);
-  box-shadow: 0 8px 30px rgba(45, 40, 30, 0.1);
+  box-shadow: 0 12px 40px rgba(30, 28, 24, 0.22);
 }
-.modal-title { font-size: 18px; margin-bottom: 14px; color: var(--ink); letter-spacing: 2px; }
+.modal-title { font-size: 18px; margin-bottom: 14px; color: var(--ink); letter-spacing: 2px; font-weight: 600; }
 
 /* 输入框（白底凸出，解决浅山水背景/宣纸弹窗下输入框看不清） */
 .ipt {
