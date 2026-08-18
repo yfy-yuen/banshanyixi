@@ -255,6 +255,7 @@ Page({
     const items = this.data.cart.map((c) => ({
       name: c.name, unitPrice: c.unitPrice, qty: c.qty || 1, sel: c.sel, category: c.category,
       selText: buildSelText(c.sel),
+      subtotalText: fmt(c.unitPrice * (c.qty || 1)),
     }));
     const total = items.reduce((s, i) => s + i.unitPrice * i.qty, 0);
     const note = (this.data.note || '').trim();

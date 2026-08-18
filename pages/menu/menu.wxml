@@ -97,7 +97,7 @@
     <view class="b-items">
       <view class="b-row" wx:for="{{bill.items}}" wx:key="idx">
         <text>{{item.name}}{{item.selText}} ×{{item.qty}}</text>
-        <text>{{item.unitPrice * item.qty}}</text>
+        <text>{{item.subtotalText}}</text>
       </view>
     </view>
     <view class="b-row total-line">
@@ -116,7 +116,7 @@
       <view class="cart-line" wx:for="{{cartGroups}}" wx:key="key">
         <view class="cl-info">
           <view class="cl-name">{{item.name}}<text wx:if="{{item.selText}}" class="cl-sel">{{item.selText}}</text></view>
-          <text class="cl-unit">单价 ¥{{item.unitPrice}}</text>
+          <text class="cl-unit">单价 {{item.unitPriceText}}</text>
         </view>
         <view class="cl-right">
           <view class="step">
