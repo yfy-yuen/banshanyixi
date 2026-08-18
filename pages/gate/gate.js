@@ -11,8 +11,10 @@ Page({
     open: false,
     videoSrc: '',
     videoPoster: '',
+    videoDuration: 11, // 视频真实时长（秒），由 loadedmetadata 回填；默认 11 兜底
     videoVisible: false, // ⚠️ 初始不渲染 video：避免空 src 触发 binderror 误判为视频失败。解析出有效 src 后才置 true。
     fallbackMode: false, // 视频不可用 → 退回 CSS 静态兜底，防黑屏卡死
+    _jumped: false, // 防 onVideoEnd 与超时兜底重复跳转
   },
   onLoad() {
     // 距上次开过门不足刷新间隔 → 直达包厢列表（不播视频）；否则展示开门页
@@ -76,24 +78,46 @@ Page({
     this.setData({ open: true }); // 隐藏覆盖文字层
     // ⚠️ 关键：直接播放 onLoad 已就绪的视频，绝不在点击时改动 videoSrc。
     // 之前在 enter 里用 rawSrc 重新解析并 setData 改 src，导致 <video> 重新加载、
-    // play() 时机早于新源就绪 → 视频卡在首帧"动不了"。这是本次卡死的真因。
-    const tryPlay = () => {
-      const v = wx.createVideoContext('gateVideo', this);
-      if (v && typeof v.play === 'function') v.play();
-    };
-    tryPlay();
-    // 双保险：个别机型首次 play() 不生效，延迟再触发一次
-    clearTimeout(this._playT);
-    this._playT = setTimeout(tryPlay, 120);
+    // play() 时机早于新源就绪 → 视频卡在首帧"动不了"。这是之前卡死的真因。
+    this.playVideo();
+    // 兜底：bindended 万一不触发（机型/基础库差异），按真实时长(+3s 缓冲)强制跳转，绝不卡死
+    this.armSafeJump();
+  },
+  playVideo() {
+    const v = wx.createVideoContext('gateVideo', this);
+    if (v && typeof v.play === 'function') {
+      v.play();
+      // 个别机型首次 play() 不生效，延迟再触发一次
+      clearTimeout(this._playT);
+      this._playT = setTimeout(() => { try { v.play(); } catch (e) {} }, 200);
+    }
+  },
+  // 视频元数据就绪：回填真实时长（用于超时兜底），若已进入则确保开播
+  onVideoMeta(e) {
+    const d = e.detail && e.detail.duration;
+    if (d && d > 0) this.setData({ videoDuration: Math.ceil(d) });
+    if (this.data.open && !this.data._jumped) this.playVideo();
+  },
+  armSafeJump() {
+    clearTimeout(this._safeT);
+    const dur = this.data.videoDuration || 11; // 秒
+    this._safeT = setTimeout(() => {
+      if (this.data._jumped) return;
+      this.setData({ _jumped: true });
+      wx.switchTab({ url: '/pages/rooms/rooms' });
+    }, (dur + 3) * 1000);
   },
   onVideoEnd() {
+    if (this.data._jumped) return;
+    this.setData({ _jumped: true });
+    clearTimeout(this._safeT);
     wx.switchTab({ url: '/pages/rooms/rooms' });
   },
   onVideoError() {
-    // 视频加载/播放失败 → 退回静态兜底，避免黑屏卡死
-    if (!this.data.fallbackMode) {
-      this.setData({ fallbackMode: true, videoVisible: false });
-    }
+    // 视频加载/播放失败 → 退回静态兜底并直接进入，避免黑屏/无入口卡死
+    clearTimeout(this._safeT);
+    this.setData({ fallbackMode: true, videoVisible: false, _jumped: true });
+    wx.switchTab({ url: '/pages/rooms/rooms' });
   },
   // 隐藏老板注册入口：视频模式下原生组件限制，由"长按"改为"点击"触发（功能不变）。
   bindBossEntry() {
