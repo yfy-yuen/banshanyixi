@@ -35,22 +35,6 @@
   border: 3rpx solid #cea256;
   border-radius: 10rpx;
 }
-.fb-btn {
-  position: absolute;
-  top: 76vh;
-  left: 275rpx;
-  width: 200rpx;
-  height: 62rpx;
-  line-height: 62rpx;
-  text-align: center;
-  font-size: 34rpx;
-  letter-spacing: 10rpx;
-  color: #e9c7a0;
-  font-family: 'STXingkai','行楷-简',KaiTi,serif;
-  border: 2rpx solid #cea256;
-  border-radius: 31rpx;
-  animation: gateBreathe 2.2s ease-in-out infinite;
-}
 
 /* ===== 覆盖层（cover-view 层级最高，能盖住原生 video） ===== */
 .gate-cover {

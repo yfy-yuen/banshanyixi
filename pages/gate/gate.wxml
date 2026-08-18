@@ -1,8 +1,7 @@
 <view class="gate">
-  <!-- CSS 老木门静态兜底（视频未就绪/出错时可见，防黑屏）；带进入按钮，避免出错后无任何入口 -->
+  <!-- CSS 老木门静态兜底（视频未就绪/出错时可见，防黑屏） -->
   <view wx:if="{{fallbackMode}}" class="gate-fallback">
     <view class="fb-plaque">半山·一席</view>
-    <view class="fb-btn" bindtap="enter">推门而入</view>
   </view>
 
   <!-- 全屏开门视频（原生组件，覆盖层必须用 cover-view） -->
@@ -22,7 +21,6 @@
     enable-progress-gesture="{{false}}"
     muted="{{false}}"
     bindtap="enter"
-    bindloadedmetadata="onVideoMeta"
     bindended="onVideoEnd"
     binderror="onVideoError"
   ></video>
