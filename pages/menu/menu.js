@@ -280,7 +280,8 @@ Page({
   closeBill() { this.setData({ showBill: false }); },
   goOrders() {
     this.setData({ showBill: false });
-    wx.navigateTo({ url: '/pages/orders/orders' });
+    // 下单成功后直接回到包厢页，并定位到「订单 → 现场下单菜品」
+    wx.redirectTo({ url: '/pages/room/room?tab=order&sub=live' });
   },
   setPeople() {
     const opts = [];

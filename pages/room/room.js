@@ -39,7 +39,9 @@ Page({
   onLoad(options) {
     const no = options.room || app.globalData.roomNo || '1';
     const name = ROOMS[no] || ('厢' + no);
-    this.setData({ roomNo: no, roomName: name });
+    const tab = options.tab === 'order' ? 'order' : 'env';
+    const orderSub = options.sub === 'live' ? 'live' : 'book';
+    this.setData({ roomNo: no, roomName: name, tab, orderSub });
     wx.setStorageSync('roomNo', no);
     wx.setStorageSync('roomName', name);
     this.loadData(no);
