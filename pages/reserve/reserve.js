@@ -34,6 +34,8 @@ Page({
         mealText: mealLabel(r.mealTime),
         statusText: statusText(r.status),
         cancellable: canCancel(r.status),
+        preorderCount: (r.dishes || []).length,
+        preorderable: r.status === 'pending',
         // 店务确认后会自动排席并生成 booking（reservationRef 回指），这里显示顾客被安排在几号包厢
         roomText: r.roomId ? (ROOMS[r.roomId] || (r.roomId + ' 号包厢')) : '',
       }));
@@ -83,6 +85,34 @@ Page({
       this.setData({ submitting: false });
       wx.showToast({ title: (err && err.message) || '提交失败', icon: 'none' });
     }
+  },
+  /* 去预点菜（申请弹窗内）：先建一条 pending 预订（无菜品），再跳 menu 预点菜模式选菜并写回 */
+  async goPreorder() {
+    const { form } = this.data;
+    if (!form.date) { wx.showToast({ title: '请选择日期', icon: 'none' }); return; }
+    if (!form.partySize || form.partySize < 1) { wx.showToast({ title: '请填写人数', icon: 'none' }); return; }
+    if (!/^1[3-9]\d{9}$/.test(form.contactPhone)) { wx.showToast({ title: '请填写正确手机号', icon: 'none' }); return; }
+    wx.showLoading({ title: '提交中' });
+    try {
+      const res = await submitReservation({
+        date: form.date, mealTime: form.mealTime,
+        partySize: form.partySize, contactPhone: form.contactPhone, note: form.note, dishes: [],
+      });
+      wx.hideLoading();
+      const id = res && res.id;
+      if (!id) { wx.showToast({ title: '创建失败', icon: 'none' }); return; }
+      this.setData({ showApply: false });
+      wx.navigateTo({ url: '/pages/menu/menu?mode=preorder&reservationId=' + id });
+    } catch (err) {
+      wx.hideLoading();
+      wx.showToast({ title: (err && err.message) || '提交失败', icon: 'none' });
+    }
+  },
+  /* 去预点菜（我的订位内，针对已有预订）：直接跳 menu 预点菜模式改/补 */
+  editPreorder(e) {
+    const id = e.currentTarget.dataset.id;
+    if (!id) return;
+    wx.navigateTo({ url: '/pages/menu/menu?mode=preorder&reservationId=' + id });
   },
   async cancelMine(e) {
     const id = e.currentTarget.dataset.id;

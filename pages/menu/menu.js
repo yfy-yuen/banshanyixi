@@ -1,5 +1,5 @@
 const { CATS, ROOMS, fmt } = require('../../utils/config');
-const { loadDishes, submitOrder } = require('../../utils/api');
+const { loadDishes, submitOrder, getReservation, savePreorder } = require('../../utils/api');
 const { classifyError } = require('../../utils/cloudbase');
 const app = getApp();
 
@@ -18,6 +18,7 @@ function buildSelText(sel) {
 
 Page({
   data: {
+    preorder: false, reservationId: '',
     roomNo: '', roomName: '', people: 1,
     cats: [], sections: [], activeCat: '',
     scrollIntoId: '',
@@ -31,6 +32,11 @@ Page({
     showSearch: false, searchKeyword: '', searchResults: [],
   },
   onLoad(options) {
+    if (options.mode === 'preorder') {
+      this.setData({ preorder: true, reservationId: options.reservationId || '', roomNo: '', roomName: '', people: 1 });
+      this.initPreorder();
+      return;
+    }
     let roomNo = options.roomNo || app.globalData.roomNo;
     if (!roomNo) {
       wx.showToast({ title: '请先选择包厢', icon: 'none' });
@@ -44,6 +50,26 @@ Page({
     wx.setStorageSync('roomName', roomName);
     this.setData({ roomNo, roomName, people: app.globalData.people || 1 });
     this.loadMenu();
+  },
+  async initPreorder() {
+    wx.showLoading({ title: '加载中' });
+    try {
+      await this.loadMenu();
+      const rid = this.data.reservationId;
+      if (rid) {
+        const r = await getReservation(rid);
+        const dishes = (r && r.dishes) || [];
+        const cart = dishes.map((d) => {
+          const doc = this.data.dishes.find((x) => x.id === d.dish_id);
+          return { dishId: d.dish_id, name: d.name, basePrice: doc ? doc.price : 0, category: doc ? doc.category : '', sel: {}, unitPrice: doc ? doc.price : 0, qty: d.qty || 1 };
+        }).filter((c) => c.dishId);
+        this.updateCart(cart);
+      }
+      wx.hideLoading();
+    } catch (e) {
+      wx.hideLoading();
+      wx.showToast({ title: '加载失败', icon: 'none' });
+    }
   },
   async loadMenu() {
     wx.showLoading({ title: '加载菜单' });
@@ -252,6 +278,24 @@ Page({
   /* ===== 提交订单 ===== */
   async submitOrder() {
     if (!this.data.cart.length) return;
+    if (this.data.preorder) {
+      const dishes = this.data.cart.map((c) => ({
+        dish_id: c.dishId, name: c.name,
+        image: (this.data.dishes.find((x) => x.id === c.dishId) || {}).image || '',
+        qty: c.qty || 1, note: buildSelText(c.sel),
+      }));
+      wx.showLoading({ title: '保存中' });
+      try {
+        await savePreorder(this.data.reservationId, dishes);
+        wx.hideLoading();
+        wx.showToast({ title: '已保存预点菜', icon: 'success' });
+        setTimeout(() => wx.navigateBack(), 600);
+      } catch (e) {
+        wx.hideLoading();
+        wx.showToast({ title: '保存失败：' + (e.message || ''), icon: 'none' });
+      }
+      return;
+    }
     const items = this.data.cart.map((c) => ({
       name: c.name, unitPrice: c.unitPrice, qty: c.qty || 1, sel: c.sel, category: c.category,
       selText: buildSelText(c.sel),

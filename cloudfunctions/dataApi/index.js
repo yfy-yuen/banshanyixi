@@ -272,6 +272,7 @@ exports.main = async (event) => {
           data: {
             _openid: openid, date: p.date, mealTime, roomNo: p.roomNo || '',
             partySize: ps, contactPhone: p.contactPhone, note: p.note || '',
+            dishes: Array.isArray(p.dishes) ? p.dishes : [],
             status: 'pending', source: 'self', createdAt: db.serverDate(),
           },
         }))._id;
@@ -291,6 +292,7 @@ exports.main = async (event) => {
           partySize: r.partySize, contactPhone: maskPhone(r.contactPhone), note: r.note || '',
           status: r.status, source: r.source, createdAt: r.createdAt,
           roomId: bkMap[r._id] || null,
+          dishes: r.dishes || [],
         }));
         break;
       }
@@ -310,6 +312,26 @@ exports.main = async (event) => {
           for (const b of linked) { try { await db.collection('bookings').doc(b._id).remove(); } catch (e) {} }
         } catch (e) { console.warn('[cancel] booking', e.message); }
         return { data: { ok: true } };
+      }
+
+      // 顾客：保存/修改预点菜（仅待确认可改；与订位解耦，不影响包厢排席）
+      case 'savePreorder': {
+        if (!openid) return { error: '身份未就绪' };
+        await ensureCol('reservations');
+        const r = (await db.collection('reservations').doc(p.id).get()).data;
+        if (!r || r._openid !== openid) return { error: '无权限' };
+        if (r.status !== 'pending') return { error: '仅待确认时可预点或修改' };
+        const dishes = Array.isArray(p.dishes) ? p.dishes : [];
+        await db.collection('reservations').doc(p.id).update({ data: { dishes } });
+        return { data: { ok: true } };
+      }
+      // 顾客：读取单条预订（含预点菜），供预点菜页回显
+      case 'getReservation': {
+        if (!openid) return { error: '身份未就绪' };
+        await ensureCol('reservations');
+        const r = (await db.collection('reservations').doc(p.id).get()).data;
+        if (!r || r._openid !== openid) return { error: '无权限' };
+        return { data: { id: r._id, date: r.date, mealTime: r.mealTime, partySize: r.partySize, contactPhone: maskPhone(r.contactPhone), note: r.note || '', status: r.status, dishes: r.dishes || [] } };
       }
 
       /* ===== 以下为店员/老板 ===== */
@@ -341,6 +363,7 @@ exports.main = async (event) => {
           id: r._id, date: r.date, mealTime: r.mealTime, roomNo: r.roomNo || '',
           partySize: r.partySize, contactPhone: maskPhone(r.contactPhone), phonePlain: isMgr ? (r.contactPhone || '') : '',
           note: r.note || '', status: r.status, source: r.source, createdAt: r.createdAt,
+          dishes: r.dishes || [],
         }));
         break;
       }
@@ -371,9 +394,14 @@ exports.main = async (event) => {
 
         let bookingId = '';
         if (roomId) {
-          // 用当前在售菜品快照生成一桌（保持「订餐菜品」有内容；后续预点菜可覆盖）
-          const dishes = (await db.collection('dishes').where({ available: _.neq(false) }).limit(1000).get()).data || [];
-          const dishSnapshot = dishes.map((d) => ({ dish_id: d._id, name: d.name, image: d.image || '', qty: 1, note: '' }));
+          // 优先用顾客预点的 dishes；否则用当前在售菜品快照兜底（保持「订餐菜品」有内容）
+          let dishSnapshot;
+          if (Array.isArray(r.dishes) && r.dishes.length) {
+            dishSnapshot = r.dishes.map((d) => ({ dish_id: d.dish_id, name: d.name, image: d.image || '', qty: d.qty || 1, note: d.note || '' }));
+          } else {
+            const dishes = (await db.collection('dishes').where({ available: _.neq(false) }).limit(1000).get()).data || [];
+            dishSnapshot = dishes.map((d) => ({ dish_id: d._id, name: d.name, image: d.image || '', qty: 1, note: '' }));
+          }
           bookingId = (await db.collection('bookings').add({
             data: {
               room_id: roomId, date: r.date, slot, type: 'meal',

@@ -5,7 +5,7 @@
   <view class="topbar">
     <view class="tb-left">
       <view class="tb-name">半山·一席</view>
-      <view class="tb-sub">{{roomName}} · <text class="link" bindtap="setPeople">{{people}}人</text></view>
+      <view class="tb-sub">{{preorder ? '预订预点菜' : roomName + ' · '}}<text wx:if="{{!preorder}}" class="link" bindtap="setPeople">{{people}}人</text></view>
     </view>
     <view class="tb-search" bindtap="openSearch">
       <text class="tb-search-ic">⌕</text>
@@ -139,7 +139,7 @@
 <!-- 确认订单弹窗：同内容只读 + 合计 + 备注(输入) + 确认结算 -->
 <view class="mask" wx:if="{{showConfirm}}" bindtap="closeConfirm">
   <view class="modal" catchtap="noop">
-    <view class="modal-title">确认订单<text class="modal-close" catchtap="closeConfirm">✕</text></view>
+    <view class="modal-title">{{preorder ? '确认预点菜' : '确认订单'}}<text class="modal-close" catchtap="closeConfirm">✕</text></view>
     <scroll-view class="cart-list" scroll-y>
       <view class="cart-line" wx:for="{{cartGroups}}" wx:key="key">
         <view class="cl-info">
@@ -157,7 +157,7 @@
       <text class="note-label">备注</text>
       <textarea class="note-input" placeholder="口味、忌口、用餐时间等" value="{{note}}" bindinput="onNoteInput" maxlength="200"></textarea>
     </view>
-    <view class="btn btn-checkout" catchtap="submitOrder">确认结算</view>
+    <view class="btn btn-checkout" catchtap="submitOrder">{{preorder ? '保存预点菜' : '确认结算'}}</view>
   </view>
 </view>
 

@@ -59,6 +59,10 @@
   margin-top: 14rpx; align-self: flex-end; font-size: 24rpx; color: var(--cinnabar);
   border: 1rpx solid var(--cinnabar); border-radius: 999rpx; padding: 6rpx 22rpx; display: inline-block;
 }
+.mcard-preorder {
+  margin-top: 14rpx; align-self: flex-end; font-size: 24rpx; color: #fff;
+  background: var(--gold); border: 1rpx solid var(--gold); border-radius: 999rpx; padding: 6rpx 22rpx; display: inline-block;
+}
 
 /* 详情弹窗内菜单 */
 .menu-scroll { max-height: 360rpx; margin: 6rpx 0 6rpx; }
