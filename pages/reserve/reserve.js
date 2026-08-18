@@ -1,4 +1,4 @@
-const { ROOMS } = require('../../utils/config');
+const { ROOMS, RESERVE_TPL_ID } = require('../../utils/config');
 const { submitReservation, myReservations, cancelReservation } = require('../../utils/api');
 
 function mealLabel(m) { return m === 'dinner' ? '晚市' : '午市'; }
@@ -58,6 +58,15 @@ Page({
     if (!form.date) { wx.showToast({ title: '请选择日期', icon: 'none' }); return; }
     if (!form.partySize || form.partySize < 1) { wx.showToast({ title: '请填写人数', icon: 'none' }); return; }
     if (!/^1[3-9]\d{9}$/.test(form.contactPhone)) { wx.showToast({ title: '请填写正确手机号', icon: 'none' }); return; }
+
+    // 订阅消息授权（顾客端）：必须在用户点击的同步链路内请求，店务确认时云端才能推送。
+    // RESERVE_TPL_ID 为空时不弹授权（与现状一致）；用户拒绝也不阻断订位提交。
+    if (RESERVE_TPL_ID) {
+      try {
+        await new Promise((res) => wx.requestSubscribeMessage({ tmplIds: [RESERVE_TPL_ID], success: res, fail: res }));
+      } catch (e) { /* 授权失败不影响订位提交 */ }
+    }
+
     this.setData({ submitting: true });
     wx.showLoading({ title: '提交中' });
     try {

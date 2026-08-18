@@ -29,8 +29,16 @@ const GATE_VIDEO_POSTER = 'cloud://cloud1-d9gs6p6t18e19cff9.636c-cloud1-d9gs6p6t
 // 菜品分类（与真实菜单对应）
 const CATS = ['招牌', '凉菜', '海鲜', '河鲜', '家禽', '热菜', '素菜', '汤品', '点心', '饮品', '酒水', '其他'];
 
+/* 微信订阅消息模板 ID（预订确认推送用）。
+ * 必填才能实际推送：① 在 MP 后台「订阅消息 → 我的模板」选「预订成功通知」类模板，拿到模板 ID 填到此处；
+ * ② 同时在 dataApi 云函数的环境变量里设同名 RESERVE_TPL_ID（云端 openapi 发送侧读取 process.env.RESERVE_TPL_ID）。
+ * 两处 ID 必须一致。留空 '' 时：顾客端不弹授权、店务确认也不发推送（与现在行为一致，不会报错）。
+ * 另：云端 confirmReservation 发送时用到的 thing1/number2/phrase3 关键字需与该模板的实际关键字顺序一致，
+ * 若你选的模板关键字不同，需同步调整 dataApi 的 template 字段（目前按「日期+人数+状态」三字段写死）。 */
+const RESERVE_TPL_ID = '';
+
 // 工具函数
 const fmt = (n) => '¥' + Number(n || 0).toFixed(2);
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-module.exports = { ENV, REGION, ROOMS, BOSS_CODE, CATS, fmt, genId, GATE_VIDEO_SRC, GATE_VIDEO_POSTER };
+module.exports = { ENV, REGION, ROOMS, BOSS_CODE, CATS, fmt, genId, GATE_VIDEO_SRC, GATE_VIDEO_POSTER, RESERVE_TPL_ID };
