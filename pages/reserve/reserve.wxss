@@ -83,3 +83,37 @@
 }
 .dl { margin: 16rpx 0 8rpx; font-size: 25rpx; color: var(--ink); letter-spacing: 2rpx; font-weight: 500; }
 .picker { display: flex; align-items: center; min-height: 84rpx; }
+
+/* 申请订位弹窗内优化：输入框文字垂直居中、按钮对比度、标题间距 */
+.modal { padding: 36rpx 30rpx 44rpx; }
+.modal-title { font-size: 36rpx; margin-bottom: 26rpx; text-align: center; letter-spacing: 6rpx; font-weight: 600; }
+
+.modal .ipt {
+  height: 84rpx;
+  line-height: 84rpx;
+  padding: 0 22rpx;
+  font-size: 28rpx;
+  background: #fff;
+  border-color: #c9c4ba;
+  box-shadow: inset 0 1px 2px rgba(45, 40, 30, 0.06);
+}
+.modal .picker {
+  height: 84rpx;
+  min-height: auto;
+}
+.modal .seg2 { border-radius: 999rpx; }
+.modal .seg2-btn { padding: 18rpx 0; font-size: 28rpx; }
+
+.modal .btn { background: var(--cinnabar); color: #fff; border-color: var(--cinnabar); padding: 22rpx 0; font-size: 28rpx; }
+.modal .btn-ghost { background: #fff; color: var(--ink); border-color: var(--border); padding: 22rpx 0; font-size: 28rpx; }
+.btn-del {
+  width: 100%;
+  text-align: center;
+  padding: 22rpx;
+  border-radius: 12rpx;
+  background: #fff;
+  color: var(--muted);
+  border: 1rpx solid var(--border);
+  font-size: 28rpx;
+  margin-top: 10rpx;
+}

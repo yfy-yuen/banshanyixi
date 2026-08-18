@@ -46,13 +46,13 @@
       </view>
 
       <view class="dl">人数</view>
-      <input class="ipt" type="number" value="{{form.partySize}}" bindinput="onParty" placeholder="用餐人数" placeholder-style="color:#8a857d" />
+      <input class="ipt" type="number" value="{{form.partySize}}" bindinput="onParty" placeholder="用餐人数" placeholder-style="color:#5a544d;font-size:28rpx" />
 
       <view class="dl">手机号</view>
-      <input class="ipt" type="number" value="{{form.contactPhone}}" bindinput="onPhone" placeholder="用于接收确认通知" placeholder-style="color:#8a857d" />
+      <input class="ipt" type="number" value="{{form.contactPhone}}" bindinput="onPhone" placeholder="用于接收确认通知" placeholder-style="color:#5a544d;font-size:28rpx" />
 
       <view class="dl">备注（选填）</view>
-      <input class="ipt" value="{{form.note}}" bindinput="onNote" placeholder="忌口 / 过敏 / 其他" placeholder-style="color:#8a857d" />
+      <input class="ipt" value="{{form.note}}" bindinput="onNote" placeholder="忌口 / 过敏 / 其他" placeholder-style="color:#5a544d;font-size:28rpx" />
 
       <view class="btn btn-ghost" style="width:100%;margin-top:14px;" bindtap="goPreorder">去预点菜（选填）</view>
       <view class="btn" style="width:100%;margin-top:10px;" bindtap="submit" wx:if="{{!submitting}}">提交订位申请</view>
