@@ -158,7 +158,7 @@ Page({
     });
     const cartGroups = gOrder.map((k) => {
       const g = gMap[k];
-      return { ...g, lineTotal: fmt(g.unitPrice * g.qty) };
+      return { ...g, unitPriceText: fmt(g.unitPrice), lineTotal: fmt(g.unitPrice * g.qty) };
     });
     this.setData({ cart, qtyMap, cartCount: count, cartTotalText: fmt(total), cartGroups });
   },

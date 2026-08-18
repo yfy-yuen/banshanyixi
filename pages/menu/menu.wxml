@@ -124,7 +124,7 @@
             <text class="n">{{item.qty}}</text>
             <view class="plus" catchtap="incCart" data-key="{{item.key}}">+</view>
           </view>
-          <text class="cl-price">¥{{item.lineTotal}}</text>
+          <text class="cl-price">{{item.lineTotal}}</text>
           <text class="cl-del" catchtap="delCart" data-key="{{item.key}}">删除</text>
         </view>
       </view>
@@ -144,9 +144,9 @@
       <view class="cart-line" wx:for="{{cartGroups}}" wx:key="key">
         <view class="cl-info">
           <view class="cl-name">{{item.name}}<text wx:if="{{item.selText}}" class="cl-sel">{{item.selText}}</text></view>
-          <text class="cl-unit">¥{{item.unitPrice}} × {{item.qty}}</text>
+          <text class="cl-unit">{{item.unitPriceText}} × {{item.qty}}</text>
         </view>
-        <text class="cl-price">¥{{item.lineTotal}}</text>
+        <text class="cl-price">{{item.lineTotal}}</text>
       </view>
     </scroll-view>
     <view class="confirm-sum">
