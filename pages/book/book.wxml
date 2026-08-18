@@ -13,7 +13,7 @@
   <block wx:else>
     <view class="shop-bar">
       <view class="shop-title">店务管理</view>
-      <view class="btn-sm" bindtap="openPublish">+ 发席</view>
+      <view class="btn-sm" wx:if="{{showPublishFeature}}" bindtap="openPublish">+ 发席</view>
     </view>
     <view class="cal-head">
       <view class="cal-nav" bindtap="prevMonth">‹</view>
@@ -58,6 +58,7 @@
       </view>
     </view>
 
+    <block wx:if="{{showPublishFeature}}">
     <view class="mtitle">已发场次</view>
     <view wx:if="{{!sessions.length}}" class="r-empty">尚未发席，点右上角「+ 发席」开放顾客订位</view>
     <view wx:for="{{sessions}}" wx:key="id" class="sess">
@@ -70,6 +71,7 @@
         <view class="mbtn del" data-id="{{item.id}}" bindtap="closeSession">关场</view>
       </view>
     </view>
+    </block>
 
     <view class="mtitle">顾客订位申请</view>
     <view wx:if="{{!applications.length}}" class="r-empty">暂无待确认的顾客订位申请</view>
@@ -121,7 +123,7 @@
     </view>
   </view>
 
-  <view class="mask" wx:if="{{showPub}}" bindtap="closePub">
+  <view class="mask" wx:if="{{showPub && showPublishFeature}}" bindtap="closePub">
     <view class="modal" catchtap="noop">
       <view class="modal-title">发布场次</view>
       <view class="dl">日期</view>

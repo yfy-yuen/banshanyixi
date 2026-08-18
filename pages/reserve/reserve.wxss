@@ -31,22 +31,13 @@
   font-size: 26rpx; background: var(--card); border-radius: 16rpx; border: 1rpx solid var(--border);
 }
 
-/* 场次卡 */
-.rcard {
-  background: var(--card); border: 1rpx solid var(--border); border-radius: 18rpx;
-  padding: 24rpx 26rpx; margin-bottom: 20rpx; box-shadow: 0 6rpx 20rpx var(--shadow);
+/* 申请订位按钮（顶部主操作） */
+.btn-apply {
+  display: block; width: 100%; text-align: center;
+  padding: 24rpx; border-radius: 14rpx; margin: 4rpx 0 4rpx;
+  background: var(--cinnabar); color: #fff; font-size: 30rpx; letter-spacing: 6rpx;
+  box-shadow: 0 8rpx 22rpx var(--shadow);
 }
-.rcard-top { display: flex; align-items: center; }
-.rcard-date { font-size: 32rpx; font-weight: 700; color: var(--ink); letter-spacing: 2rpx; }
-.rcard-meal { margin-left: 16rpx; font-size: 24rpx; color: var(--gold); }
-.rcard-state {
-  margin-left: auto; font-size: 24rpx; padding: 4rpx 18rpx; border-radius: 999rpx;
-  border: 1rpx solid var(--border);
-}
-.rcard-state.ok { color: var(--cinnabar); border-color: var(--cinnabar); }
-.rcard-state.full { color: var(--muted); }
-.rcard-note { margin-top: 12rpx; font-size: 25rpx; color: var(--muted); }
-.rcard-foot { margin-top: 14rpx; font-size: 23rpx; color: var(--muted); letter-spacing: 1rpx; }
 
 /* 我的预订 */
 .mcard {

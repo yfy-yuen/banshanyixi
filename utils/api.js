@@ -112,9 +112,9 @@ async function listSessions() {
 async function sessionDetail(id) {
   return await callApi('sessionDetail', { id });
 }
-// 顾客：提交预约申请
-async function submitReservation({ sessionRef, partySize, contactPhone, note }) {
-  return await callApi('submitReservation', { sessionRef, partySize, contactPhone, note });
+// 顾客：提交订位申请（不再依赖场次，自带 date/mealTime）
+async function submitReservation({ date, mealTime, partySize, contactPhone, note, roomNo }) {
+  return await callApi('submitReservation', { date, mealTime, partySize, contactPhone, note, roomNo });
 }
 // 顾客：我的预订
 async function myReservations() {

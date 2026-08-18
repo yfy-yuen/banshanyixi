@@ -259,73 +259,51 @@ exports.main = async (event) => {
         };
         break;
       }
-      // 顾客：提交预约申请（原子占用余位，防并发超订）
+      // 顾客：提交订位申请（不再依赖场次，自带 date/mealTime；店务确认时自动排席）
       case 'submitReservation': {
         if (!openid) return { error: '身份未就绪' };
-        await ensureCol('sessions'); await ensureCol('reservations');
+        await ensureCol('reservations');
         const ps = Number(p.partySize);
         if (!ps || ps < 1) return { error: '请填写有效人数' };
         if (!/^1[3-9]\d{9}$/.test(p.contactPhone || '')) return { error: '请填写正确的 11 位手机号' };
-        const s = (await db.collection('sessions').doc(p.sessionRef).get()).data;
-        if (!s || s.status !== 'open') return { error: '该场次不可预订' };
-        const t = await db.startTransaction();
-        try {
-          const cur = (await t.collection('sessions').doc(p.sessionRef).get()).data;
-          const rem = (cur.capacity || 0) - (cur.reservedSeats || 0);
-          if (rem < ps) { await t.rollback(); return { error: '余位不足' }; }
-          await t.collection('sessions').doc(p.sessionRef).update({ data: { reservedSeats: _.inc(ps) } });
-          const _id = (await t.collection('reservations').add({
-            data: {
-              _openid: openid, sessionRef: p.sessionRef, partySize: ps,
-              contactPhone: p.contactPhone, note: p.note || '', status: 'pending',
-              source: 'self', createdAt: db.serverDate(),
-            },
-          }))._id;
-          await t.commit();
-          return { data: { id: _id, status: 'pending' } };
-        } catch (err) {
-          try { await t.rollback(); } catch (e) {}
-          return { error: err.message || '提交失败' };
-        }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(p.date || '')) return { error: '请选择日期' };
+        const mealTime = p.mealTime === 'dinner' ? 'dinner' : 'lunch';
+        const _id = (await db.collection('reservations').add({
+          data: {
+            _openid: openid, date: p.date, mealTime, roomNo: p.roomNo || '',
+            partySize: ps, contactPhone: p.contactPhone, note: p.note || '',
+            status: 'pending', source: 'self', createdAt: db.serverDate(),
+          },
+        }))._id;
+        return { data: { id: _id, status: 'pending' } };
       }
-      // 顾客：我的预订（自身）
+      // 顾客：我的预订（自身）；自带 date/mealTime，roomId 由 reservationRef 关联 booking
       case 'myReservations': {
         if (!openid) return { error: '身份未就绪' };
-        await ensureCol('reservations'); await ensureCol('sessions'); await ensureCol('bookings');
+        await ensureCol('reservations'); await ensureCol('bookings');
         const list = (await db.collection('reservations').where({ _openid: openid }).orderBy('createdAt', 'desc').limit(1000).get()).data;
-        const refs = [...new Set(list.map((r) => r.sessionRef))];
-        const sessList = refs.length ? (await db.collection('sessions').where({ _id: _.in(refs) }).limit(1000).get()).data : [];
-        const sessMap = {};
-        sessList.forEach((s) => { sessMap[s._id] = { date: s.date, mealTime: s.mealTime, note: s.note || '' }; });
-        // 关联自动排席的包厢：确认时 confirmReservation 会生成 booking，reservationRef 回指本预订
-        // 一次联查回传 roomId，让顾客端确认后能直接看到「被安排在 X 号包厢」
-        const bks = refs.length ? (await db.collection('bookings').where({ reservationRef: _.in(refs) }).limit(1000).get()).data : [];
+        const ids = list.map((r) => r._id);
+        const bks = ids.length ? (await db.collection('bookings').where({ reservationRef: _.in(ids) }).limit(1000).get()).data : [];
         const bkMap = {};
         bks.forEach((b) => { if (!bkMap[b.reservationRef]) bkMap[b.reservationRef] = b.room_id; });
         rows = list.map((r) => ({
-          id: r._id, sessionRef: r.sessionRef, partySize: r.partySize,
-          contactPhone: maskPhone(r.contactPhone), note: r.note || '', status: r.status,
-          source: r.source, createdAt: r.createdAt, session: sessMap[r.sessionRef] || {},
+          id: r._id, date: r.date, mealTime: r.mealTime, roomNo: r.roomNo || '',
+          partySize: r.partySize, contactPhone: maskPhone(r.contactPhone), note: r.note || '',
+          status: r.status, source: r.source, createdAt: r.createdAt,
           roomId: bkMap[r._id] || null,
         }));
         break;
       }
-      // 顾客：取消（仅 pending/confirmed，且距开席 > 4h；回减余位）
+      // 顾客：取消（仅 pending/confirmed，且距开席 > 4h；无场次余位概念，仅释放关联包厢排席）
       case 'cancelReservation': {
         if (!openid) return { error: '身份未就绪' };
-        await ensureCol('reservations'); await ensureCol('sessions');
+        await ensureCol('reservations'); await ensureCol('bookings');
         const r = (await db.collection('reservations').doc(p.id).get()).data;
         if (!r || r._openid !== openid) return { error: '无权限' };
         if (r.status !== 'pending' && r.status !== 'confirmed') return { error: '当前状态不可取消' };
-        const s = (await db.collection('sessions').doc(r.sessionRef).get()).data;
-        const serve = s ? serveAtOf(s.date, s.mealTime) : null;
+        const serve = serveAtOf(r.date, r.mealTime);
         if (serve && (serve.getTime() - Date.now()) < 4 * 3600 * 1000) return { error: '距开席不足 4 小时，无法自助取消' };
-        const t = await db.startTransaction();
-        try {
-          await t.collection('reservations').doc(p.id).update({ data: { status: 'cancelled' } });
-          if (s) await t.collection('sessions').doc(r.sessionRef).update({ data: { reservedSeats: _.inc(-r.partySize) } });
-          await t.commit();
-        } catch (err) { try { await t.rollback(); } catch (e) {} return { error: err.message || '取消失败' }; }
+        await db.collection('reservations').doc(p.id).update({ data: { status: 'cancelled' } });
         // 同步释放关联的包厢排席（确认时自动生成的 booking）
         try {
           const linked = (await db.collection('bookings').where({ reservationRef: p.id }).limit(10).get()).data || [];
@@ -353,51 +331,53 @@ exports.main = async (event) => {
         }))._id;
         return { data: { id: _id } };
       }
-      // 老板/店员：全部预订（列表脱敏；明文仅老板可见）
+      // 老板/店员：全部预订（自带 date/mealTime，列表脱敏；明文仅老板可见）
       case 'listReservations': {
         if (!(await isStaffOf())) return { error: '无权限' };
-        await ensureCol('reservations'); await ensureCol('sessions');
+        await ensureCol('reservations');
         const isMgr = (await roleOf()) === 'manager';
         const list = (await db.collection('reservations').orderBy('createdAt', 'desc').limit(1000).get()).data;
-        const refs = [...new Set(list.map((r) => r.sessionRef))];
-        const sessList = refs.length ? (await db.collection('sessions').where({ _id: _.in(refs) }).limit(1000).get()).data : [];
-        const sessMap = {};
-        sessList.forEach((s) => { sessMap[s._id] = { date: s.date, mealTime: s.mealTime, note: s.note || '' }; });
         rows = list.map((r) => ({
-          id: r._id, sessionRef: r.sessionRef, partySize: r.partySize,
-          contactPhone: maskPhone(r.contactPhone), phonePlain: isMgr ? (r.contactPhone || '') : '',
+          id: r._id, date: r.date, mealTime: r.mealTime, roomNo: r.roomNo || '',
+          partySize: r.partySize, contactPhone: maskPhone(r.contactPhone), phonePlain: isMgr ? (r.contactPhone || '') : '',
           note: r.note || '', status: r.status, source: r.source, createdAt: r.createdAt,
-          session: sessMap[r.sessionRef] || {},
         }));
         break;
       }
       // 老板/店员：确认（翻转状态 + 自动在 bookings 生成一桌，打通订位与包厢排席）
       case 'confirmReservation': {
         if (!(await isStaffOf())) return { error: '无权限' };
-        await ensureCol('reservations'); await ensureCol('sessions'); await ensureCol('bookings');
+        await ensureCol('reservations'); await ensureCol('bookings');
         const r = (await db.collection('reservations').doc(p.id).get()).data;
         if (!r) return { error: '预订不存在' };
         if (r.status !== 'pending') return { error: '仅待确认可确认' };
-        const s = (await db.collection('sessions').doc(r.sessionRef).get()).data || {};
-        const slot = s.mealTime === 'dinner' ? 'dinner' : 'lunch';
+        const slot = r.mealTime === 'dinner' ? 'dinner' : 'lunch';
 
-        // 自动分配该日期餐段下的空闲包厢（无空闲则仅确认、提示老板手动排席）
-        let roomId = '';
-        try {
-          const occ = (await db.collection('bookings').where({ date: s.date, slot }).limit(1000).get()).data || [];
-          const used = new Set(occ.map((b) => String(b.room_id)));
-          roomId = ROOM_IDS.find((no) => !used.has(no)) || '';
-        } catch (e) { console.warn('[confirm] alloc', e.message); }
+        // 分配包厢：优先顾客指定，否则自动分配该日期餐段下的空闲包厢（无空闲则仅确认、提示手动排席）
+        let roomId = r.roomNo || '';
+        if (roomId) {
+          const clash = (await db.collection('bookings').where({ date: r.date, slot, room_id: roomId }).limit(1).get()).data || [];
+          if (clash.length) roomId = '';
+        }
+        if (!roomId) {
+          try {
+            const occ = (await db.collection('bookings').where({ date: r.date, slot }).limit(1000).get()).data || [];
+            const used = new Set(occ.map((b) => String(b.room_id)));
+            roomId = ROOM_IDS.find((no) => !used.has(no)) || '';
+          } catch (e) { console.warn('[confirm] alloc', e.message); }
+        }
 
         await db.collection('reservations').doc(p.id).update({ data: { status: 'confirmed', confirmedAt: db.serverDate() } });
 
         let bookingId = '';
         if (roomId) {
-          const dishes = (s.menuSnapshot || []).map((d) => ({ dish_id: '', name: d.name, image: d.image || '', qty: 1, note: '' }));
+          // 用当前在售菜品快照生成一桌（保持「订餐菜品」有内容；后续预点菜可覆盖）
+          const dishes = (await db.collection('dishes').where({ available: _.neq(false) }).limit(1000).get()).data || [];
+          const dishSnapshot = dishes.map((d) => ({ dish_id: d._id, name: d.name, image: d.image || '', qty: 1, note: '' }));
           bookingId = (await db.collection('bookings').add({
             data: {
-              room_id: roomId, date: s.date, slot, type: 'meal',
-              dishes, guest_name: '', guest_phone: r.contactPhone || '', note: r.note || '',
+              room_id: roomId, date: r.date, slot, type: 'meal',
+              dishes: dishSnapshot, guest_name: '', guest_phone: r.contactPhone || '', note: r.note || '',
               reservationRef: r._id, source: 'reservation', created_at: db.serverDate(),
             },
           }))._id;
@@ -410,7 +390,7 @@ exports.main = async (event) => {
               touser: r._openid,
               templateId: process.env.RESERVE_TPL_ID,
               data: {
-                thing1: { value: (s.date || '') + ' ' + (s.mealTime === 'dinner' ? '晚市' : '午市') },
+                thing1: { value: (r.date || '') + ' ' + (r.mealTime === 'dinner' ? '晚市' : '午市') },
                 number2: { value: r.partySize },
                 phrase3: { value: '预约已确认' },
               },

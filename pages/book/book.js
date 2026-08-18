@@ -22,7 +22,7 @@ Page({
     matrix: {},
     applications: [],
     sessions: [],
-    showModal: false, showPub: false,
+    showModal: false, showPub: false, showPublishFeature: false,
     form: { roomNo: '', roomName: '', slot: 'lunch', type: 'meal', dishIds: [], guest_name: '', guest_phone: '', note: '', date: '', id: null },
     pub: { date: '', mealTime: 'lunch', capacity: '', note: '' },
   },

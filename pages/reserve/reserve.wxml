@@ -8,28 +8,17 @@
 
   <view class="r-head">
     <view class="r-title">订位 · 一席之约</view>
-    <view class="r-sub">挑一场，看当席菜单，留位待启</view>
+    <view class="r-sub">择一席，留个位，静候启席</view>
   </view>
 
-  <!-- 开放场次 -->
-  <view class="r-sec">开放场次</view>
-  <view wx:if="{{!sessions.length && !loading}}" class="r-empty">暂未开放场次，敬请期待主理人发席</view>
-  <view wx:for="{{sessions}}" wx:key="id" class="rcard" data-id="{{item.id}}" bindtap="openSession">
-    <view class="rcard-top">
-      <view class="rcard-date">{{item.date}}</view>
-      <view class="rcard-meal">{{item.mealText}}</view>
-      <view class="rcard-state {{item.bookable ? 'ok' : 'full'}}">{{item.bookable ? '可订' : '已满'}}</view>
-    </view>
-    <view wx:if="{{item.note}}" class="rcard-note">{{item.note}}</view>
-    <view class="rcard-foot">当日菜单 {{item.menuCount}} 道 · 点击查看</view>
-  </view>
+  <view class="btn-apply" bindtap="openApply">申请订位</view>
 
-  <!-- 我的预订 -->
+  <!-- 我的订位 -->
   <view class="r-sec">我的订位</view>
-  <view wx:if="{{!mine.length}}" class="r-empty">还没有订位，去上方挑一场吧</view>
+  <view wx:if="{{!mine.length}}" class="r-empty">还没有订位，点上方「申请订位」留个位吧</view>
   <view wx:for="{{mine}}" wx:key="id" class="mcard">
     <view class="mcard-top">
-      <view class="mcard-date">{{item.session.date}} · {{item.mealText}}</view>
+      <view class="mcard-date">{{item.date}} · {{item.mealText}}</view>
       <view class="badge badge-{{item.status}}">{{item.statusText}}</view>
     </view>
     <view class="mcard-info">人数 {{item.partySize}} 人 · 手机 {{item.contactPhone}}</view>
@@ -38,24 +27,21 @@
     <view wx:if="{{item.cancellable}}" class="mcard-cancel" data-id="{{item.id}}" bindtap="cancelMine">取消订位</view>
   </view>
 
-  <!-- 场次详情 / 申请 -->
-  <view class="mask" wx:if="{{showDetail}}" bindtap="closeDetail">
+  <!-- 申请订位弹窗 -->
+  <view class="mask" wx:if="{{showApply}}" bindtap="closeApply">
     <view class="modal" catchtap="noop">
-      <view class="modal-title">{{detail.date}} · {{detail.mealText}}{{detail.full ? '（已满）' : ''}}</view>
-      <view wx:if="{{detail.note}}" class="modal-note">{{detail.note}}</view>
+      <view class="modal-title">申请订位</view>
 
-      <view class="dl">当席菜单</view>
-      <scroll-view scroll-y class="menu-scroll">
-        <view wx:for="{{detail.menu}}" wx:key="name" class="dish">
-          <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" class="dish-img" />
-          <view wx:else class="dish-img ph">{{item.name}}</view>
-          <view class="dish-info">
-            <view class="dish-name">{{item.name}}</view>
-            <view wx:if="{{item.desc}}" class="dish-desc">{{item.desc}}</view>
-            <view class="dish-price">¥{{item.price}}</view>
-          </view>
-        </view>
-      </scroll-view>
+      <view class="dl">日期</view>
+      <picker mode="date" value="{{form.date}}" bindchange="onDate">
+        <view class="ipt picker">{{form.date || '选择日期'}}</view>
+      </picker>
+
+      <view class="dl">餐段</view>
+      <view class="seg2">
+        <view class="seg2-btn {{form.mealTime==='lunch'?'on':''}}" data-meal="lunch" bindtap="onMeal">午市</view>
+        <view class="seg2-btn {{form.mealTime==='dinner'?'on':''}}" data-meal="dinner" bindtap="onMeal">晚市</view>
+      </view>
 
       <view class="dl">人数</view>
       <input class="ipt" type="number" value="{{form.partySize}}" bindinput="onParty" placeholder="用餐人数" />
@@ -66,9 +52,9 @@
       <view class="dl">备注（选填）</view>
       <input class="ipt" value="{{form.note}}" bindinput="onNote" placeholder="忌口 / 过敏 / 其他" />
 
-      <view class="btn" style="width:100%;margin-top:14px;" bindtap="submit" wx:if="{{!detail.full}}">提交订位申请</view>
-      <view wx:else class="btn-dis" style="width:100%;margin-top:14px;">该场已约满</view>
-      <view class="btn-del" style="width:100%;margin-top:10px;" bindtap="closeDetail">返回</view>
+      <view class="btn" style="width:100%;margin-top:14px;" bindtap="submit" wx:if="{{!submitting}}">提交订位申请</view>
+      <view wx:else class="btn-dis" style="width:100%;margin-top:14px;">提交中…</view>
+      <view class="btn-del" style="width:100%;margin-top:10px;" bindtap="closeApply">返回</view>
     </view>
   </view>
 </view>
