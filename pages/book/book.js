@@ -214,7 +214,7 @@ Page({
       const list = (await listReservations()) || [];
       const apps = list.filter((r) => r.status === 'pending').map((r) => ({
         id: r.id, partySize: r.partySize, contactPhone: r.contactPhone, note: r.note || '',
-        date: (r.session && r.session.date) || '', meal: mealText((r.session && r.session.mealTime) || 'lunch'),
+        date: r.date || '', meal: mealText(r.mealTime || 'lunch'),
       }));
       this.setData({ applications: apps });
     } catch (e) { console.warn('[book] applications', e); }

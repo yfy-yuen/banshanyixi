@@ -133,7 +133,7 @@ view, text, scroll-view, input { box-sizing: border-box; }
 }
 .modal-title { font-size: 18px; margin-bottom: 14px; color: var(--ink); letter-spacing: 2px; }
 
-/* 输入框 */
+/* 输入框（白底凸出，解决浅山水背景/宣纸弹窗下输入框看不清） */
 .ipt {
   width: 100%;
   margin-top: 10px;
@@ -141,8 +141,9 @@ view, text, scroll-view, input { box-sizing: border-box; }
   border: 1px solid var(--border);
   border-radius: 10px;
   font-size: 14px;
-  background: var(--card-soft);
+  background: #ffffff;
   color: var(--ink);
+  box-shadow: inset 0 1px 2px rgba(45, 40, 30, 0.06);
 }
 
 /* ===== 全局水墨背景层（用 <image> 组件，本地路径生效，gate 页不使用） ===== */

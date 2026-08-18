@@ -400,20 +400,15 @@ exports.main = async (event) => {
 
         return { data: { ok: true, bookingId, roomId, needManualAssign: !roomId } };
       }
-      // 老板/店员：婉拒（回减已占用余位）
+      // 老板/店员：婉拒（仅翻转状态；不再有场次余位概念）
       case 'rejectReservation': {
         if (!(await isStaffOf())) return { error: '无权限' };
-        await ensureCol('reservations'); await ensureCol('sessions');
+        await ensureCol('reservations');
         const r = (await db.collection('reservations').doc(p.id).get()).data;
         if (!r) return { error: '预订不存在' };
         if (r.status !== 'pending') return { error: '仅待确认可婉拒' };
-        const t = await db.startTransaction();
-        try {
-          await t.collection('reservations').doc(p.id).update({ data: { status: 'rejected' } });
-          await t.collection('sessions').doc(r.sessionRef).update({ data: { reservedSeats: _.inc(-r.partySize) } });
-          await t.commit();
-          return { data: { ok: true } };
-        } catch (err) { try { await t.rollback(); } catch (e) {} return { error: err.message || '婉拒失败' }; }
+        await db.collection('reservations').doc(p.id).update({ data: { status: 'rejected' } });
+        return { data: { ok: true } };
       }
       // 店员/老板：全部场次（含已关），用于店务管理（发席/关场）
       case 'sessionsAdmin': {
@@ -434,21 +429,19 @@ exports.main = async (event) => {
         await db.collection('sessions').doc(p.id).update({ data: { status: 'closed' } });
         return { data: { ok: true } };
       }
-      // 老板：超时自动释放（pending > 24h 自动取消并回减余位；供定时任务调用）
+      // 老板：超时自动释放（pending > 24h 自动取消；供定时任务调用）
       case 'sweepPending': {
         if ((await roleOf()) !== 'manager') return { error: '无权限' };
-        await ensureCol('reservations'); await ensureCol('sessions');
+        await ensureCol('reservations');
         const cutoff = Date.now() - 24 * 3600 * 1000;
         const list = (await db.collection('reservations').where({ status: 'pending' }).limit(1000).get()).data;
         let n = 0;
         for (const r of list) {
           if (tsOf(r.createdAt) && tsOf(r.createdAt) < cutoff) {
-            const t = await db.startTransaction();
             try {
-              await t.collection('reservations').doc(r._id).update({ data: { status: 'cancelled' } });
-              await t.collection('sessions').doc(r.sessionRef).update({ data: { reservedSeats: _.inc(-r.partySize) } });
-              await t.commit(); n++;
-            } catch (e) { try { await t.rollback(); } catch (e2) {} }
+              await db.collection('reservations').doc(r._id).update({ data: { status: 'cancelled' } });
+              n++;
+            } catch (e) { console.warn('[sweep]', e.message); }
           }
         }
         return { data: { cancelled: n } };
