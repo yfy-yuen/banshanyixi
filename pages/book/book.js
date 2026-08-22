@@ -298,6 +298,8 @@ Page({
     }
   },
   async confirmApp(e) {
+    const id = e.currentTarget.dataset.id;
+    if (!id) { wx.showToast({ title: '缺少预订ID', icon: 'none' }); return; }
     wx.showLoading({ title: '确认中' });
     try {
       // 先确认并拿到云端自动分配的包厢（结论 #H/#10）
