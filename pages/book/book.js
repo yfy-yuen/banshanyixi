@@ -23,7 +23,8 @@ Page({
     applications: [],
     sessions: [],
     showModal: false, showPub: false, showPublishFeature: false,
-    form: { roomNo: '', roomName: '', slot: 'lunch', type: 'meal', dishIds: [], guest_name: '', guest_phone: '', note: '', date: '', id: null },
+    roomIndex: 0,
+    form: { roomNo: '', roomName: '', slot: 'lunch', type: 'meal', dishIds: [], guest_name: '', guest_phone: '', note: '', date: '', id: null, partySize: 0 },
     pub: { date: '', mealTime: 'lunch', capacity: '', note: '' },
     confirmed: [],
     showPre: false, preForm: { id: null, roomText: '', dishes: [] },
@@ -133,14 +134,16 @@ Page({
     const d = this.data.detail;
     if (!d.id) return;
     const ok = await new Promise((res) => wx.showModal({
-      title: '确认改期', content: '是否改期该排席？', success: (r) => res(r.confirm),
+      title: '确认改包厢 / 改期', content: '是否调整该排席的包厢或日期？', success: (r) => res(r.confirm),
     }));
     if (!ok) return;
     this.closeDetail();
     const b = this.data.matrix[d.roomNo] && this.data.matrix[d.roomNo][d.slot];
     if (!b) return;
     const dishIds = (b.dishes || []).map((x) => x.dish_id).filter(Boolean);
+    const roomIndex = Math.max(0, this.data.rooms.findIndex((r) => r.no === d.roomNo));
     this.setData({
+      roomIndex,
       showModal: true,
       form: {
         roomNo: d.roomNo, roomName: d.roomName, slot: b.slot, type: b.type, dishIds,
@@ -215,6 +218,12 @@ Page({
     this.setData({ 'form.dishIds': arr });
   },
   onField(e) { this.setData({ ['form.' + e.currentTarget.dataset.field]: e.detail.value }); },
+  onRoom(e) {
+    const idx = Number(e.detail.value) || 0;
+    const rm = this.data.rooms[idx];
+    if (!rm) return;
+    this.setData({ roomIndex: idx, 'form.roomNo': rm.no, 'form.roomName': rm.name });
+  },
   // 取消预定（支持从事件或字符串 id 调用）
   async cancelBooking(e) {
     const id = (typeof e === 'string') ? e : (e.currentTarget && e.currentTarget.dataset.id);
@@ -242,7 +251,7 @@ Page({
     wx.showLoading({ title: '保存中' });
     try {
       if (f.id) {
-        // 改期/改餐段：冲突校验（排除自身）
+        // 改包厢/改期/改餐段：冲突校验（排除自身）
         const exist = await callApi('bookings', { date: f.date });
         const clash = (exist || []).find((x) => x.room_id === f.roomNo && x.slot === f.slot && String(x.id) !== String(f.id));
         if (clash) {
@@ -253,8 +262,9 @@ Page({
         await callApi('saveBooking', {
           id: f.id,
           booking: {
-            date: f.date, slot: f.slot, type: f.type,
+            room_id: f.roomNo, date: f.date, slot: f.slot, type: f.type,
             dishes, guest_name: f.guest_name, guest_phone: f.guest_phone, note: f.note,
+            partySize: Number(f.partySize) || 0,
           },
         });
       } else {
@@ -262,6 +272,7 @@ Page({
           booking: {
             room_id: f.roomNo, date: f.date, slot: f.slot, type: f.type,
             dishes, guest_name: f.guest_name, guest_phone: f.guest_phone, note: f.note,
+            partySize: Number(f.partySize) || 0,
           },
         });
       }

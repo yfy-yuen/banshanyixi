@@ -105,7 +105,12 @@
 
   <view class="mask" wx:if="{{showModal}}" bindtap="closeModal">
     <view class="modal" catchtap="noop">
-      <view class="modal-title">{{form.id ? '改期 · ' : ''}}{{form.roomName}} · {{form.slot==='lunch'?'午餐':'晚餐'}}</view>
+      <view class="modal-title">{{form.id ? '改包厢 / 改期 · ' : ''}}{{form.roomName}} · {{form.slot==='lunch'?'午餐':'晚餐'}}</view>
+
+      <view class="dl">包厢</view>
+      <picker mode="selector" range="{{rooms}}" range-key="name" value="{{roomIndex}}" bindchange="onRoom">
+        <view class="ipt picker">{{form.roomName || '选择包厢'}}</view>
+      </picker>
 
       <picker mode="date" value="{{form.date}}" bindchange="onDate">
         <view class="ipt picker">{{form.date || '选择日期'}}</view>
@@ -211,7 +216,7 @@
 
       <view class="detail-actions">
         <view class="mbtn" catchtap="doAddDishFromDetail">加菜</view>
-        <view class="mbtn" catchtap="doEditFromDetail">改期</view>
+        <view class="mbtn" catchtap="doEditFromDetail">改包厢 / 改期</view>
         <view class="mbtn del" catchtap="doCancelFromDetail">取消</view>
       </view>
     </view>
