@@ -21,13 +21,44 @@
       <view class="cal-nav" bindtap="nextMonth">›</view>
     </view>
     <view class="cal-week">
-      <text wx:for="{{['日','一','二','三','四','五','六']}}" wx:key="*this" class="cal-wd">{{item}}</text>
+      <text wx:for="{{['日','一','二','三','四',' 五','六']}}" wx:key="*this" class="cal-wd">{{item}}</text>
     </view>
     <view class="cal-grid">
       <view wx:for="{{cells}}" wx:key="index"
         class="cal-cell {{item.isSel?'sel':''}} {{item.empty?'empty':''}}"
         data-date="{{item.dateStr}}" bindtap="pickDay">
         <text wx:if="{{item.day}}">{{item.day}}</text>
+      </view>
+    </view>
+
+    <view class="mtitle">已确认预订 · 改预点</view>
+    <view wx:if="{{!confirmed.length}}" class="r-empty">暂无已确认预订</view>
+    <view wx:for="{{confirmed}}" wx:key="id" class="appr">
+      <view class="appr-top">
+        <view class="appr-date">{{item.date}} · {{item.meal}}{{item.roomText ? ' · ' + item.roomText : ''}}</view>
+        <view class="appr-people">{{item.partySize}} 人</view>
+      </view>
+      <view class="appr-info">已预点 {{item.dishCount}} 道</view>
+      <view class="appr-podishes">
+        <text wx:for="{{item.dishes}}" wx:for-item="d" wx:key="name" class="appr-pod">{{d.name}}×{{d.qty}}</text>
+      </view>
+      <view class="appr-acts">
+        <view class="mbtn" catchtap="openPre" data-id="{{item.id}}">改预点</view>
+      </view>
+    </view>
+
+    <view class="mtitle">顾客订位申请</view>
+    <view wx:if="{{!applications.length}}" class="r-empty">暂无待确认的顾客订位申请</view>
+    <view wx:for="{{applications}}" wx:key="id" class="appr">
+      <view class="appr-top">
+        <view class="appr-date">{{item.date}} · {{item.meal}}</view>
+        <view class="appr-people">{{item.partySize}} 人</view>
+      </view>
+      <view class="appr-info">手机 {{item.contactPhone}}</view>
+      <view wx:if="{{item.note}}" class="appr-note">备注：{{item.note}}</view>
+      <view class="appr-acts">
+        <view class="mbtn" catchtap="confirmApp" data-id="{{item.id}}">确认</view>
+        <view class="mbtn del" catchtap="rejectApp" data-id="{{item.id}}">婉拒</view>
       </view>
     </view>
 
@@ -72,37 +103,6 @@
       </view>
     </view>
     </block>
-
-    <view class="mtitle">顾客订位申请</view>
-    <view wx:if="{{!applications.length}}" class="r-empty">暂无待确认的顾客订位申请</view>
-    <view wx:for="{{applications}}" wx:key="id" class="appr">
-      <view class="appr-top">
-        <view class="appr-date">{{item.date}} · {{item.meal}}</view>
-        <view class="appr-people">{{item.partySize}} 人</view>
-      </view>
-      <view class="appr-info">手机 {{item.contactPhone}}</view>
-      <view wx:if="{{item.note}}" class="appr-note">备注：{{item.note}}</view>
-      <view class="appr-acts">
-        <view class="mbtn" catchtap="confirmApp" data-id="{{item.id}}">确认</view>
-        <view class="mbtn del" catchtap="rejectApp" data-id="{{item.id}}">婉拒</view>
-      </view>
-    </view>
-
-    <view class="mtitle">已确认预订 · 改预点</view>
-    <view wx:if="{{!confirmed.length}}" class="r-empty">暂无已确认预订</view>
-    <view wx:for="{{confirmed}}" wx:key="id" class="appr">
-      <view class="appr-top">
-        <view class="appr-date">{{item.date}} · {{item.meal}}{{item.roomText ? ' · ' + item.roomText : ''}}</view>
-        <view class="appr-people">{{item.partySize}} 人</view>
-      </view>
-      <view class="appr-info">已预点 {{item.dishCount}} 道</view>
-      <view class="appr-podishes">
-        <text wx:for="{{item.dishes}}" wx:for-item="d" wx:key="name" class="appr-pod">{{d.name}}×{{d.qty}}</text>
-      </view>
-      <view class="appr-acts">
-        <view class="mbtn" catchtap="openPre" data-id="{{item.id}}">改预点</view>
-      </view>
-    </view>
   </block>
 
   <view class="mask" wx:if="{{showModal}}" bindtap="closeModal">
@@ -125,7 +125,7 @@
       <view class="dl">选择菜品</view>
       <view class="dlist">
         <view wx:for="{{dishes}}" wx:key="id"
-          class="dopt {{form.dishIds.indexOf(item.id)>=0?'on':''}}" data-id="{{item.id}}" bindtap="toggleDish">
+          class  ="dopt {{form.dishIds.indexOf(item.id)>=0?'on':''}}" data-id="{{item.id}}" bindtap="toggleDish">
           <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" class="dopt-img" />
           <view wx:else class="dopt-img ph">{{item.name}}</view>
           <view class="dopt-name">{{item.name}}</view>
