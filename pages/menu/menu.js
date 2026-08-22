@@ -1,5 +1,5 @@
 const { CATS, ROOMS, fmt, canSelfEditPreorder, STORE_PHONE } = require('../../utils/config');
-const { loadDishes, submitOrder, getReservation, savePreorder, submitReservation } = require('../../utils/api');
+const { callApi, loadDishes, submitOrder, getReservation, savePreorder, submitReservation } = require('../../utils/api');
 const { classifyError } = require('../../utils/cloudbase');
 const app = getApp();
 
@@ -30,8 +30,25 @@ Page({
     showBill: false, bill: null,
     showCart: false, showConfirm: false, note: '',
     showSearch: false, searchKeyword: '', searchResults: [],
+    // 店员追加菜品模式（从店务详情进入）
+    appendMode: false, appendBookingId: '', appendTargetLabel: '',
   },
   onLoad(options) {
+    if (options.mode === 'append') {
+      const bookingId = options.bookingId || '';
+      const appendTargetLabel = options.label || '该排席';
+      if (!bookingId) {
+        wx.showToast({ title: '缺少排席信息', icon: 'none' });
+        setTimeout(() => wx.navigateBack(), 800);
+        return;
+      }
+      this.setData({
+        appendMode: true, appendBookingId: bookingId, appendTargetLabel,
+        preorder: false,
+      });
+      this.loadMenu();
+      return;
+    }
     if (options.mode === 'preorder') {
       const createMode = options.create === '1';
       this.createMode = createMode;
@@ -301,6 +318,25 @@ Page({
   /* ===== 提交订单 ===== */
   async submitOrder() {
     if (!this.data.cart.length) return;
+    // 店员追加菜品模式：只把购物车菜品追加到指定 booking
+    if (this.data.appendMode) {
+      const dishes = this.data.cart.map((c) => ({
+        dish_id: c.dishId, name: c.name,
+        image: (this.data.dishes.find((x) => x.id === c.dishId) || {}).image || '',
+        qty: c.qty || 1, note: buildSelText(c.sel), sel: c.sel || {},
+      }));
+      wx.showLoading({ title: '追加中' });
+      try {
+        await callApi('appendBookingDishes', { id: this.data.appendBookingId, dishes });
+        wx.hideLoading();
+        wx.showToast({ title: '已追加 ' + dishes.length + ' 道菜', icon: 'success' });
+        setTimeout(() => wx.navigateBack(), 600);
+      } catch (e) {
+        wx.hideLoading();
+        wx.showToast({ title: '追加失败：' + (e.message || ''), icon: 'none' });
+      }
+      return;
+    }
     if (this.data.preorder) {
       if (this.data.locked) {
         wx.showToast({ title: '预点已锁定，请联系店员代加', icon: 'none' });

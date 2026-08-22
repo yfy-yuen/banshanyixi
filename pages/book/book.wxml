@@ -224,20 +224,4 @@
     </view>
   </view>
 
-  <view class="mask" wx:if="{{showAddDish}}" bindtap="closeAddDish">
-    <view class="modal" catchtap="noop">
-      <view class="modal-title">加菜 · {{detail.roomName}}</view>
-      <view class="dl">选择要追加的菜品</view>
-      <view class="dlist">
-        <view wx:for="{{dishes}}" wx:key="id"
-          class="dopt {{addDishForm.dishIds.indexOf(item.id)>=0?'on':''}}" data-id="{{item.id}}" bindtap="toggleAddDish">
-          <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" class="dopt-img" />
-          <view wx:else class="dopt-img ph">{{item.name}}</view>
-          <view class="dopt-name">{{item.name}}</view>
-        </view>
-      </view>
-      <view class="btn" style="width:100%;margin-top:14px;" bindtap="saveAddDish">确认加菜</view>
-      <view class="btn-del" style="width:100%;margin-top:10px;" bindtap="closeAddDish">取消</view>
-    </view>
-  </view>
 </view>

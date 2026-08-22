@@ -5,7 +5,11 @@
   <view class="topbar">
     <view class="tb-left">
       <view class="tb-name">半山·一席</view>
-      <view class="tb-sub">{{preorder ? '预订预点菜' : roomName + ' · '}}<text wx:if="{{!preorder}}" class="link" bindtap="setPeople">{{people}}人</text></view>
+      <view class="tb-sub">
+        <block wx:if="{{appendMode}}">为 {{appendTargetLabel}} 追加菜品</block>
+        <block wx:elif="{{preorder}}">预订预点菜</block>
+        <block wx:else>{{roomName + ' · '}}<text class="link" bindtap="setPeople">{{people}}人</text></block>
+      </view>
     </view>
     <view class="tb-search" bindtap="openSearch">
       <text class="tb-search-ic">⌕</text>
@@ -65,7 +69,7 @@
         <text class="cart-count">共 {{cartCount}} 件 · 点此查看</text>
       </view>
     </view>
-    <view wx:if="{{!locked}}" class="btn-checkout" bindtap="openCart">去结算</view>
+    <view wx:if="{{!locked}}" class="btn-checkout" bindtap="openCart">{{appendMode ? '确认追加' : '去结算'}}</view>
   </view>
 </view>
 
@@ -147,7 +151,7 @@
 <!-- 确认订单弹窗：同内容只读 + 合计 + 备注(输入) + 确认结算 -->
 <view class="mask" wx:if="{{showConfirm}}" bindtap="closeConfirm">
   <view class="modal" catchtap="noop">
-    <view class="modal-title">{{preorder ? '确认预点菜' : '确认订单'}}<text class="modal-close" catchtap="closeConfirm">✕</text></view>
+    <view class="modal-title">{{appendMode ? '确认追加菜品' : (preorder ? '确认预点菜' : '确认订单')}}<text class="modal-close" catchtap="closeConfirm">✕</text></view>
     <scroll-view class="cart-list" scroll-y>
       <view class="cart-line" wx:for="{{cartGroups}}" wx:key="key">
         <view class="cl-info">
@@ -165,7 +169,7 @@
       <text class="note-label">备注</text>
       <textarea class="note-input" placeholder="口味、忌口、用餐时间等" value="{{note}}" bindinput="onNoteInput" maxlength="200"></textarea>
     </view>
-    <view wx:if="{{!locked}}" class="btn btn-checkout" catchtap="submitOrder">{{preorder ? '保存预点菜' : '确认结算'}}</view>
+    <view wx:if="{{!locked}}" class="btn btn-checkout" catchtap="submitOrder">{{appendMode ? '确认追加' : (preorder ? '保存预点菜' : '确认结算')}}</view>
     <view wx:else class="btn btn-checkout disabled">已锁定</view>
   </view>
 </view>
