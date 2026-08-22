@@ -363,6 +363,7 @@ exports.main = async (event) => {
         const data = {
           room_id: b.room_id, date: b.date, slot: b.slot, type: b.type,
           dishes: b.dishes, guest_name: b.guest_name, guest_phone: b.guest_phone, note: b.note,
+          partySize: Number(b.partySize) || 0,
         };
         if (p.id) {
           await db.collection('bookings').doc(p.id).update({ data });
@@ -573,6 +574,7 @@ exports.main = async (event) => {
             data: {
               room_id: roomId, date: r.date, slot, type: 'meal', arrival: r.expectedArrival || '',
               dishes: dishSnapshot, guest_name: '', guest_phone: r.contactPhone || '', note: r.note || '',
+              partySize: Number(r.partySize) || 0,
               reservationRef: r._id, source: 'reservation', created_at: db.serverDate(),
             },
           }))._id;

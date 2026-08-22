@@ -71,3 +71,18 @@
 .po-ctrl { display: flex; align-items: center; gap: 12px; }
 .po-minus, .po-plus { width: 30px; height: 30px; line-height: 28px; text-align: center; border-radius: 50%; border: 1px solid var(--border); color: var(--ink); font-size: 18px; }
 .po-qty { min-width: 20px; text-align: center; font-size: 15px; color: var(--cinnabar); }
+
+/* 排席详情弹窗 */
+.detail-modal { max-height: 76vh; overflow: auto; }
+.detail-tag { display: inline-block; font-size: 12px; color: #fff; background: var(--cinnabar); padding: 3px 10px; border-radius: 999px; margin-bottom: 14px; }
+.detail-section { background: var(--paper); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; }
+.detail-row { display: flex; padding: 6px 0; font-size: 14px; }
+.detail-label { width: 56px; color: var(--muted); flex-shrink: 0; }
+.detail-value { flex: 1; color: var(--ink); word-break: break-all; }
+.detail-sec-title { font-size: 14px; color: var(--ink); font-weight: 600; margin-bottom: 8px; }
+.detail-dish { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-light); font-size: 14px; }
+.detail-dish:last-child { border-bottom: none; }
+.detail-dish-name { color: var(--ink); }
+.detail-dish-qty { color: var(--cinnabar); font-weight: 500; }
+.detail-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+.detail-actions .mbtn { padding: 6px 18px; font-size: 13px; }

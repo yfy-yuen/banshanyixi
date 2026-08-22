@@ -28,6 +28,8 @@ Page({
     confirmed: [],
     showPre: false, preForm: { id: null, roomText: '', dishes: [] },
     dishCount: {},
+    showDetail: false,
+    detail: { roomNo: '', roomName: '', slot: '', slotText: '', type: '', typeText: '', label: '', guest_name: '', guest_phone: '', partySize: 0, dishes: [], note: '', id: '' },
   },
   onLoad() {
     const now = new Date();
@@ -100,7 +102,23 @@ Page({
     const roomName = (this.data.rooms.find((r) => r.no === room) || {}).name || room;
     const existing = this.data.matrix[room] && this.data.matrix[room][slot];
     if (existing) {
-      wx.showToast({ title: '该餐段已排：' + bookingLabel(existing), icon: 'none' });
+      // 点击已占用格子打开详情卡片
+      this.setData({
+        showDetail: true,
+        detail: {
+          roomNo: room, roomName, slot,
+          slotText: slot === 'lunch' ? '午餐' : '晚餐',
+          type: existing.type || 'meal',
+          typeText: (existing.type || 'meal') === 'game' ? '棋牌' : '用餐',
+          label: bookingLabel(existing),
+          guest_name: existing.guest_name || '',
+          guest_phone: existing.guest_phone || '',
+          partySize: existing.partySize || 0,
+          dishes: (existing.dishes || []).map((d) => ({ name: d.name || '', qty: d.qty || 1 })),
+          note: existing.note || '',
+          id: existing.id || '',
+        },
+      });
       return;
     }
     this.setData({
@@ -108,21 +126,38 @@ Page({
       form: { roomNo: room, roomName, slot, type: 'meal', dishIds: [], guest_name: '', guest_phone: '', note: '', date: this.data.selected, id: null },
     });
   },
-  // 改期：打开弹窗并回填
-  editBooking(e) {
-    const { room, slot } = e.currentTarget.dataset;
-    const b = this.data.matrix[room] && this.data.matrix[room][slot];
+  closeDetail() { this.setData({ showDetail: false }); },
+  // 详情页点改期：二次确认后打开编辑弹窗
+  async doEditFromDetail() {
+    const d = this.data.detail;
+    if (!d.id) return;
+    const ok = await new Promise((res) => wx.showModal({
+      title: '确认改期', content: '是否改期该排席？', success: (r) => res(r.confirm),
+    }));
+    if (!ok) return;
+    this.closeDetail();
+    const b = this.data.matrix[d.roomNo] && this.data.matrix[d.roomNo][d.slot];
     if (!b) return;
-    const roomName = (this.data.rooms.find((r) => r.no === room) || {}).name || room;
-    const dishIds = (b.dishes || []).map((d) => d.dish_id).filter(Boolean);
+    const dishIds = (b.dishes || []).map((x) => x.dish_id).filter(Boolean);
     this.setData({
       showModal: true,
       form: {
-        roomNo: room, roomName, slot: b.slot, type: b.type, dishIds,
+        roomNo: d.roomNo, roomName: d.roomName, slot: b.slot, type: b.type, dishIds,
         guest_name: b.guest_name || '', guest_phone: b.guest_phone || '', note: b.note || '',
         date: b.date, id: b.id,
       },
     });
+  },
+  // 详情页点取消：二次确认后执行
+  async doCancelFromDetail() {
+    const d = this.data.detail;
+    if (!d.id) return;
+    const ok = await new Promise((res) => wx.showModal({
+      title: '确认取消', content: '确定取消该排席？', success: (r) => res(r.confirm),
+    }));
+    if (!ok) return;
+    this.closeDetail();
+    await this.cancelBooking(d.id);
   },
   closeModal() { this.setData({ showModal: false }); },
   noop() {},
@@ -137,16 +172,15 @@ Page({
     this.setData({ 'form.dishIds': arr });
   },
   onField(e) { this.setData({ ['form.' + e.currentTarget.dataset.field]: e.detail.value }); },
-  // 取消预定
+  // 取消预定（支持从事件或字符串 id 调用）
   async cancelBooking(e) {
-    const id = e.currentTarget.dataset.id;
-    const ok = await new Promise((res) => wx.showModal({ title: '取消预定', content: '确定取消该排席？', success: (r) => res(r.confirm) }));
-    if (!ok) return;
+    const id = (typeof e === 'string') ? e : (e.currentTarget && e.currentTarget.dataset.id);
+    if (!id) return;
     wx.showLoading({ title: '取消中' });
     try {
       await callApi('deleteBooking', { id });
       wx.hideLoading();
-      this.setData({ showModal: false });
+      this.setData({ showModal: false, showDetail: false });
       this.loadMatrix(this.data.selected);
       wx.showToast({ title: '已取消', icon: 'success' });
     } catch (err) {

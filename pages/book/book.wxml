@@ -39,8 +39,7 @@
           <block wx:if="{{matrix[rm.no].lunch}}">
             <view class="mslot-lbl">{{matrix[rm.no].lunch.type==='game'?(matrix[rm.no].lunch.slot==='lunch'?'午间棋牌':'晚间棋牌'):(matrix[rm.no].lunch.slot==='lunch'?'午餐订餐':'晚餐订餐')}}</view>
             <view class="mslot-acts">
-              <view class="mbtn" catchtap="editBooking" data-room="{{rm.no}}" data-slot="lunch">改期</view>
-              <view class="mbtn del" catchtap="cancelBooking" data-id="{{matrix[rm.no].lunch.id}}">取消</view>
+              <view class="mbtn" catchtap="openCell" data-room="{{rm.no}}" data-slot="lunch">详情</view>
             </view>
           </block>
           <block wx:else>空闲</block>
@@ -49,8 +48,7 @@
           <block wx:if="{{matrix[rm.no].dinner}}">
             <view class="mslot-lbl">{{matrix[rm.no].dinner.type==='game'?(matrix[rm.no].dinner.slot==='lunch'?'午间棋牌':'晚间棋牌'):(matrix[rm.no].dinner.slot==='lunch'?'午餐订餐':'晚餐订餐')}}</view>
             <view class="mslot-acts">
-              <view class="mbtn" catchtap="editBooking" data-room="{{rm.no}}" data-slot="dinner">改期</view>
-              <view class="mbtn del" catchtap="cancelBooking" data-id="{{matrix[rm.no].dinner.id}}">取消</view>
+              <view class="mbtn" catchtap="openCell" data-room="{{rm.no}}" data-slot="dinner">详情</view>
             </view>
           </block>
           <block wx:else>空闲</block>
@@ -175,6 +173,46 @@
       </view>
       <view class="btn" style="width:100%;margin-top:14px;" bindtap="savePre">保存修改</view>
       <view class="btn-del" style="width:100%;margin-top:10px;" bindtap="closePre">取消</view>
+    </view>
+  </view>
+
+  <view class="mask" wx:if="{{showDetail}}" bindtap="closeDetail">
+    <view class="modal detail-modal" catchtap="noop">
+      <view class="modal-title">{{detail.roomName}} · {{detail.slotText}}</view>
+      <view class="detail-tag">{{detail.typeText}}</view>
+
+      <view class="detail-section">
+        <view class="detail-row">
+          <text class="detail-label">客人</text>
+          <text class="detail-value">{{detail.guest_name || '未填写'}}</text>
+        </view>
+        <view class="detail-row">
+          <text class="detail-label">人数</text>
+          <text class="detail-value">{{detail.partySize ? detail.partySize + ' 人' : '—'}}</text>
+        </view>
+        <view class="detail-row">
+          <text class="detail-label">手机</text>
+          <text class="detail-value">{{detail.guest_phone || '—'}}</text>
+        </view>
+        <view class="detail-row" wx:if="{{detail.note}}">
+          <text class="detail-label">备注</text>
+          <text class="detail-value">{{detail.note}}</text>
+        </view>
+      </view>
+
+      <view class="detail-section">
+        <view class="detail-sec-title">预点菜 {{detail.dishes.length ? detail.dishes.length + ' 道' : '无'}}</view>
+        <view wx:if="{{!detail.dishes.length}}" class="r-empty">暂无预点菜</view>
+        <view wx:for="{{detail.dishes}}" wx:key="name" class="detail-dish">
+          <text class="detail-dish-name">{{item.name}}</text>
+          <text class="detail-dish-qty">×{{item.qty}}</text>
+        </view>
+      </view>
+
+      <view class="detail-actions">
+        <view class="mbtn" catchtap="doEditFromDetail">改期</view>
+        <view class="mbtn del" catchtap="doCancelFromDetail">取消</view>
+      </view>
     </view>
   </view>
 </view>
