@@ -325,6 +325,7 @@ Page({
           await submitReservation({
             date: d.date, expectedArrival: d.expectedArrival,
             partySize: d.partySize, contactPhone: d.contactPhone, note: d.note || '', dishes,
+            roomNo: d.roomNo || '',
           });
           wx.hideLoading();
           wx.showToast({ title: '已提交订位，等待确认', icon: 'none' });

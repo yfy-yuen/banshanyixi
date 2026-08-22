@@ -1,6 +1,11 @@
 const { ROOMS, RESERVE_TPL_ID, canSelfEditPreorder, STORE_PHONE } = require('../../utils/config');
 const { submitReservation, myReservations, cancelReservation } = require('../../utils/api');
 
+// 包厢选择列表：第一项「由店家安排」表示不指定，交给云端自动预匹配
+const ROOM_OPTIONS = [{ no: '', name: '由店家安排' }].concat(
+  Object.entries(ROOMS).map(([no, name]) => ({ no, name }))
+);
+
 function mealLabel(m) { return m === 'dinner' ? '晚市' : '午市'; }
 function statusText(s) {
   return ({ pending: '审核中', confirmed: '已确认', rejected: '已婉拒', cancelled: '已取消' })[s] || s;
@@ -21,7 +26,9 @@ Page({
   data: {
     mine: [], loading: false,
     showApply: false,
-    form: { date: '', expectedArrival: '18:00', partySize: 2, contactPhone: '', note: '' },
+    form: { date: '', expectedArrival: '18:00', partySize: 2, contactPhone: '', note: '', roomNo: '', roomName: '由店家安排' },
+    roomOptions: ROOM_OPTIONS,
+    roomIndex: 0,
     submitting: false,
   },
   onShow() {
@@ -50,7 +57,7 @@ Page({
 
   /* 申请订位弹窗（不再依赖场次，顾客自选日期/餐段直接提交） */
   openApply() {
-    this.setData({ showApply: true, form: { date: todayStr(), expectedArrival: '18:00', partySize: 2, contactPhone: '', note: '' } });
+    this.setData({ showApply: true, form: { date: todayStr(), expectedArrival: '18:00', partySize: 2, contactPhone: '', note: '', roomNo: '', roomName: '由店家安排' }, roomIndex: 0 });
   },
   closeApply() { this.setData({ showApply: false }); },
   noop() {},
@@ -59,6 +66,12 @@ Page({
   onParty(e) { this.setData({ 'form.partySize': Math.max(1, parseInt(e.detail.value) || 1) }); },
   onPhone(e) { this.setData({ 'form.contactPhone': e.detail.value }); },
   onNote(e) { this.setData({ 'form.note': e.detail.value }); },
+  onRoom(e) {
+    const idx = Number(e.detail.value) || 0;
+    const opt = this.data.roomOptions[idx];
+    if (!opt) return;
+    this.setData({ roomIndex: idx, 'form.roomNo': opt.no, 'form.roomName': opt.name });
+  },
   /* 去预点菜（必填，结论 #15 / #G）：
      校验 日期+预计到达时间+人数+手机号 后，把表单草稿交给 menu 预点模式；
      menu 在「完成预点」时一并创建带预点菜的预订（submitReservation）。
@@ -80,6 +93,7 @@ Page({
     getApp().globalData.preorderDraft = {
       date: form.date, expectedArrival: form.expectedArrival,
       partySize: form.partySize, contactPhone: form.contactPhone, note: form.note,
+      roomNo: form.roomNo || '',
     };
     this.setData({ showApply: false });
     wx.navigateTo({ url: '/pages/menu/menu?mode=preorder&create=1' });

@@ -467,15 +467,21 @@ exports.main = async (event) => {
         const arrival = (p.expectedArrival && /^\d{1,2}:\d{2}$/.test(p.expectedArrival)) ? p.expectedArrival : '';
         const mealTime = p.mealTime === 'dinner' ? 'dinner' : (p.mealTime === 'lunch' ? 'lunch' : (slotOf(arrival) || 'lunch'));
         const slot = slotOf(arrival) || mealTime;
+        // 自动预匹配建议包厢（结论 #H/#10）：顾客若未指定包厢，则按容量≥人数且当日该窗口空闲挑最小合适厢，
+        // 作为「建议包厢」写入 roomNo，供店员审批时直接看到；若顾客已指定则尊重其选择。
+        let suggestRoom = p.roomNo || '';
+        if (!suggestRoom) {
+          try { suggestRoom = await pickFreeRoom(p.date, arrival, ps) || ''; } catch (e) { console.warn('[submit] suggest', e.message); }
+        }
         const _id = (await db.collection('reservations').add({
           data: {
-            _openid: openid, date: p.date, mealTime, slot, expectedArrival: arrival, roomNo: p.roomNo || '',
+            _openid: openid, date: p.date, mealTime, slot, expectedArrival: arrival, roomNo: suggestRoom,
             partySize: ps, contactPhone: p.contactPhone, note: p.note || '',
             dishes: Array.isArray(p.dishes) ? p.dishes : [],
             status: 'pending', source: 'self', createdAt: db.serverDate(),
           },
         }))._id;
-        return { data: { id: _id, status: 'pending' } };
+        return { data: { id: _id, status: 'pending', suggestRoom } };
       }
       // 顾客：我的预订（自身）；自带 date/mealTime，roomId 由 reservationRef 关联 booking
       case 'myReservations': {

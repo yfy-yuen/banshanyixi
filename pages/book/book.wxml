@@ -64,6 +64,7 @@
         <view class="appr-people">{{item.partySize}} 人</view>
       </view>
       <view class="appr-info">手机 {{item.contactPhone}}</view>
+      <view class="appr-info">{{item.roomText ? '建议包厢：' + item.roomText : '建议包厢：由店家安排'}}</view>
       <view wx:if="{{item.note}}" class="appr-note">备注：{{item.note}}</view>
       <view class="appr-acts">
         <view class="mbtn" catchtap="confirmApp" data-id="{{item.id}}">确认</view>

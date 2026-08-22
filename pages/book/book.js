@@ -307,6 +307,7 @@ Page({
       const apps = list.filter((r) => r.status === 'pending').map((r) => ({
         id: r.id, partySize: r.partySize, contactPhone: r.contactPhone, note: r.note || '',
         date: r.date || '', meal: mealText(r.mealTime || 'lunch'),
+        roomText: r.roomNo ? (ROOMS[r.roomNo] || (r.roomNo + ' 号包厢')) : '',
       }));
       this.setData({ applications: apps });
     } catch (e) { console.warn('[book] applications', e); }
