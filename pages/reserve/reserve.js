@@ -5,7 +5,12 @@ function mealLabel(m) { return m === 'dinner' ? '晚市' : '午市'; }
 function statusText(s) {
   return ({ pending: '审核中', confirmed: '已确认', rejected: '已婉拒', cancelled: '已取消' })[s] || s;
 }
-function canCancel(s) { return s === 'pending' || s === 'confirmed'; }
+// 自助取消：状态为 pending/confirmed 且距用餐 ≥ 2 整天才可自助取消；否则只能联系店员。
+// 与预点菜截止线（canSelfEditPreorder）保持一致：用餐当天/前 1 天锁定。
+function canCancel(s, date) {
+  if (s !== 'pending' && s !== 'confirmed') return false;
+  return canSelfEditPreorder(date);
+}
 function pad(n) { return (n < 10 ? '0' : '') + n; }
 function todayStr() {
   const d = new Date();
@@ -30,7 +35,7 @@ Page({
         ...r,
         mealText: mealLabel(r.mealTime),
         statusText: statusText(r.status),
-        cancellable: canCancel(r.status),
+        cancellable: canCancel(r.status, r.date),
         preorderCount: (r.dishes || []).length,
         // 自助改预点：状态为 pending/confirmed 且距用餐 ≥ 2 整天；否则只能联系店员代加
         preorderable: (r.status === 'pending' || r.status === 'confirmed') && canSelfEditPreorder(r.date),
@@ -88,8 +93,14 @@ Page({
   async cancelMine(e) {
     const id = e.currentTarget.dataset.id;
     if (!id) return;
+    // 双保险：即便绕过 UI 直接调用，也按截止线拦截（与预点菜一致）
+    const target = (this.data.mine || []).find((r) => r.id === id);
+    if (target && !canCancel(target.status, target.date)) {
+      wx.showToast({ title: '距用餐不足 2 天，无法自助取消，请联系店员', icon: 'none' });
+      return;
+    }
     const ok = await new Promise((res) => wx.showModal({
-      title: '取消预订', content: '确定取消该预订申请？', success: (r) => res(r.confirm),
+      title: '取消预订', content: '确定取消该预订申请？', success: (r) =>  res(r.confirm),
     }));
     if (!ok) return;
     wx.showLoading({ title: '取消中' });

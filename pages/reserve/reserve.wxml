@@ -28,6 +28,7 @@
     <view wx:if="{{item.preorderable}}" class="mcard-preorder" data-id="{{item.id}}" bindtap="editPreorder">去预点菜</view>
     <view wx:elif="{{item.status==='pending' || item.status==='confirmed'}}" class="mcard-locked">距用餐不足 2 天，预点已锁定，请到店联系店员代加</view>
     <view wx:if="{{item.cancellable}}" class="mcard-cancel" data-id="{{item.id}}" bindtap="cancelMine">取消订位</view>
+    <view wx:elif="{{item.status==='pending' || item.status==='confirmed'}}" class="mcard-locked">距用餐不足 2 天，无法自助取消，请到店联系店员取消</view>
   </view>
 
   <!-- 申请订位弹窗 -->
