@@ -28,6 +28,7 @@
         class="cal-cell {{item.isSel?'sel':''}} {{item.empty?'empty':''}}"
         data-date="{{item.dateStr}}" bindtap="pickDay">
         <text wx:if="{{item.day}}">{{item.day}}</text>
+        <text wx:if="{{item.day && dateCounts[item.dateStr]}}" class="cal-count">{{dateCounts[item.dateStr]}}</text>
       </view>
     </view>
 

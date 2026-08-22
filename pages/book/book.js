@@ -22,6 +22,7 @@ Page({
     matrix: {},
     applications: [],
     sessions: [],
+    dateCounts: {},
     showModal: false, showPub: false, showPublishFeature: false,
     roomIndex: 0,
     form: { roomNo: '', roomName: '', slot: 'lunch', type: 'meal', dishIds: [], guest_name: '', guest_phone: '', note: '', date: '', id: null, partySize: 0 },
@@ -68,6 +69,14 @@ Page({
       cells.push({ day: d, dateStr: ds, isSel: ds === this.data.selected });
     }
     this.setData({ cells });
+    this.loadMonthCounts(y, m);
+  },
+  async loadMonthCounts(y, m) {
+    try {
+      const ym = y + '-' + pad(m);
+      const counts = await callApi('bookingCountsByMonth', { yearMonth: ym });
+      this.setData({ dateCounts: counts || {} });
+    } catch (e) { console.warn('[book] monthCounts', e); }
   },
   prevMonth() {
     let { year, month } = this.data; month--;
@@ -234,6 +243,7 @@ Page({
       wx.hideLoading();
       this.setData({ showModal: false, showDetail: false });
       this.loadMatrix(this.data.selected);
+      this.loadMonthCounts(this.data.year, this.data.month);
       wx.showToast({ title: '已取消', icon: 'success' });
     } catch (err) {
       wx.hideLoading();
@@ -279,6 +289,7 @@ Page({
       wx.hideLoading();
       this.setData({ showModal: false });
       this.loadMatrix(this.data.selected);
+      this.loadMonthCounts(this.data.year, this.data.month);
       wx.showToast({ title: f.id ? '已改期' : '已排定', icon: 'success' });
     } catch (err) {
       wx.hideLoading();

@@ -13,9 +13,11 @@
 .cal-week { display: flex; }
 .cal-wd { flex: 1; text-align: center; font-size: 12px; color: var(--muted); padding: 6px 0; }
 .cal-grid { display: flex; flex-wrap: wrap; margin-top: 4px; }
-.cal-cell { width: 14.28%; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--ink); }
+.cal-cell { width: 14.28%; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--ink); position: relative; }
 .cal-cell.empty { visibility: hidden; }
 .cal-cell.sel { background: var(--cinnabar); color: #fff; border-radius: 10px; }
+.cal-count { position: absolute; top: 2px; right: 4px; font-size: 9px; line-height: 12px; min-width: 12px; padding: 0 3px; text-align: center; border-radius: 6px; background: var(--cinnabar); color: #fff; }
+.cal-cell.sel .cal-count { background: #fff; color: var(--cinnabar); }
 
 .mtitle { font-size: 14px; color: var(--ink-light); margin: 18px 0 10px; letter-spacing: 1px; }
 .shop-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }

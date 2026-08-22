@@ -230,6 +230,18 @@ exports.main = async (event) => {
         if (p.date) rows = normalize((await db.collection('bookings').where({ date: p.date }).limit(1000).get()).data);
         else rows = normalize((await db.collection('bookings').limit(1000).get()).data);
         break;
+      case 'bookingCountsByMonth': {
+        // 返回当月每一天已排包厢数量（按 bookings 集合 date 字段统计），供店务日历显示小角标
+        const ym = String(p.yearMonth || '');
+        if (!/^\d{4}-\d{2}$/.test(ym)) return { error: 'yearMonth 格式需为 YYYY-MM' };
+        const first = ym + '-01';
+        const lastDay = new Date(Number(ym.slice(0, 4)), Number(ym.slice(5, 7)), 0).getDate();
+        const last = `${ym}-${lastDay < 10 ? '0' + lastDay : lastDay}`;
+        const all = (await db.collection('bookings').where({ date: _.gte(first).and(_.lte(last)) }).limit(1000).get()).data || [];
+        const counts = {};
+        all.forEach((b) => { if (b.date) counts[b.date] = (counts[b.date] || 0) + 1; });
+        return { data: counts };
+      }
 
       /* ===== 读（店员/老板：订单列表） ===== */
       case 'merchantOrders': {
