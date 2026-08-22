@@ -46,8 +46,26 @@ const STORE_LAT = 28.260397;         // GCJ-02 纬度（腾讯地图坐标，悦
 const STORE_LNG = 112.883721;        // GCJ-02 经度（腾讯地图坐标，悦禧国际山庄参考点）
 const STORE_NAME = '半山一席';   // 工商注册名（导航/拨号显示用，无间隔点）；品牌视觉仍用「半山·一席」
 
+// 预点菜自助修改截止线：用餐日 00:00 往前数 N 个整天。
+// 规则：距用餐日 < N 整天（即用餐当天 / 前 1 天 / 不足 N 天）则锁定，只能联系店员代加。
+// 例：用餐周六 → 周三(前3天)仍可改，周四00:00起锁定（PREORDER_LOCK_DAYS=2 表示「至少提前 2 整天」）。
+const PREORDER_LOCK_DAYS = 2;
+
+// 判断顾客能否自助修改预点菜（仅针对「已有预订」的改预点场景；首次创建下单不受限）。
+// date: 用餐日期 'YYYY-MM-DD'。返回 true=可自助改；false=已锁定。
+function canSelfEditPreorder(date) {
+  if (!date) return true; // 缺日期时保守放开，由后端兜底
+  const now = new Date();
+  const [y, m, d] = String(date).split('-').map(Number);
+  if (!y || !m || !d) return true;
+  const mealDay = new Date(y, m - 1, d, 0, 0, 0, 0); // 用餐日 00:00
+  const diffMs = mealDay.getTime() - now.getTime();
+  const diffDays = diffMs / (24 * 60 * 60 * 1000);
+  return diffDays >= PREORDER_LOCK_DAYS;
+}
+
 // 工具函数
 const fmt = (n) => '¥' + Number(n || 0).toFixed(2);
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-module.exports = { ENV, REGION, ROOMS, BOSS_CODE, CATS, fmt, genId, GATE_VIDEO_SRC, GATE_VIDEO_POSTER, RESERVE_TPL_ID, STORE_ADDR, STORE_PHONE, STORE_LAT, STORE_LNG, STORE_NAME };
+module.exports = { ENV, REGION, ROOMS, BOSS_CODE, CATS, fmt, genId, GATE_VIDEO_SRC, GATE_VIDEO_POSTER, RESERVE_TPL_ID, STORE_ADDR, STORE_PHONE, STORE_LAT, STORE_LNG, STORE_NAME, PREORDER_LOCK_DAYS, canSelfEditPreorder };

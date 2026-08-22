@@ -13,6 +13,12 @@
     </view>
   </view>
 
+  <!-- 预点锁定提示（仅改预点且距用餐不足2天时显示） -->
+  <view wx:if="{{preorder && locked}}" class="lock-bar">
+    <view class="lock-txt">距用餐已不足 2 天，预点已锁定，修改请到店后联系店员代加</view>
+    <view wx:if="{{storePhone}}" class="lock-call" bindtap="callStore">拨打店员 {{storePhone}}</view>
+  </view>
+
   <!-- 左栏 + 右分区 -->
   <view class="body">
     <scroll-view class="rail" scroll-y>
@@ -59,7 +65,7 @@
         <text class="cart-count">共 {{cartCount}} 件 · 点此查看</text>
       </view>
     </view>
-    <view class="btn-checkout" bindtap="openCart">去结算</view>
+    <view wx:if="{{!locked}}" class="btn-checkout" bindtap="openCart">去结算</view>
   </view>
 </view>
 
@@ -133,7 +139,7 @@
     </scroll-view>
     <view class="cart-foot">
       <view class="cart-foot-sum">合计 <text class="price-red">{{cartTotalText}}</text></view>
-      <view class="btn btn-checkout" catchtap="goConfirm">去结算</view>
+      <view wx:if="{{!locked}}" class="btn btn-checkout" catchtap="goConfirm">去结算</view>
     </view>
   </view>
 </view>
@@ -159,7 +165,8 @@
       <text class="note-label">备注</text>
       <textarea class="note-input" placeholder="口味、忌口、用餐时间等" value="{{note}}" bindinput="onNoteInput" maxlength="200"></textarea>
     </view>
-    <view class="btn btn-checkout" catchtap="submitOrder">{{preorder ? '保存预点菜' : '确认结算'}}</view>
+    <view wx:if="{{!locked}}" class="btn btn-checkout" catchtap="submitOrder">{{preorder ? '保存预点菜' : '确认结算'}}</view>
+    <view wx:else class="btn btn-checkout disabled">已锁定</view>
   </view>
 </view>
 

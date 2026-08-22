@@ -1,4 +1,4 @@
-const { CATS, ROOMS, fmt } = require('../../utils/config');
+const { CATS, ROOMS, fmt, canSelfEditPreorder, STORE_PHONE } = require('../../utils/config');
 const { loadDishes, submitOrder, getReservation, savePreorder, submitReservation } = require('../../utils/api');
 const { classifyError } = require('../../utils/cloudbase');
 const app = getApp();
@@ -18,7 +18,7 @@ function buildSelText(sel) {
 
 Page({
   data: {
-    preorder: false, reservationId: '',
+    preorder: false, reservationId: '', locked: false, storePhone: '',
     roomNo: '', roomName: '', people: 1,
     cats: [], sections: [], activeCat: '',
     scrollIntoId: '',
@@ -64,11 +64,17 @@ Page({
       if (rid) {
         const r = await getReservation(rid);
         const dishes = (r && r.dishes) || [];
+        // 距用餐不足 2 整天 → 锁定自助改预点，只能联系店员代加（仍可读）
+        const locked = !canSelfEditPreorder(r && r.date);
         const cart = dishes.map((d) => {
           const doc = this.data.dishes.find((x) => x.id === d.dish_id);
           return { dishId: d.dish_id, name: d.name, basePrice: doc ? doc.price : 0, category: doc ? doc.category : '', sel: {}, unitPrice: doc ? doc.price : 0, qty: d.qty || 1 };
         }).filter((c) => c.dishId);
         this.updateCart(cart);
+        this.setData({
+          locked,
+          storePhone: (STORE_PHONE || '').split('/')[0] || '',
+        });
       }
       wx.hideLoading();
     } catch (e) {
@@ -147,6 +153,7 @@ Page({
 
   /* ===== 购物车 ===== */
   addDish(e) {
+    if (this.data.locked) return;
     const id = e.currentTarget.dataset.id;
     const d = this.data.dishes.find((x) => x.id === id);
     if (!d) return;
@@ -155,6 +162,7 @@ Page({
     this.addToCart({ dishId: id, name: d.name, basePrice: d.price, category: d.category, sel: {}, unitPrice: d.price, qty: 1 });
   },
   decDish(e) {
+    if (this.data.locked) return;
     const id = e.currentTarget.dataset.id;
     const cart = this.data.cart.slice();
     let idx = -1;
@@ -212,6 +220,7 @@ Page({
     return out;
   },
   incCart(e) {
+    if (this.data.locked) return;
     const key = e.currentTarget.dataset.key;
     const idxs = this._idxsOf(key);
     if (!idxs.length) return;
@@ -220,6 +229,7 @@ Page({
     this.updateCart(cart);
   },
   decCart(e) {
+    if (this.data.locked) return;
     const key = e.currentTarget.dataset.key;
     const idxs = this._idxsOf(key);
     if (!idxs.length) return;
@@ -228,6 +238,7 @@ Page({
     this.updateCart(cart);
   },
   delCart(e) {
+    if (this.data.locked) return;
     const key = e.currentTarget.dataset.key;
     const cart = this.data.cart.slice().filter((c) => {
       const k = c.dishId + '|' + (buildSelText(c.sel) || '');
@@ -265,6 +276,7 @@ Page({
     this.setData({ spec: this.buildSpec(spec.dish, spec.picked, qty) });
   },
   confirmSpec() {
+    if (this.data.locked) return;
     const spec = this.data.spec;
     const d = spec.dish;
     const sel = {};
@@ -280,11 +292,20 @@ Page({
     this.setData({ showSpec: false, spec: null });
   },
   closeSpec() { this.setData({ showSpec: false, spec: null }); },
+  callStore() {
+    const phone = (this.data.storePhone || '').trim();
+    if (!phone) { wx.showToast({ title: '暂未配置门店电话', icon: 'none' }); return; }
+    wx.makePhoneCall({ phoneNumber: phone });
+  },
 
   /* ===== 提交订单 ===== */
   async submitOrder() {
     if (!this.data.cart.length) return;
     if (this.data.preorder) {
+      if (this.data.locked) {
+        wx.showToast({ title: '预点已锁定，请联系店员代加', icon: 'none' });
+        return;
+      }
       if (!this.data.cart.length) { wx.showToast({ title: '请至少预点一道菜', icon: 'none' }); return; }
       const dishes = this.data.cart.map((c) => ({
         dish_id: c.dishId, name: c.name,

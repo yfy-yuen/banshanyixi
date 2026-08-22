@@ -26,6 +26,7 @@
     <view wx:if="{{item.roomText}}" class="mcard-room">已为您排定：{{item.roomText}}</view>
     <view wx:if="{{item.preorderCount}}" class="mcard-note">已预点 {{item.preorderCount}} 道菜{{item.preorderable ? '' : '（已锁定）'}}</view>
     <view wx:if="{{item.preorderable}}" class="mcard-preorder" data-id="{{item.id}}" bindtap="editPreorder">去预点菜</view>
+    <view wx:elif="{{item.status==='pending' || item.status==='confirmed'}}" class="mcard-locked">距用餐不足 2 天，预点已锁定，请到店联系店员代加</view>
     <view wx:if="{{item.cancellable}}" class="mcard-cancel" data-id="{{item.id}}" bindtap="cancelMine">取消订位</view>
   </view>
 

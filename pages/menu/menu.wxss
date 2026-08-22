@@ -146,6 +146,19 @@
   font-size: 15px; letter-spacing: 1px;
   box-shadow: 0 2px 8px var(--shadow);
 }
+.btn-checkout.disabled { background: #b8b2a6; }
+.lock-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 10px 16px; background: #fff7e9;
+  border-top: 1px solid #e7d6b0;
+  box-shadow: 0 -2px 14px rgba(45, 40, 30, 0.08);
+}
+.lock-txt { color: #8a6d2b; font-size: 13px; line-height: 1.4; }
+.lock-call {
+  align-self: flex-start; color: #b3392f; font-size: 14px; font-weight: 500;
+  border: 1px solid #d9a441; border-radius: 999px; padding: 6px 16px;
+}
 
 /* 规格 / 账单弹窗 */
 .spec-group { margin: 14px 0; }

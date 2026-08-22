@@ -1,4 +1,4 @@
-const { ROOMS, RESERVE_TPL_ID } = require('../../utils/config');
+const { ROOMS, RESERVE_TPL_ID, canSelfEditPreorder, STORE_PHONE } = require('../../utils/config');
 const { submitReservation, myReservations, cancelReservation } = require('../../utils/api');
 
 function mealLabel(m) { return m === 'dinner' ? '晚市' : '午市'; }
@@ -32,7 +32,8 @@ Page({
         statusText: statusText(r.status),
         cancellable: canCancel(r.status),
         preorderCount: (r.dishes || []).length,
-        preorderable: r.status === 'pending' && (r.dishes || []).length === 0,
+        // 自助改预点：状态为 pending/confirmed 且距用餐 ≥ 2 整天；否则只能联系店员代加
+        preorderable: (r.status === 'pending' || r.status === 'confirmed') && canSelfEditPreorder(r.date),
         arrivalText: r.expectedArrival || (r.mealTime === 'dinner' ? '晚市' : '午市'),
         // 店务确认后会自动排席并生成 booking（reservationRef 回指），这里显示顾客被安排在几号包厢
         roomText: r.roomId ? (ROOMS[r.roomId] || (r.roomId + ' 号包厢')) : '',
