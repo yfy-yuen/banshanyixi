@@ -97,6 +97,9 @@ Page({
   },
   noop() {},
 
+  // 跳转门店信息页
+  goAbout() { wx.navigateTo({ url: '/pages/about/about' }); },
+
   onPanelScroll() {
     const query = wx.createSelectorQuery().in(this);
     query.selectAll('.sec').boundingClientRect();

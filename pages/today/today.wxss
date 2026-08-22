@@ -1,0 +1,74 @@
+.wrap {
+  padding: 40rpx 32rpx;
+  min-height: 100vh;
+  background: #efe9df;
+  box-sizing: border-box;
+}
+.empty {
+  margin-top: 200rpx;
+  text-align: center;
+  color: #6a655d;
+}
+.big {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #2c2622;
+  margin-bottom: 16rpx;
+}
+.sub {
+  font-size: 26rpx;
+  color: #8a8076;
+  margin-top: 12rpx;
+}
+.muted {
+  color: #a39a8e;
+}
+.btn {
+  margin: 48rpx auto 0;
+  width: 300rpx;
+  height: 76rpx;
+  line-height: 76rpx;
+  text-align: center;
+  background: #a63522;
+  color: #fff;
+  border-radius: 38rpx;
+  font-size: 30rpx;
+  letter-spacing: 4rpx;
+}
+.card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 36rpx;
+  box-shadow: 0 6rpx 24rpx rgba(0,0,0,.06);
+}
+.title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #2c2622;
+  margin-bottom: 28rpx;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0ece4;
+}
+.k {
+  color: #8a8076;
+  font-size: 28rpx;
+}
+.v {
+  color: #2c2622;
+  font-size: 28rpx;
+}
+.section {
+  margin: 28rpx 0 12rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #a63522;
+}
+.dish {
+  font-size: 28rpx;
+  color: #2c2622;
+  padding: 8rpx 0;
+}

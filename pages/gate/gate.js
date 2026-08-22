@@ -95,6 +95,14 @@ Page({
       this.setData({ fallbackMode: true, videoVisible: false });
     }
   },
+  // 分流：订一席（跳订位提交页，普通页 navigateTo）
+  goReserve() {
+    wx.navigateTo({ url: '/pages/reserve/reserve' });
+  },
+  // 分流：入席去（跳「我的今日」页，按身份显示今日包厢与预点菜）
+  goArrive() {
+    wx.navigateTo({ url: '/pages/today/today' });
+  },
   // 隐藏老板注册入口：视频模式下原生组件限制，由"长按"改为"点击"触发（功能不变）。
   bindBossEntry() {
     const app = getApp();

@@ -1,5 +1,5 @@
 const { ROOMS } = require('../../utils/config');
-const { getOrdersByRoomName, callApi } = require('../../utils/api');
+const { getOrdersByRoomName, callApi, markArrived } = require('../../utils/api');
 const app = getApp();
 
 function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -22,6 +22,7 @@ function decorateOrder(o) {
     totalText: '¥' + Number(o.total || 0).toFixed(2),
     statusText: o.status === 'paid' ? '已结账' : '未结账',
     createdText: (o.created_at || '').replace('T', ' ').slice(0, 16),
+    noteText: (o.note || '').trim(),
   };
 }
 
@@ -44,6 +45,8 @@ Page({
     this.setData({ roomNo: no, roomName: name, tab, orderSub });
     wx.setStorageSync('roomNo', no);
     wx.setStorageSync('roomName', name);
+    // 结论 #1：进入「自己预订的」包厢内页即静默标记到店（须该厢+已到预计时间，后端校验防误标）
+    markArrived(this.data.roomNo).catch(() => {});
     this.loadData(no);
   },
   async loadData(no) {
@@ -56,20 +59,23 @@ Page({
         getOrdersByRoomName(this.data.roomName).catch(() => []),
       ]);
       const room = (rooms || []).find((x) => x.id === no || x.room_no === no) || {};
-      const list = (bookings || []).filter((x) => x.room_id === no);
       const today = todayStr();
-      const sorted = list.slice().sort((a, c) => (a.date < c.date ? -1 : 1));
-      const pick = list.find((x) => x.date === today) || sorted[0];
+      // 结论 #F：包厢页仅显示当天排席，过期（非当天）预订不回退展示
+      const list = (bookings || []).filter((x) => x.room_id === no && x.date === today);
+      const pick = list[0];
       let dateLabel = '', typeLabel = '', dishes = [];
       if (pick) {
         dateLabel = pick.date;
         typeLabel = bookingLabel(pick);
         dishes = pick.dishes || [];
+      } else {
+        dateLabel = today;
+        typeLabel = '今日无排席';
       }
       const cover = room.cover || (room.env_photos && room.env_photos[0]) || '';
       let introHtml = room.intro || '';
       if (introHtml) introHtml = await this.introToDisplay(introHtml); // 富文本插图 cloud:// → 临时链
-      const liveOrders = (o || []).map(decorateOrder);
+      const liveOrders = (o || []).filter((x) => !x.closed).map(decorateOrder);
       this.setData({
         envPhotos: room.env_photos || [],
         restaurantPhotos: room.restaurant_photos || [],

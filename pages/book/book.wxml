@@ -87,6 +87,22 @@
         <view class="mbtn del" catchtap="rejectApp" data-id="{{item.id}}">婉拒</view>
       </view>
     </view>
+
+    <view class="mtitle">已确认预订 · 改预点</view>
+    <view wx:if="{{!confirmed.length}}" class="r-empty">暂无已确认预订</view>
+    <view wx:for="{{confirmed}}" wx:key="id" class="appr">
+      <view class="appr-top">
+        <view class="appr-date">{{item.date}} · {{item.meal}}{{item.roomText ? ' · ' + item.roomText : ''}}</view>
+        <view class="appr-people">{{item.partySize}} 人</view>
+      </view>
+      <view class="appr-info">已预点 {{item.dishCount}} 道</view>
+      <view class="appr-podishes">
+        <text wx:for="{{item.dishes}}" wx:for-item="d" wx:key="name" class="appr-pod">{{d.name}}×{{d.qty}}</text>
+      </view>
+      <view class="appr-acts">
+        <view class="mbtn" catchtap="openPre" data-id="{{item.id}}">改预点</view>
+      </view>
+    </view>
   </block>
 
   <view class="mask" wx:if="{{showModal}}" bindtap="closeModal">
@@ -141,6 +157,24 @@
       <input class="ipt" value="{{pub.note}}" data-field="note" bindinput="onPubInput" placeholder="如 主理人私宴" />
       <view class="btn" style="width:100%;margin-top:14px;" bindtap="savePub">发布并开放订位</view>
       <view class="btn-del" style="width:100%;margin-top:10px;" bindtap="closePub">取消</view>
+    </view>
+  </view>
+
+  <view class="mask" wx:if="{{showPre}}" bindtap="closePre">
+    <view class="modal" catchtap="noop">
+      <view class="modal-title">改预点菜 · {{preForm.roomText}}</view>
+      <view class="po-tip">顾客已锁定，商家可在此代改（结论 #5）</view>
+      <view wx:if="{{!preForm.dishes.length}}" class="r-empty">暂无可改菜品，点「+」添加需在菜单页操作</view>
+      <view wx:for="{{preForm.dishes}}" wx:key="name" class="po-row">
+        <view class="po-name">{{item.name}}</view>
+        <view class="po-ctrl">
+          <view class="po-minus" data-name="{{item.name}}" data-delta="-1" bindtap="changePre">−</view>
+          <view class="po-qty">{{item.qty}}</view>
+          <view class="po-plus" data-name="{{item.name}}" data-delta="1" bindtap="changePre">＋</view>
+        </view>
+      </view>
+      <view class="btn" style="width:100%;margin-top:14px;" bindtap="savePre">保存修改</view>
+      <view class="btn-del" style="width:100%;margin-top:10px;" bindtap="closePre">取消</view>
     </view>
   </view>
 </view>

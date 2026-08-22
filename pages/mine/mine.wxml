@@ -1,0 +1,80 @@
+<view class="page">
+  <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
+
+  <view wx:if="{{loading}}" class="loading-mask">
+    <view class="spinner"></view>
+    <view class="loading-tip">加载中…</view>
+  </view>
+
+  <!-- 个人信息 -->
+  <view class="head">
+    <image class="h-logo" src="/assets/images/seal.png" mode="aspectFit"></image>
+    <view class="h-name" bindtap="editName">{{name || '尊客'}}<text class="h-edit">改称呼</text></view>
+    <view class="h-phone">{{phoneMask || '未留手机号'}}</view>
+  </view>
+
+  <!-- 我的预订 -->
+  <view class="sec">我的预订</view>
+  <view wx:if="{{!active.length}}" class="empty">暂无进行中的预订</view>
+  <view wx:for="{{active}}" wx:key="id" class="mcard">
+    <view class="mcard-top">
+      <text>{{item.date}} · {{item.mealText}}</text>
+      <text class="badge badge-{{item.status}}">{{item.statusText}}</text>
+    </view>
+    <view class="mcard-info">人数 {{item.partySize}} 人{{item.roomText ? ' · ' + item.roomText : ''}}</view>
+    <view wx:if="{{item.note}}" class="mcard-note">备注：{{item.note}}</view>
+    <view class="prog">
+      <view class="prog-step {{item.step >= 0 ? 'on' : ''}}"><view class="dot"></view><text>审核中</text></view>
+      <view class="prog-step {{item.step >= 1 ? 'on' : ''}}"><view class="dot"></view><text>已确认</text></view>
+      <view class="prog-step {{item.step >= 2 ? 'on' : ''}}"><view class="dot"></view><text>已预点</text></view>
+    </view>
+    <view class="mcard-ops">
+      <view wx:if="{{item.status === 'pending' && item.step < 2}}" class="op" data-id="{{item.id}}" bindtap="editPreorder">去预点菜</view>
+      <view wx:if="{{item.status === 'confirmed' && item.step >= 2}}" class="op op-lock">预点已锁定</view>
+      <view wx:if="{{item.status === 'pending'}}" class="op" data-id="{{item.id}}" bindtap="cancelMine">取消</view>
+      <view wx:if="{{item.status === 'confirmed'}}" class="op op-cancel" data-id="{{item.id}}" bindtap="cancelMine">取消重订</view>
+    </view>
+  </view>
+  <view class="btn-apply" bindtap="goReserve">订一席</view>
+
+  <!-- 我的预点菜 -->
+  <view class="sec">我的预点菜</view>
+  <view wx:if="{{!preorders.length}}" class="empty">暂无预点菜品</view>
+  <view wx:for="{{preorders}}" wx:key="id" class="mcard">
+    <view class="mcard-top"><text>{{item.date}} · {{item.roomText}}</text><text wx:if="{{item.locked}}" class="badge badge-locked">已锁定</text></view>
+    <view class="po-list"><text wx:for="{{item.dishes}}" wx:for-item="d" wx:key="name">{{d.name}}{{d.selText}} ×{{d.qty}}　</text></view>
+    <view class="mcard-tip">如需改菜请联系门店（商家可代改）</view>
+  </view>
+
+  <!-- 常点清单 -->
+  <view class="sec">常点清单</view>
+  <view wx:if="{{!favorites.length}}" class="empty">还没有常点记录</view>
+  <view wx:else class="fav-wrap">
+    <view wx:for="{{favorites}}" wx:key="name" class="fav">{{item.name}}<text class="fav-c">×{{item.count}}</text></view>
+  </view>
+
+  <!-- 历史订位 -->
+  <view class="sec">历史订位</view>
+  <view wx:if="{{!history.length}}" class="empty">暂无历史订位</view>
+  <view wx:for="{{history}}" wx:key="id" class="mcard">
+    <view class="mcard-top">
+      <text>{{item.date}} · {{item.mealText}}</text>
+      <text class="badge badge-{{item.status}}">{{item.statusText}}</text>
+    </view>
+    <view class="mcard-info">人数 {{item.partySize}} 人{{item.roomText ? ' · ' + item.roomText : ''}}</view>
+    <view wx:if="{{item.note}}" class="mcard-note">备注：{{item.note}}</view>
+  </view>
+
+  <!-- 门店信息入口 -->
+  <view class="entry" bindtap="goAbout">半山·一席 · 关于本店 ›</view>
+</view>
+
+<!-- 改称呼弹窗 -->
+<view class="mask" wx:if="{{showNameModal}}" bindtap="closeName">
+  <view class="modal" catchtap="noop">
+    <view class="modal-title">称呼</view>
+    <input class="ipt" value="{{nameInput}}" bindinput="onNameInput" placeholder="如何称呼您" placeholder-style="color:#5a544d;font-size:28rpx" />
+    <view class="btn" style="width:100%;margin-top:14px;" bindtap="saveName">保存</view>
+    <view class="btn-del" style="width:100%;margin-top:10px;" bindtap="closeName">返回</view>
+  </view>
+</view>

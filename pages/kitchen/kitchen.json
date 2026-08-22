@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "后厨配菜单",
+  "navigationBarBackgroundColor": "#6a655d",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#e2ded6",
+  "enablePullDownRefresh": true
+}

@@ -99,6 +99,39 @@ page {
   50% { opacity: 1; }
 }
 
+/* ===== 分流按钮（2026-08-21 用户授权新增；匾额/诗句/logo/老板印章等冻结视觉不变） ===== */
+.gate-divider {
+  position: absolute;
+  top: 83vh;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 24rpx;
+  color: rgba(205,187,142,0.85);
+  letter-spacing: 8rpx;
+}
+.gate-btn-sub {
+  position: absolute;
+  top: 87vh;
+  width: 220rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  text-align: center;
+  font-size: 30rpx;
+  letter-spacing: 6rpx;
+  font-family: 'STXingkai','行楷-简',KaiTi,serif;
+  border-radius: 32rpx;
+  box-sizing: border-box;
+}
+.gate-btn-primary {
+  background: #a63522;
+  color: #fff;
+}
+.gate-btn-ghost {
+  border: 2rpx solid #cea256;
+  color: #e9c7a0;
+}
+
 /* ===== 老板隐藏入口（右上角印章，长按无，单击触发 BOSS_CODE 注册） ===== */
 .boss-seal {
   position: absolute;

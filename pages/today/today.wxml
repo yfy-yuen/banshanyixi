@@ -1,0 +1,26 @@
+<view class="wrap">
+  <view wx:if="{{loading}}" class="empty">查询中…</view>
+
+  <view wx:elif="{{!has}}" class="empty">
+    <view class="big">今日暂无您的预订</view>
+    <view class="sub">还未订位？点击下方按钮，让我们为您安排一席。</view>
+    <view class="btn" bindtap="goReserve">去订位</view>
+  </view>
+
+  <view wx:else class="card">
+    <view class="title">今日为您备席</view>
+    <view class="row"><text class="k">包厢</text><text class="v">{{info.roomName ? info.roomName : '包厢' + info.roomNo + '号'}}</text></view>
+    <view class="row"><text class="k">日期</text><text class="v">{{info.date}}</text></view>
+    <view class="row"><text class="k">到店</text><text class="v">{{info.arriveTime || info.mealTime || '—'}}</text></view>
+    <view class="row"><text class="k">人数</text><text class="v">{{info.partySize}} 位</text></view>
+    <view wx:if="{{info.note}}" class="row"><text class="k">备注</text><text class="v">{{info.note}}</text></view>
+
+    <view class="section">预点菜品</view>
+    <view wx:if="{{dishes.length}}" class="dishes">
+      <view wx:for="{{dishes}}" wx:key="id" class="dish">
+        <text>{{item.name}}{{item.selText}} ×{{item.qty}}</text>
+      </view>
+    </view>
+    <view wx:else class="sub muted">尚未预点菜，可在「订位」中补点。</view>
+  </view>
+</view>

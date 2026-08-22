@@ -31,7 +31,7 @@ Page({
     wx.showLoading({ title: '加载中' });
     try {
       const raw = await getOrdersByRoom(this.data.roomNo);
-      this.setData({ list: raw.map(decorate) });
+      this.setData({ list: raw.filter((o) => !o.closed).map(decorate) });
     } catch (e) {
       wx.showToast({ title: '加载失败', icon: 'none' });
     } finally {

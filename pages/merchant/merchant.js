@@ -1,6 +1,6 @@
 const { CATS, fmt, ROOMS } = require('../../utils/config');
 const {
-  getMerchantOrders, settleOrder, getDishesAdmin, saveDish, deleteDish, getPaymentQrcodes, saveQr, callApi,
+  getMerchantOrders, settleOrder, clearOrder, listReceipts, pushReminders, resetDailyFlags, getDishesAdmin, saveDish, deleteDish, getPaymentQrcodes, saveQr, callApi, sweepPending,
 } = require('../../utils/api');
 
 function decorateOrder(o) {
@@ -12,6 +12,7 @@ function decorateOrder(o) {
     ...o, items, totalText: fmt(o.total),
     paidText: o.status === 'paid' ? '已支付' : '未支付',
     createdText: (o.created_at || '').replace('T', ' ').slice(0, 16),
+    noteText: (o.note || '').trim(),
   };
 }
 
@@ -27,7 +28,9 @@ Page({
     tab: 'orders',
     orderSub: 'book',
     mOrders: [], mBookings: [], mDishes: [],
+    mClosed: [], showClosed: false,
     repMode: 'day', repDate: '', repRows: [], repTotalText: '', repCount: 0,
+    mReceipts: [], receiptDetail: false,
     qrMap: {},
     showEdit: false, editId: '__new__', edit: null, cats: CATS, catsIndex: 0,
     tagOptions: ['招牌', '辣', '素', '时令'],
@@ -113,6 +116,9 @@ Page({
     this.setData({ orderSub: e.currentTarget.dataset.sub });
     this.renderMOrders();
   },
+  gotoKitchen() {
+    wx.navigateTo({ url: '/pages/kitchen/kitchen' });
+  },
 
   /* 订单：订餐菜品 / 现场下单菜品 */
   renderMOrders() {
@@ -122,7 +128,10 @@ Page({
   async loadLiveOrders() {
     try {
       const raw = await getMerchantOrders();
-      this.setData({ mOrders: (raw || []).map(decorateOrder) });
+      const all = (raw || []).map(decorateOrder);
+      const mOrders = all.filter((o) => !o.closed);
+      const mClosed = all.filter((o) => o.closed).slice(0, 20); // 最近 20 笔已清台，作历史归档
+      this.setData({ mOrders, mClosed });
     } catch (e) { wx.showToast({ title: '加载失败', icon: 'none' }); }
   },
   async loadBookings() {
@@ -139,20 +148,41 @@ Page({
       });
     } catch (e) { wx.showToast({ title: '加载失败', icon: 'none' }); }
   },
+  // 一键结账：选支付方式后直接清台（支付+开收据+closed 一步到位，消除两步法口径分裂）
   async settleOrder(e) {
     const id = e.currentTarget.dataset.id;
-    wx.showLoading({ title: '处理中' });
-    try { await settleOrder(id); this.renderMOrders(); }
+    const method = await new Promise((res) => wx.showActionSheet({
+      itemList: ['现金', '扫码', '记账'],
+      success: (r) => res(['cash', 'scan', 'credit'][r.tapIndex]),
+      fail: () => res(''),
+    }));
+    if (!method) return;
+    wx.showLoading({ title: '结账中' });
+    try { await clearOrder(id, method); this.renderMOrders(); wx.showToast({ title: '已结清', icon: 'success' }); }
     catch (err) { wx.showToast({ title: '操作失败', icon: 'none' }); }
     finally { wx.hideLoading(); }
   },
+  // 兼容：对已进入「已支付未清台」状态的订单二次清台确认（正常流程一键结账后用不到，保留防历史脏数据）
+  async clearOrder(e) {
+    const id = e.currentTarget.dataset.id;
+    const ok = await new Promise((res) => wx.showModal({
+      title: '清台确认', content: '确认清台？该订单将从当前列表移除，但记录在「已清台」归档中可查。',
+      success: (r) => res(r.confirm),
+    }));
+    if (!ok) return;
+    wx.showLoading({ title: '处理中' });
+    try { await clearOrder(id); this.renderMOrders(); }
+    catch (err) { wx.showToast({ title: '操作失败', icon: 'none' }); }
+    finally { wx.hideLoading(); }
+  },
+  toggleClosed() { this.setData({ showClosed: !this.data.showClosed }); },
 
   /* 菜品 */
   async renderMDishes() {
     try {
       const raw = await getDishesAdmin();
       this.setData({
-        mDishes: (raw || []).map((d) => ({ ...d, priceText: fmt(d.price), ph: (d.name || '?').charAt(0) })),
+        mDishes: (raw || []).map((d) => ({ ...d, priceText: fmt(d.price), ph: (d.name || '?').charAt(0), portions: d.portions || {} })),
       });
     } catch (e) { wx.showToast({ title: '加载失败', icon: 'none' }); }
   },
@@ -160,11 +190,13 @@ Page({
     const id = e.currentTarget.dataset.id;
     let edit;
     if (id === '__new__') {
-      edit = { name: '', category: CATS[0], price: '', image: '', description: '', specs: [], tags: [] };
+      edit = { name: '', category: CATS[0], price: '', image: '', description: '', specs: [], tags: [], soldOut: false, limited: false, portions: [] };
     } else {
       const d = this.data.mDishes.find((x) => x.id === id);
       const known = ['招牌', '辣', '素', '时令'];
-      edit = { name: d.name, category: d.category, price: String(d.price), image: d.image || '', description: d.description || '', specs: d.specs || [], tags: (d.tags || []).filter((t) => known.indexOf(t) >= 0) };
+      const rawPortions = (d.portions && typeof d.portions === 'object' && !Array.isArray(d.portions)) ? d.portions : {};
+      const portions = Object.keys(rawPortions).map((k) => ({ mat: k, amt: String(rawPortions[k]) }));
+      edit = { name: d.name, category: d.category, price: String(d.price), image: d.image || '', description: d.description || '', specs: d.specs || [], tags: (d.tags || []).filter((t) => known.indexOf(t) >= 0), soldOut: !!d.soldOut, limited: !!d.limited, portions };
     }
     this.setData({ showEdit: true, editId: id, edit, catsIndex: Math.max(0, CATS.indexOf(edit.category)) });
   },
@@ -181,15 +213,41 @@ Page({
   onCatPick(e) {
     this.setData({ 'edit.category': this.data.cats[e.detail.value], catsIndex: e.detail.value });
   },
+  onSoldOutToggle() { this.setData({ 'edit.soldOut': !this.data.edit.soldOut }); },
+  onLimitedToggle() { this.setData({ 'edit.limited': !this.data.edit.limited }); },
+  /* 每份用料编辑（结论 #D：食材采购清单数据源） */
+  addPortion() {
+    const portions = this.data.edit.portions.concat([{ mat: '', amt: '' }]);
+    this.setData({ 'edit.portions': portions });
+  },
+  onPortion(e) {
+    const { pi, f } = e.currentTarget.dataset;
+    this.setData({ ['edit.portions[' + pi + '].' + f]: e.detail.value });
+  },
+  removePortion(e) {
+    const pi = e.currentTarget.dataset.pi;
+    const portions = this.data.edit.portions.slice();
+    portions.splice(pi, 1);
+    this.setData({ 'edit.portions': portions });
+  },
   closeEdit() { this.setData({ showEdit: false }); },
   async saveDish() {
     const ed = this.data.edit;
     if (!ed.name || !ed.name.trim()) { wx.showToast({ title: '请填写菜名', icon: 'none' }); return; }
+    // 每份用料：行数组 → {材料: 用量数值}
+    const portions = {};
+    (ed.portions || []).forEach((p) => {
+      const m = (p.mat || '').trim();
+      const a = Number(p.amt) || 0;
+      if (m && a > 0) portions[m] = a;
+    });
     const payload = {
       name: ed.name.trim(), category: ed.category,
       price: Number(ed.price) || 0, image: ed.image || '',
       description: ed.description || '', specs: ed.specs || [],
       tags: ed.tags || [], available: true,
+      soldOut: !!ed.soldOut, limited: !!ed.limited,
+      portions,
     };
     wx.showLoading({ title: '保存中' });
     try {
@@ -208,14 +266,47 @@ Page({
     catch (err) { wx.showToast({ title: '删除失败', icon: 'none' }); }
     finally { wx.hideLoading(); }
   },
+  // 列表上快速切换：今日售罄 / 今日限定
+  async toggleSoldOut(e) {
+    const id = e.currentTarget.dataset.id;
+    const d = this.data.mDishes.find((x) => x.id === id);
+    if (!d) return;
+    wx.showLoading({ title: '处理中' });
+    try {
+      await saveDish(id, {
+        name: d.name, category: d.category, price: d.price, image: d.image || '',
+        description: d.description || '', specs: d.specs || [], tags: d.tags || [],
+        soldOut: !d.soldOut, limited: !!d.limited,
+      });
+      this.renderMDishes();
+    } catch (err) { wx.showToast({ title: '操作失败', icon: 'none' }); }
+    finally { wx.hideLoading(); }
+  },
+  async toggleLimited(e) {
+    const id = e.currentTarget.dataset.id;
+    const d = this.data.mDishes.find((x) => x.id === id);
+    if (!d) return;
+    wx.showLoading({ title: '处理中' });
+    try {
+      await saveDish(id, {
+        name: d.name, category: d.category, price: d.price, image: d.image || '',
+        description: d.description || '', specs: d.specs || [], tags: d.tags || [],
+        soldOut: !!d.soldOut, limited: !d.limited,
+      });
+      this.renderMDishes();
+    } catch (err) { wx.showToast({ title: '操作失败', icon: 'none' }); }
+    finally { wx.hideLoading(); }
+  },
 
   /* 报表 */
   setRep(e) { this.setData({ repMode: e.currentTarget.dataset.mode }); this.renderReport(); },
   onRepDate(e) { this.setData({ repDate: e.detail.value }); this.renderReport(); },
   async renderReport() {
+    if (this.data.repMode === 'receipt') { this.renderReceipts(); return; }
     try {
       const raw = await getMerchantOrders();
-      const paid = (raw || []).filter((o) => o.status === 'paid');
+      // 报表口径：以「已结清（closed）」为准，与收据列表一致，避免含未清台订单导致对账差
+      const paid = (raw || []).filter((o) => o.closed);
       if (this.data.repMode === 'day') {
         const rows = paid.filter((o) => (o.paid_at || o.created_at).slice(0, 10) === this.data.repDate);
         const total = rows.reduce((s, o) => s + o.total, 0);
@@ -230,6 +321,69 @@ Page({
         this.setData({ repRows: slots, repTotalText: fmt(total), repCount: slots.length });
       }
     } catch (e) { wx.showToast({ title: '加载失败', icon: 'none' }); }
+  },
+  /* 电子收据列表（结论 #E） */
+  async renderReceipts() {
+    try {
+      const list = await listReceipts();
+      this.setData({
+        mReceipts: (list || []).map((r) => ({
+          ...r,
+          totalText: fmt(r.total),
+          pmText: ({ cash: '现金', scan: '扫码', credit: '记账' })[r.paymentMethod] || r.paymentMethod,
+          paidText: r.paid ? '已支付' : '未支付',
+          invText: r.invoiced ? '已开票' : '未开票',
+          lines: (r.lines || []).map((it) => ({
+            ...it, unitText: fmt(it.unitPrice), subText: fmt(it.subtotal),
+          })),
+        })),
+      });
+    } catch (e) { wx.showToast({ title: '加载失败', icon: 'none' }); }
+  },
+  openReceipt(e) {
+    const id = e.currentTarget.dataset.id;
+    const r = this.data.mReceipts.find((x) => x.id === id);
+    if (r) this.setData({ receiptDetail: r });
+  },
+  closeReceipt() { this.setData({ receiptDetail: false }); },
+
+  /* 老板工具：补发提醒 / 清零售罄（结论 #3 / #18尾） */
+  async pushReminders() {
+    wx.showLoading({ title: '补发中' });
+    try {
+      const res = await pushReminders();
+      wx.hideLoading();
+      wx.showToast({ title: '已补发 ' + (res.sent || 0) + ' 条', icon: 'none' });
+    } catch (e) { wx.hideLoading(); wx.showToast({ title: '失败', icon: 'none' }); }
+  },
+  async resetDailyFlags() {
+    const ok = await new Promise((res) => wx.showModal({
+      title: '清零售罄', content: '将清除全部菜品的「今日售罄 / 今日限定」标记（每日开门应做的操作）。确定？',
+      success: (r) => res(r.confirm),
+    }));
+    if (!ok) return;
+    wx.showLoading({ title: '重置中' });
+    try {
+      const res = await resetDailyFlags();
+      wx.hideLoading();
+      wx.showToast({ title: '已重置 ' + (res.reset || 0) + ' 道', icon: 'none' });
+      this.renderMDishes();
+    } catch (e) { wx.hideLoading(); wx.showToast({ title: '失败', icon: 'none' }); }
+  },
+  // 老板工具：清理过期 pending 申请（创建超 24h 仍未处理的预订标记为已取消）
+  async sweepPending() {
+    const ok = await new Promise((res) => wx.showModal({
+      title: '清理过期申请', content: '将把创建超过 24 小时仍未处理的预订申请标记为已取消。确定？',
+      success: (r) => res(r.confirm),
+    }));
+    if (!ok) return;
+    wx.showLoading({ title: '清理中' });
+    try {
+      const res = await sweepPending();
+      wx.hideLoading();
+      wx.showToast({ title: '已清理 ' + (res.cancelled || 0) + ' 条', icon: 'none' });
+      this.renderMOrders();
+    } catch (e) { wx.hideLoading(); wx.showToast({ title: '失败', icon: 'none' }); }
   },
 
   /* 收款码 */

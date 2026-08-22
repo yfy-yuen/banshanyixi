@@ -21,10 +21,10 @@
       <view class="mcard-date">{{item.date}} · {{item.mealText}}</view>
       <view class="badge badge-{{item.status}}">{{item.statusText}}</view>
     </view>
-    <view class="mcard-info">人数 {{item.partySize}} 人 · 手机 {{item.contactPhone}}</view>
+    <view class="mcard-info">人数 {{item.partySize}} 人 · {{item.arrivalText}}</view>
     <view wx:if="{{item.note}}" class="mcard-note">备注：{{item.note}}</view>
     <view wx:if="{{item.roomText}}" class="mcard-room">已为您排定：{{item.roomText}}</view>
-    <view wx:if="{{item.preorderCount}}" class="mcard-note">已预点 {{item.preorderCount}} 道菜</view>
+    <view wx:if="{{item.preorderCount}}" class="mcard-note">已预点 {{item.preorderCount}} 道菜{{item.preorderable ? '' : '（已锁定）'}}</view>
     <view wx:if="{{item.preorderable}}" class="mcard-preorder" data-id="{{item.id}}" bindtap="editPreorder">去预点菜</view>
     <view wx:if="{{item.cancellable}}" class="mcard-cancel" data-id="{{item.id}}" bindtap="cancelMine">取消订位</view>
   </view>
@@ -39,11 +39,10 @@
         <view class="ipt picker">{{form.date || '选择日期'}}</view>
       </picker>
 
-      <view class="dl">餐段</view>
-      <view class="seg2">
-        <view class="seg2-btn {{form.mealTime==='lunch'?'on':''}}" data-meal="lunch" bindtap="onMeal">午市</view>
-        <view class="seg2-btn {{form.mealTime==='dinner'?'on':''}}" data-meal="dinner" bindtap="onMeal">晚市</view>
-      </view>
+      <view class="dl">预计到达时间</view>
+      <picker mode="time" value="{{form.expectedArrival}}" bindchange="onArrival">
+        <view class="ipt picker">{{form.expectedArrival || '选择时间'}}</view>
+      </picker>
 
       <view class="dl">人数</view>
       <input class="ipt" type="number" value="{{form.partySize}}" bindinput="onParty" placeholder="用餐人数" placeholder-style="color:#5a544d;font-size:28rpx" />
@@ -54,9 +53,8 @@
       <view class="dl">备注（选填）</view>
       <input class="ipt" value="{{form.note}}" bindinput="onNote" placeholder="忌口 / 过敏 / 其他" placeholder-style="color:#5a544d;font-size:28rpx" />
 
-      <view class="btn btn-ghost" style="width:100%;margin-top:14px;" bindtap="goPreorder">去预点菜（选填）</view>
-      <view class="btn" style="width:100%;margin-top:10px;" bindtap="submit" wx:if="{{!submitting}}">提交订位申请</view>
-      <view wx:else class="btn-dis" style="width:100%;margin-top:10px;">提交中…</view>
+      <view class="modal-note">订厢须先预点菜（必填）</view>
+      <view class="btn" style="width:100%;margin-top:10px;" bindtap="goPreorder">去预点菜并提交</view>
       <view class="btn-del" style="width:100%;margin-top:10px;" bindtap="closeApply">返回</view>
     </view>
   </view>

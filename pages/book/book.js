@@ -1,5 +1,5 @@
 const { ROOMS } = require('../../utils/config');
-const { callApi, getDishesAdmin, listReservations, confirmReservation, rejectReservation, publishSession, closeSession, sessionsAdmin } = require('../../utils/api');
+const { callApi, getDishesAdmin, listReservations, confirmReservation, rejectReservation, publishSession, closeSession, sessionsAdmin, updateReservationDishes } = require('../../utils/api');
 const app = getApp();
 
 function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -25,6 +25,9 @@ Page({
     showModal: false, showPub: false, showPublishFeature: false,
     form: { roomNo: '', roomName: '', slot: 'lunch', type: 'meal', dishIds: [], guest_name: '', guest_phone: '', note: '', date: '', id: null },
     pub: { date: '', mealTime: 'lunch', capacity: '', note: '' },
+    confirmed: [],
+    showPre: false, preForm: { id: null, roomText: '', dishes: [] },
+    dishCount: {},
   },
   onLoad() {
     const now = new Date();
@@ -47,6 +50,7 @@ Page({
     this.loadDishes();
     this.loadMatrix(this.data.selected);
     this.loadApplications();
+    this.loadConfirmed();
     this.loadSessions();
   },
   buildMonth(y, m) {
@@ -219,17 +223,116 @@ Page({
       this.setData({ applications: apps });
     } catch (e) { console.warn('[book] applications', e); }
   },
-  async confirmApp(e) {
+  // 已确认/到店预订：供商家改预点菜（结论 #5）
+  async loadConfirmed() {
+    try {
+      const list = (await listReservations()) || [];
+      const cs = list
+        .filter((r) => r.status === 'confirmed' || r.status === 'arrived' || r.status === 'pending_manual')
+        .map((r) => ({
+          id: r.id,
+          date: r.date || '',
+          meal: mealText(r.mealTime || 'lunch'),
+          roomText: r.roomId ? (ROOMS[r.roomId] || (r.roomId + ' 号包厢')) : (r.roomNo ? (ROOMS[r.roomNo] || (r.roomNo + ' 号包厢')) : ''),
+          partySize: r.partySize || 0,
+          dishes: (r.dishes || []).map((d) => ({ dish_id: d.dish_id || '', name: d.name, qty: d.qty || 1, sel: d.sel || '', note: d.note || '' })),
+          dishCount: (r.dishes || []).reduce((s, d) => s + (d.qty || 1), 0),
+        }));
+      this.setData({ confirmed: cs });
+    } catch (e) { console.warn('[book] confirmed', e); }
+  },
+  // 商家打开改预点弹窗（结论 #5）
+  openPre(e) {
     const id = e.currentTarget.dataset.id;
+    const item = (this.data.confirmed || []).find((c) => c.id === id);
+    if (!item) return;
+    // 构建以菜名为键的计数映射，便于加减
+    const dishCount = {};
+    (item.dishes || []).forEach((d) => { dishCount[d.name] = (dishCount[d.name] || 0) + (d.qty || 1); });
+    this.setData({
+      showPre: true,
+      preForm: { id, roomText: item.roomText, dishes: item.dishes.slice() },
+      dishCount,
+    });
+  },
+  closePre() { this.setData({ showPre: false }); },
+  // 改预点：加减某道菜数量
+  changePre(e) {
+    const name = e.currentTarget.dataset.name;
+    const delta = Number(e.currentTarget.dataset.delta) || 0;
+    const dishCount = Object.assign({}, this.data.dishCount);
+    const cur = dishCount[name] || 0;
+    const next = Math.max(0, cur + delta);
+    if (next === 0) delete dishCount[name]; else dishCount[name] = next;
+    // 同步 preForm.dishes
+    const dishes = this.data.preForm.dishes.slice();
+    const idx = dishes.findIndex((d) => d.name === name);
+    if (next === 0) {
+      if (idx >= 0) dishes.splice(idx, 1);
+    } else {
+      const orig = idx >= 0 ? dishes[idx] : (() => {
+        const found = (this.data.dishes || []).find((x) => x.name === name);
+        return { dish_id: found ? found.id : '', name, qty: 0, sel: '', note: '' };
+      })();
+      orig.qty = next;
+      if (idx >= 0) dishes[idx] = orig; else dishes.push(orig);
+    }
+    this.setData({ dishCount, 'preForm.dishes': dishes });
+  },
+  async savePre() {
+    const id = this.data.preForm.id;
     if (!id) return;
+    const dishes = (this.data.preForm.dishes || [])
+      .filter((d) => (d.qty || 0) > 0)
+      .map((d) => ({ dish_id: d.dish_id || '', name: d.name, qty: d.qty || 1, sel: d.sel || '', note: d.note || '' }));
+    wx.showLoading({ title: '保存中' });
+    try {
+      await updateReservationDishes(id, dishes);
+      wx.hideLoading();
+      this.setData({ showPre: false });
+      this.loadConfirmed();
+      wx.showToast({ title: '已更新预点', icon: 'success' });
+    } catch (err) {
+      wx.hideLoading();
+      wx.showToast({ title: (err && err.message) || '保存失败', icon: 'none' });
+    }
+  },
+  async confirmApp(e) {
     wx.showLoading({ title: '确认中' });
     try {
+      // 先确认并拿到云端自动分配的包厢（结论 #H/#10）
       const res = await confirmReservation(id);
       wx.hideLoading();
       this.loadApplications();
       this.loadMatrix(this.data.selected);
-      const tip = res && res.needManualAssign ? '已确认，包厢已满请手动排席' : '已确认并自动排席';
-      wx.showToast({ title: tip, icon: 'none' });
+      if (res && res.needManualAssign) {
+        wx.showModal({ title: '需人工排席', content: '当前时段包厢已满，已转入「待人工分配」。请在右侧日历为该预订手动安排包厢。', showCancel: false });
+        return;
+      }
+      const autoRoom = res && res.roomId ? String(res.roomId) : '';
+      // 商家可手动改厢（结论 #H）：弹窗选择包厢覆盖自动分配
+      const rooms = this.data.rooms.slice().sort((a, b) => Number(a.no) - Number(b.no));
+      const itemList = rooms.map((r) => (r.no === autoRoom ? r.name + '（已分配）' : r.name));
+      const pick = await new Promise((res2) => wx.showActionSheet({
+        itemList,
+        success: (s) => res2(rooms[s.tapIndex].no),
+        fail: () => res2(''),
+      }));
+      if (!pick || pick === autoRoom) {
+        wx.showToast({ title: '已确认 · ' + (autoRoom ? autoRoom + '号包厢' : '排席完成'), icon: 'none' });
+        return;
+      }
+      // 改厢：带 roomId 重新确认
+      wx.showLoading({ title: '改厢中' });
+      try {
+        await confirmReservation(id, pick);
+        wx.hideLoading();
+        this.loadMatrix(this.data.selected);
+        wx.showToast({ title: '已改排至 ' + pick + '号包厢', icon: 'none' });
+      } catch (err) {
+        wx.hideLoading();
+        wx.showToast({ title: (err && err.message) || '改厢失败', icon: 'none' });
+      }
     } catch (err) {
       wx.hideLoading();
       wx.showToast({ title: (err && err.message) || '失败', icon: 'none' });
@@ -238,8 +341,29 @@ Page({
   async rejectApp(e) {
     const id = e.currentTarget.dataset.id;
     if (!id) return;
+    // 结论 #4：婉拒可填原因（选填）；后端若有空闲厢会自动换厢重排并发成功推送，无厢才记 rejectReason
+    const ans = await new Promise((res) => wx.showModal({
+      title: '婉拒预订', editable: true, placeholderText: '婉拒原因（选填，将告知顾客）',
+      success: (r) => res(r.confirm ? r.content || '' : null),
+      fail: () => res(null),
+    }));
+    if (ans === null) return; // 取消操作
     wx.showLoading({ title: '婉拒中' });
-    try { await rejectReservation(id); wx.hideLoading(); this.loadApplications(); this.loadMatrix(this.data.selected); wx.showToast({ title: '已婉拒', icon: 'none' }); }
+    try {
+      const res = await rejectReservation(id, ans);
+      wx.hideLoading();
+      this.loadApplications();
+      this.loadMatrix(this.data.selected);
+      if (res && res.data && res.data.swapped) {
+        wx.showModal({
+          title: '已自动换厢',
+          content: '原时段仍有空闲包厢，已为该顾客自动安排 ' + res.data.roomId + ' 号包厢并发短信通知，无需婉拒。',
+          showCancel: false,
+        });
+      } else {
+        wx.showToast({ title: '已婉拒', icon: 'none' });
+      }
+    }
     catch (err) { wx.hideLoading(); wx.showToast({ title: (err && err.message) || '失败', icon: 'none' }); }
   },
 

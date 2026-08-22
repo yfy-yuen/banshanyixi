@@ -1,0 +1,44 @@
+<view class="page">
+  <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
+
+  <!-- 顶部品牌 -->
+  <view class="hero">
+    <image class="logo" src="/assets/images/seal.png" mode="aspectFit" />
+    <view class="h-name">半山·一席</view>
+    <view class="h-sub">山坡 22 号 · 私人菜馆</view>
+  </view>
+
+  <!-- 关于我们 -->
+  <view class="card">
+    <view class="c-title">关于我们</view>
+    <view class="c-body">{{story}}</view>
+  </view>
+
+  <!-- 联系信息 -->
+  <view class="card">
+    <view class="row" bindtap="goNav">
+      <view class="r-left">
+        <view class="r-label">地址</view>
+        <view class="r-val">{{address}}</view>
+      </view>
+      <view class="r-go">导航 ›</view>
+    </view>
+    <view class="divider"></view>
+    <view class="row" bindtap="call">
+      <view class="r-left">
+        <view class="r-label">电话</view>
+        <view class="r-val">{{phone}}</view>
+      </view>
+      <view class="r-go">拨打 ›</view>
+    </view>
+    <view class="divider"></view>
+    <view class="row">
+      <view class="r-left">
+        <view class="r-label">营业时间</view>
+        <view class="r-val">{{hours}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="foot">本店仅接受预订，不接待散客</view>
+</view>

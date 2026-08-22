@@ -42,6 +42,17 @@
 /* 订单 */
 .o-row { display: flex; justify-content: space-between; align-items: center; }
 .o-items { color: var(--muted); font-size: 13px; margin: 8px 0; line-height: 1.7; }
+.o-note { font-size: 12px; color: var(--cinnabar); margin: 6px 0; line-height: 1.5; }
+
+/* 已清台归档 */
+.closed-wrap { margin-top: 18px; }
+.closed-toggle {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; color: var(--ink-light); letter-spacing: 1px;
+  padding: 10px 4px; border-top: 1px dashed var(--border);
+}
+.closed-arrow { color: var(--muted); font-size: 12px; }
+.closed-wrap .card.muted { opacity: 0.72; }
 
 /* 菜品 */
 .m-row { display: flex; gap: 10px; align-items: center; }
@@ -52,6 +63,8 @@
 .m-actions { display: flex; gap: 6px; }
 .m-edit { background: var(--paper); color: var(--ink); padding: 6px 10px; border-radius: 8px; font-size: 13px; border: 1px solid var(--border); }
 .m-del { background: #f2e6e2; color: var(--cinnabar); padding: 6px 10px; border-radius: 8px; font-size: 13px; }
+.m-toggle { background: var(--paper); color: var(--muted); padding: 6px 10px; border-radius: 8px; font-size: 13px; border: 1px solid var(--border); }
+.m-toggle.on { background: var(--gold); color: #4a3c1a; border-color: var(--gold); }
 
 /* 报表 */
 .seg { display: flex; gap: 6px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
@@ -89,3 +102,57 @@
   border: 1px solid var(--border);
 }
 .tag-chip.on { background: var(--cinnabar); color: #fff; border-color: var(--cinnabar); }
+
+/* 编辑弹窗：售罄 / 限定 开关（第18条） */
+.edit-toggles { margin-top: 12px; }
+.et-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--border-light);
+  font-size: 14px; color: var(--ink); letter-spacing: 1px;
+}
+.switch {
+  position: relative; width: 44px; height: 24px; border-radius: 999px;
+  background: var(--border); transition: background .2s;
+}
+.switch.on { background: var(--cinnabar); }
+.switch-dot {
+  position: absolute; top: 2px; left: 2px;
+  width: 20px; height: 20px; border-radius: 50%; background: #fff;
+  transition: left .2s;
+}
+.switch.on .switch-dot { left: 22px; }
+
+/* 后厨配菜单入口（第19条） */
+.kitchen-entry {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--cinnabar); color: #fff;
+  padding: 13px 16px; border-radius: 12px; margin-bottom: 14px;
+  box-shadow: 0 3px 12px rgba(160, 69, 56, 0.25);
+}
+.kitchen-entry:active { opacity: 0.9; }
+.ke-title { font-size: 15px; letter-spacing: 1px; font-weight: 500; }
+.ke-arrow { font-size: 14px; opacity: 0.9; }
+
+/* 电子收据详情（结论 #E） */
+.r-meta { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.r-meta text { font-size: 13px; color: var(--ink-light); letter-spacing: 0.5px; }
+.r-lines { border-top: 1px dashed var(--border); border-bottom: 1px dashed var(--border); padding: 10px 0; margin-bottom: 12px; }
+.r-line { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 14px; color: var(--ink); }
+.r-name { flex: 1; min-width: 0; }
+.r-qty { color: var(--muted); font-size: 13px; }
+.r-sub { color: var(--cinnabar); font-weight: 500; min-width: 56px; text-align: right; }
+.r-total { margin-top: 4px; font-size: 15px; }
+.r-total .price-red { font-size: 18px; }
+
+/* 菜品编辑：每份用料（结论 #D） */
+.edit-portions { margin-top: 14px; border-top: 1px dashed var(--border); padding-top: 12px; }
+
+/* 老板工具（补发提醒 / 清零售罄） */
+.mtools { display: flex; gap: 10px; margin-top: 16px; }
+.mtool { flex: 1; text-align: center; padding: 12px; border-radius: 12px; background: var(--paper); color: var(--ink-light); font-size: 14px; border: 1px solid var(--border); letter-spacing: 1px; }
+.mtool:active { background: var(--ink-light); color: var(--card); }
+.por-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.por-mat { flex: 1; min-width: 0; margin-top: 0; }
+.por-amt { width: 92px; margin-top: 0; }
+.por-del { padding: 8px 10px; color: var(--cinnabar); font-size: 13px; background: #f2e6e2; border-radius: 8px; flex-shrink: 0; }
+.por-add { margin-top: 2px; background: var(--paper); color: var(--ink-light); border: 1px solid var(--border); }

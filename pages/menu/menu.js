@@ -33,7 +33,10 @@ Page({
   },
   onLoad(options) {
     if (options.mode === 'preorder') {
-      this.setData({ preorder: true, reservationId: options.reservationId || '', roomNo: '', roomName: '', people: 1 });
+      const createMode = options.create === '1';
+      this.createMode = createMode;
+      this.draft = createMode ? (getApp().globalData.preorderDraft || {}) : null;
+      this.setData({ preorder: true, createMode, reservationId: options.reservationId || '', roomNo: '', roomName: '', people: 1 });
       this.initPreorder();
       return;
     }
@@ -55,6 +58,8 @@ Page({
     wx.showLoading({ title: '加载中' });
     try {
       await this.loadMenu();
+      // 创建模式：直接选菜即可（表单草稿已在 onLoad 时从 globalData 取好）
+      if (this.createMode) { wx.hideLoading(); return; }
       const rid = this.data.reservationId;
       if (rid) {
         const r = await getReservation(rid);
@@ -145,6 +150,7 @@ Page({
     const id = e.currentTarget.dataset.id;
     const d = this.data.dishes.find((x) => x.id === id);
     if (!d) return;
+    if (d.soldOut) { wx.showToast({ title: '该菜已售罄', icon: 'none' }); return; }
     if (d.specs && d.specs.length) { this.openSpec(id); return; }
     this.addToCart({ dishId: id, name: d.name, basePrice: d.price, category: d.category, sel: {}, unitPrice: d.price, qty: 1 });
   },
@@ -279,11 +285,36 @@ Page({
   async submitOrder() {
     if (!this.data.cart.length) return;
     if (this.data.preorder) {
+      if (!this.data.cart.length) { wx.showToast({ title: '请至少预点一道菜', icon: 'none' }); return; }
       const dishes = this.data.cart.map((c) => ({
         dish_id: c.dishId, name: c.name,
         image: (this.data.dishes.find((x) => x.id === c.dishId) || {}).image || '',
-        qty: c.qty || 1, note: buildSelText(c.sel),
+        qty: c.qty || 1, note: buildSelText(c.sel), sel: c.sel || {},
       }));
+      // 创建模式（结论 #15）：预点菜与提交预订一步完成
+      if (this.createMode) {
+        const d = this.draft || {};
+        if (!d.date || !/^1[3-9]\d{9}$/.test(d.contactPhone || '')) {
+          wx.showToast({ title: '预订信息缺失，请重试', icon: 'none' });
+          setTimeout(() => wx.navigateBack(), 800);
+          return;
+        }
+        wx.showLoading({ title: '提交中' });
+        try {
+          await submitReservation({
+            date: d.date, expectedArrival: d.expectedArrival,
+            partySize: d.partySize, contactPhone: d.contactPhone, note: d.note || '', dishes,
+          });
+          wx.hideLoading();
+          wx.showToast({ title: '已提交订位，等待确认', icon: 'none' });
+          setTimeout(() => wx.navigateBack(), 700);
+        } catch (e) {
+          wx.hideLoading();
+          wx.showToast({ title: '提交失败：' + (e.message || ''), icon: 'none' });
+        }
+        return;
+      }
+      // 已有预订：保存预点菜
       wx.showLoading({ title: '保存中' });
       try {
         await savePreorder(this.data.reservationId, dishes);

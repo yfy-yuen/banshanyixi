@@ -30,15 +30,24 @@ const GATE_VIDEO_POSTER = 'cloud://cloud1-d9gs6p6t18e19cff9.636c-cloud1-d9gs6p6t
 const CATS = ['招牌', '凉菜', '海鲜', '河鲜', '家禽', '热菜', '素菜', '汤品', '点心', '饮品', '酒水', '其他'];
 
 /* 微信订阅消息模板 ID（预订确认推送用）。
- * 必填才能实际推送：① 在 MP 后台「订阅消息 → 我的模板」选「预订成功通知」类模板，拿到模板 ID 填到此处；
- * ② 同时在 dataApi 云函数的环境变量里设同名 RESERVE_TPL_ID（云端 openapi 发送侧读取 process.env.RESERVE_TPL_ID）。
- * 两处 ID 必须一致。留空 '' 时：顾客端不弹授权、店务确认也不发推送（与现在行为一致，不会报错）。
- * 另：云端 confirmReservation 发送时用到的 thing1/number2/phrase3 关键字需与该模板的实际关键字顺序一致，
- * 若你选的模板关键字不同，需同步调整 dataApi 的 template 字段（目前按「日期+人数+状态」三字段写死）。 */
-const RESERVE_TPL_ID = '';
+ * 模板：宴席预定即将到时提醒（关键词：预定日期 / 宾客人数 / 宴席类型 / 预定宴会厅）。
+ * 必填才能实际推送：① 此处填模板 ID；② 同时在 dataApi 云函数环境变量设同名 RESERVE_TPL_ID（云端 openapi 发送侧读取 process.env.RESERVE_TPL_ID）。
+ * 两处 ID 必须一致。留空 '' 时：顾客端不弹授权、店务确认也不发推送（不会报错）。
+ * 云端 confirmReservation 发送侧字段代号（date1/number2/thing3/thing4）以 MP 后台「我的模板」显示的为准；若代号与此不同，改 dataApi 第 428-432 行的 data 字段即可。 */
+const RESERVE_TPL_ID = 'kQPofhWMCtqHYs_DobSxURk0wvQF6k9o0_Rc0O-_uDE';
+
+/* 门店基础信息（about 页导航/拨号用）。顾客端 about 页从此处集中读取，避免硬编码散落。
+ * STORE_ADDR：门店地址（导航显示名）
+ * STORE_PHONE：门店电话（一键拨打；多个号码用 / 分隔，拨号时取第一个）
+ * STORE_LAT / STORE_LNG：GCJ-02 经纬度（微信发位置/腾讯位置服务坐标拾取器获取；0 表示未设置，导航提示「门店位置待补充」） */
+const STORE_ADDR = '湖南省长沙市望城区雷锋大道悦禧山庄山坡22号半山一席';
+const STORE_PHONE = '13055195558/18674843777';  // 多个号码用 / 分隔，拨号取第一个
+const STORE_LAT = 28.260397;         // GCJ-02 纬度（腾讯地图坐标，悦禧国际山庄参考点）
+const STORE_LNG = 112.883721;        // GCJ-02 经度（腾讯地图坐标，悦禧国际山庄参考点）
+const STORE_NAME = '半山一席';   // 工商注册名（导航/拨号显示用，无间隔点）；品牌视觉仍用「半山·一席」
 
 // 工具函数
 const fmt = (n) => '¥' + Number(n || 0).toFixed(2);
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-module.exports = { ENV, REGION, ROOMS, BOSS_CODE, CATS, fmt, genId, GATE_VIDEO_SRC, GATE_VIDEO_POSTER, RESERVE_TPL_ID };
+module.exports = { ENV, REGION, ROOMS, BOSS_CODE, CATS, fmt, genId, GATE_VIDEO_SRC, GATE_VIDEO_POSTER, RESERVE_TPL_ID, STORE_ADDR, STORE_PHONE, STORE_LAT, STORE_LNG, STORE_NAME };

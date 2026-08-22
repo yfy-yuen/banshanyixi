@@ -1,0 +1,14 @@
+{
+  "triggers": [
+    {
+      "name": "banshanMorning",
+      "type": "timer",
+      "config": "0 0 8 * * * *"
+    },
+    {
+      "name": "banshanAfternoon",
+      "type": "timer",
+      "config": "0 0 14 * * * *"
+    }
+  ]
+}

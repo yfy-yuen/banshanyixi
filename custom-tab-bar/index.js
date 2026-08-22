@@ -2,14 +2,14 @@
 // 顾客(guest) 见「包厢/菜单」；店员/店长(clerk/manager) 见「包厢/菜单/预定/商家」
 // 菜单为只读浏览页，所有人可见；真正的点单在包厢内跳转的 pages/menu/menu
 const ROLE_TABS = {
-  guest: ['rooms', 'menu', 'reserve'],
-  clerk: ['rooms', 'menu', 'reserve', 'book', 'merchant'],
-  manager: ['rooms', 'menu', 'reserve', 'book', 'merchant'],
+  guest: ['rooms', 'menu', 'mine'],
+  clerk: ['rooms', 'menu', 'mine', 'book', 'merchant'],
+  manager: ['rooms', 'menu', 'mine', 'book', 'merchant'],
 };
 const META = {
   rooms: { pagePath: '/pages/rooms/rooms', text: '包厢' },
   menu: { pagePath: '/pages/dishes/dishes', text: '菜单' },
-  reserve: { pagePath: '/pages/reserve/reserve', text: '订位' },
+  mine: { pagePath: '/pages/mine/mine', text: '我的' },
   book: { pagePath: '/pages/book/book', text: '店务' },
   merchant: { pagePath: '/pages/merchant/merchant', text: '商家' },
 };

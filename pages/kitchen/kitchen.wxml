@@ -1,0 +1,82 @@
+<view class="page kpage">
+  <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
+
+  <view wx:if="{{noPerm}}" class="login-wrap">
+    <view class="login-card">
+      <view class="login-seal">掌柜</view>
+      <view class="login-title">员工专区</view>
+      <view class="login-sub">仅本店员工可查看后厨配菜单</view>
+    </view>
+  </view>
+
+  <block wx:else>
+    <view class="khead">
+      <text class="kdate">{{date}} · 后厨配菜单</text>
+      <view class="kacts">
+        <view class="kbtn" bindtap="refresh">刷新</view>
+        <view class="kbtn" bindtap="screenshotTip">出单</view>
+      </view>
+    </view>
+
+    <view class="kseg">
+      <view class="kseg-btn {{view==='kitchen'?'on':''}}" data-view="kitchen" bindtap="switchView">后厨出餐单</view>
+      <view class="kseg-btn {{view==='summary'?'on':''}}" data-view="summary" bindtap="switchView">配菜汇总</view>
+      <view class="kseg-btn {{view==='procure'?'on':''}}" data-view="procure" bindtap="switchView">食材采购</view>
+    </view>
+
+    <!-- 后厨出餐单：按包厢 -->
+    <view wx:if="{{view==='kitchen'}}">
+      <view wx:if="{{empty}}" class="kempty">今日暂无已确认预订 / 现场下单</view>
+      <view class="kroom" wx:for="{{rooms}}" wx:key="no">
+        <view class="kroom-h">{{item.name}}<text class="kroom-no">{{item.no}}号</text></view>
+
+        <block wx:if="{{item.pre.length}}">
+          <view class="klabel">预点菜</view>
+          <view class="kdish" wx:for="{{item.pre}}" wx:for-item="d" wx:key="name">
+            <text class="kdish-name">{{d.name}}</text>
+            <text class="kdish-qty">×{{d.qty}}</text>
+            <text wx:if="{{d.note}}" class="kdish-note">注：{{d.note}}</text>
+          </view>
+        </block>
+
+        <block wx:if="{{item.live.length}}">
+          <view class="klabel">现场加菜</view>
+          <view class="kdish" wx:for="{{item.live}}" wx:for-item="d" wx:key="name">
+            <text class="kdish-name">{{d.name}}</text>
+            <text class="kdish-qty">×{{d.qty}}</text>
+          </view>
+        </block>
+
+        <view wx:if="{{item.orderNotes}}" class="korder-note">整单备注：{{item.orderNotes}}</view>
+      </view>
+    </view>
+
+    <!-- 配菜汇总 -->
+    <view wx:if="{{view==='summary'}}">
+      <view wx:if="{{empty}}" class="kempty">今日暂无配菜数据</view>
+      <view class="ksum-top" wx:if="{{!empty}}">
+        <text>今日合计</text>
+        <text class="ksum-total">{{totalQty}} 份</text>
+      </view>
+      <view class="ksum" wx:for="{{summary}}" wx:key="name">
+        <text class="ksum-name">{{item.name}}</text>
+        <text class="ksum-qty">×{{item.qty}}</text>
+      </view>
+    </view>
+
+    <!-- 食材采购清单（结论 #D：按今日预点+现场单反算每份用料） -->
+    <view wx:if="{{view==='procure'}}">
+      <view wx:if="{{procure.length===0}}" class="kempty">今日暂无可用料数据（请先在菜品编辑里填「每份用料」）</view>
+      <view class="ksum-top" wx:if="{{procure.length}}">
+        <text>今日采购合计</text>
+        <text class="ksum-total">{{procure.length}} 种材料</text>
+      </view>
+      <view class="ksum" wx:for="{{procure}}" wx:key="mat">
+        <text class="ksum-name">{{item.mat}}</text>
+        <text class="ksum-qty">×{{item.total}}</text>
+      </view>
+    </view>
+
+    <view class="ktip">屏幕出单：截图即可投屏 / 打印。后续可接入打印机自动出小票。</view>
+  </block>
+</view>

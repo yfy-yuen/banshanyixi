@@ -56,6 +56,8 @@
 
 /* 菜品卡 */
 .card {
+  position: relative;
+  overflow: hidden;
   display: flex;
   gap: 12px;
   background: var(--card);
@@ -65,6 +67,15 @@
   margin-bottom: 10px;
   box-shadow: 0 3px 12px var(--shadow);
 }
+/* 售罄 / 限定角标（第18条 菜品售罄标记） */
+.corner {
+  position: absolute; top: 0; right: 0;
+  font-size: 11px; color: #fff; padding: 3px 9px;
+  border-bottom-left-radius: 10px; letter-spacing: 1px;
+}
+.corner.limited { background: var(--gold); }
+.corner.soldout { background: #8c8c8c; }
+.card.sold-out { opacity: 0.6; }
 .pic {
   width: 64px;
   height: 64px;
@@ -100,6 +111,22 @@
   letter-spacing: 1px;
   padding: 8px 0 20px;
 }
+
+/* 门店信息入口 */
+.about-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin: 4px 0 24px;
+}
+.ae-text { flex: 1; }
+.ae-main { font-size: 14px; color: var(--ink); letter-spacing: 1px; }
+.ae-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.ae-arrow { color: var(--gold); font-size: 18px; margin-left: 12px; }
 
 /* 顶栏搜索入口 */
 .tb-search {

@@ -16,13 +16,10 @@ Page({
   data: {
     mine: [], loading: false,
     showApply: false,
-    form: { date: '', mealTime: 'lunch', partySize: 2, contactPhone: '', note: '' },
+    form: { date: '', expectedArrival: '18:00', partySize: 2, contactPhone: '', note: '' },
     submitting: false,
   },
   onShow() {
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ selectedKey: 'reserve' });
-    }
     this.refresh();
   },
   async refresh() {
@@ -35,7 +32,8 @@ Page({
         statusText: statusText(r.status),
         cancellable: canCancel(r.status),
         preorderCount: (r.dishes || []).length,
-        preorderable: r.status === 'pending',
+        preorderable: r.status === 'pending' && (r.dishes || []).length === 0,
+        arrivalText: r.expectedArrival || (r.mealTime === 'dinner' ? '晚市' : '午市'),
         // 店务确认后会自动排席并生成 booking（reservationRef 回指），这里显示顾客被安排在几号包厢
         roomText: r.roomId ? (ROOMS[r.roomId] || (r.roomId + ' 号包厢')) : '',
       }));
@@ -46,67 +44,39 @@ Page({
 
   /* 申请订位弹窗（不再依赖场次，顾客自选日期/餐段直接提交） */
   openApply() {
-    this.setData({ showApply: true, form: { date: todayStr(), mealTime: 'lunch', partySize: 2, contactPhone: '', note: '' } });
+    this.setData({ showApply: true, form: { date: todayStr(), expectedArrival: '18:00', partySize: 2, contactPhone: '', note: '' } });
   },
   closeApply() { this.setData({ showApply: false }); },
   noop() {},
   onDate(e) { this.setData({ 'form.date': e.detail.value }); },
-  onMeal(e) { this.setData({ 'form.mealTime': e.currentTarget.dataset.meal }); },
+  onArrival(e) { this.setData({ 'form.expectedArrival': e.detail.value }); },
   onParty(e) { this.setData({ 'form.partySize': Math.max(1, parseInt(e.detail.value) || 1) }); },
   onPhone(e) { this.setData({ 'form.contactPhone': e.detail.value }); },
   onNote(e) { this.setData({ 'form.note': e.detail.value }); },
-  async submit() {
-    const { form } = this.data;
-    if (!form.date) { wx.showToast({ title: '请选择日期', icon: 'none' }); return; }
-    if (!form.partySize || form.partySize < 1) { wx.showToast({ title: '请填写人数', icon: 'none' }); return; }
-    if (!/^1[3-9]\d{9}$/.test(form.contactPhone)) { wx.showToast({ title: '请填写正确手机号', icon: 'none' }); return; }
-
-    // 订阅消息授权（顾客端）：必须在用户点击的同步链路内请求，店务确认时云端才能推送。
-    // RESERVE_TPL_ID 为空时不弹授权（与现状一致）；用户拒绝也不阻断订位提交。
-    if (RESERVE_TPL_ID) {
-      try {
-        await new Promise((res) => wx.requestSubscribeMessage({ tmplIds: [RESERVE_TPL_ID], success: res, fail: res }));
-      } catch (e) { /* 授权失败不影响订位提交 */ }
-    }
-
-    this.setData({ submitting: true });
-    wx.showLoading({ title: '提交中' });
-    try {
-      await submitReservation({
-        date: form.date, mealTime: form.mealTime,
-        partySize: form.partySize, contactPhone: form.contactPhone, note: form.note,
-      });
-      wx.hideLoading();
-      this.setData({ submitting: false, showApply: false });
-      wx.showToast({ title: '已提交订位申请，等待确认', icon: 'none' });
-      this.refresh();
-    } catch (err) {
-      wx.hideLoading();
-      this.setData({ submitting: false });
-      wx.showToast({ title: (err && err.message) || '提交失败', icon: 'none' });
-    }
-  },
-  /* 去预点菜（申请弹窗内）：先建一条 pending 预订（无菜品），再跳 menu 预点菜模式选菜并写回 */
+  /* 去预点菜（必填，结论 #15 / #G）：
+     校验 日期+预计到达时间+人数+手机号 后，把表单草稿交给 menu 预点模式；
+     menu 在「完成预点」时一并创建带预点菜的预订（submitReservation）。
+     这样订厢必须同时预点，商家审核时即已有预点数据（结论 #15）。 */
   async goPreorder() {
     const { form } = this.data;
     if (!form.date) { wx.showToast({ title: '请选择日期', icon: 'none' }); return; }
+    if (!form.expectedArrival) { wx.showToast({ title: '请选择预计到达时间', icon: 'none' }); return; }
     if (!form.partySize || form.partySize < 1) { wx.showToast({ title: '请填写人数', icon: 'none' }); return; }
     if (!/^1[3-9]\d{9}$/.test(form.contactPhone)) { wx.showToast({ title: '请填写正确手机号', icon: 'none' }); return; }
-    wx.showLoading({ title: '提交中' });
-    try {
-      const res = await submitReservation({
-        date: form.date, mealTime: form.mealTime,
-        partySize: form.partySize, contactPhone: form.contactPhone, note: form.note, dishes: [],
-      });
-      wx.hideLoading();
-      const id = res && res.id;
-      if (!id) { wx.showToast({ title: '创建失败', icon: 'none' }); return; }
-      this.setData({ showApply: false });
-      wx.navigateTo({ url: '/pages/menu/menu?mode=preorder&reservationId=' + id });
-    } catch (err) {
-      wx.hideLoading();
-      wx.showToast({ title: (err && err.message) || '提交失败', icon: 'none' });
+
+    // 订阅消息授权（顾客端）：必须在用户点击的同步链路内请求，店务确认时云端才能推送
+    if (RESERVE_TPL_ID) {
+      try { await new Promise((res) => wx.requestSubscribeMessage({ tmplIds: [RESERVE_TPL_ID], success: res, fail: res })); }
+      catch (e) { /* 授权失败不影响订位提交 */ }
     }
+
+    // 把表单草稿交给 menu 预点页（menu 创建预订时一并写入预点菜）
+    getApp().globalData.preorderDraft = {
+      date: form.date, expectedArrival: form.expectedArrival,
+      partySize: form.partySize, contactPhone: form.contactPhone, note: form.note,
+    };
+    this.setData({ showApply: false });
+    wx.navigateTo({ url: '/pages/menu/menu?mode=preorder&create=1' });
   },
   /* 去预点菜（我的订位内，针对已有预订）：直接跳 menu 预点菜模式改/补 */
   editPreorder(e) {

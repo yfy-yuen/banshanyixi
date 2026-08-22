@@ -79,6 +79,7 @@
             <text class="pill {{item.status==='paid'?'paid':'unpaid'}}">{{item.statusText}}</text>
           </view>
           <view class="o-items"><text wx:for="{{item.items}}" wx:for-item="i" wx:key="k">{{i.name}}{{i.selText}} ×{{i.qty}}　</text></view>
+          <view wx:if="{{item.noteText}}" class="o-note">备注：{{item.noteText}}</view>
           <view class="o-row"><text class="price-red">{{item.totalText}}</text></view>
         </view>
       </block>

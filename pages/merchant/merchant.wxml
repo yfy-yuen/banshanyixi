@@ -26,6 +26,10 @@
 
     <!-- 订单 -->
     <view wx:if="{{tab==='orders'}}">
+      <view class="kitchen-entry" bindtap="gotoKitchen">
+        <text class="ke-title">后厨配菜单 · 一键出单</text>
+        <text class="ke-arrow">进入 ›</text>
+      </view>
       <view class="subseg">
         <view class="subseg-btn {{orderSub==='book'?'on':''}}" data-sub="book" bindtap="switchOrderSub">订餐菜品</view>
         <view class="subseg-btn {{orderSub==='live'?'on':''}}" data-sub="live" bindtap="switchOrderSub">现场下单菜品</view>
@@ -51,9 +55,26 @@
           <view class="o-row"><text><text class="price-red">{{item.room_name}}</text>（{{item.room_no}}号）</text>
             <text class="pill {{item.status==='paid'?'paid':'unpaid'}}">{{item.paidText}}</text></view>
           <view class="o-items"><text wx:for="{{item.items}}" wx:for-item="i" wx:key="k">{{i.name}}{{i.selText}} ×{{i.qty}}　</text></view>
+          <view wx:if="{{item.noteText}}" class="o-note">备注：{{item.noteText}}</view>
           <view class="o-row">
             <text class="price-red">{{item.totalText}}</text>
-            <view wx:if="{{item.status!=='paid'}}" class="btn" style="padding:6px 14px;" bindtap="settleOrder" data-id="{{item.id}}">标记支付</view>
+            <view wx:if="{{!item.closed}}" class="btn" style="padding:6px 14px;" bindtap="settleOrder" data-id="{{item.id}}">结账</view>
+            <view wx:else class="pill paid">{{item.paidText}}</view>
+          </view>
+        </view>
+
+        <!-- 已清台归档（历史，点开查看） -->
+        <view wx:if="{{mClosed.length}}" class="closed-wrap">
+          <view class="closed-toggle" bindtap="toggleClosed">
+            <text>已清台（{{mClosed.length}}）</text>
+            <text class="closed-arrow">{{showClosed ? '收起 ▲' : '展开 ▼'}}</text>
+          </view>
+          <view wx:if="{{showClosed}}">
+            <view class="card muted" wx:for="{{mClosed}}" wx:key="id">
+              <view class="o-row"><text><text class="price-red">{{item.room_name}}</text>（{{item.room_no}}号）</text><text class="pill paid">{{item.paidText}}</text></view>
+              <view class="o-items"><text wx:for="{{item.items}}" wx:for-item="i" wx:key="k">{{i.name}}{{i.selText}} ×{{i.qty}}　</text></view>
+              <view class="o-row"><text class="price-red">{{item.totalText}}</text></view>
+            </view>
           </view>
         </view>
       </view>
@@ -77,6 +98,8 @@
             <view class="price">{{item.priceText}}</view>
           </view>
           <view class="m-actions">
+            <view class="m-toggle {{item.soldOut?'on':''}}" data-id="{{item.id}}" bindtap="toggleSoldOut">售罄</view>
+            <view class="m-toggle {{item.limited?'on':''}}" data-id="{{item.id}}" bindtap="toggleLimited">限定</view>
             <view class="m-edit" bindtap="openEdit" data-id="{{item.id}}">改价</view>
             <view class="m-del" bindtap="deleteDish" data-id="{{item.id}}">删除</view>
           </view>
@@ -102,6 +125,7 @@
       <view class="seg">
         <view class="seg-btn {{repMode==='day'?'on':''}}" bindtap="setRep" data-mode="day">按日</view>
         <view class="seg-btn {{repMode==='period'?'on':''}}" bindtap="setRep" data-mode="period">按时段</view>
+        <view class="seg-btn {{repMode==='receipt'?'on':''}}" bindtap="setRep" data-mode="receipt">收据</view>
         <picker mode="date" value="{{repDate}}" bindchange="onRepDate"><view class="seg-date">{{repDate}}</view></picker>
       </view>
       <block wx:if="{{repMode==='day'}}">
@@ -115,13 +139,31 @@
         </view>
         <view wx:if="{{repRows.length===0}}" class="card muted">该日无已支付订单</view>
       </block>
-      <block wx:else>
+      <block wx:if="{{repMode==='period'}}">
         <view class="kpi-grid">
           <view class="kpi" wx:for="{{repRows}}" wx:key="k"><view class="muted">{{item.k}}</view><view class="kpi-v">{{item.v}}</view></view>
         </view>
         <view class="kpi" style="grid-column:1/3"><view class="muted">{{repDate}} 合计</view><view class="kpi-v">{{repTotalText}}</view></view>
         <view wx:if="{{repRows.length===0}}" class="card muted">该日无已支付订单</view>
       </block>
+      <block wx:if="{{repMode==='receipt'}}">
+        <view wx:if="{{mReceipts.length===0}}" class="card muted">暂无电子收据（清台后自动生成）</view>
+        <view class="card" wx:for="{{mReceipts}}" wx:key="id" bindtap="openReceipt" data-id="{{item.id}}">
+          <view class="o-row">
+            <text><text class="price-red">{{item.no}}</text> · {{item.room_name}}（{{item.room_no}}号）</text>
+            <text class="pill paid">{{item.paidText}}</text>
+          </view>
+          <view class="o-items">{{item.date}} {{item.time}} · {{item.pmText}} · {{item.invText}}{{item.phoneLast4 ? ' · 尾号' + item.phoneLast4 : ''}}</view>
+          <view class="o-row"><text class="muted">{{item.itemCount}} 项</text><text class="price-red">{{item.totalText}}</text></view>
+        </view>
+      </block>
+
+      <!-- 老板工具（仅店长） -->
+      <view wx:if="{{isManager && repMode==='receipt'}}" class="mtools">
+        <view class="mtool" bindtap="pushReminders">补发到店提醒</view>
+        <view class="mtool" bindtap="resetDailyFlags">清零售罄标记</view>
+        <view class="mtool" bindtap="sweepPending">清理过期申请</view>
+      </view>
     </view>
 
     <!-- 收款码 -->
@@ -174,6 +216,47 @@
         <view wx:for="{{tagOptions}}" wx:key="*this" class="tag-chip {{edit.tags.indexOf(item) >= 0 ? 'on' : ''}}" data-tag="{{item}}" bindtap="onTagToggle">{{item}}</view>
       </view>
     </view>
+    <view class="edit-toggles">
+      <view class="et-row" bindtap="onSoldOutToggle">
+        <text>今日售罄</text>
+        <view class="switch {{edit.soldOut?'on':''}}"><view class="switch-dot"></view></view>
+      </view>
+      <view class="et-row" bindtap="onLimitedToggle">
+        <text>今日限定</text>
+        <view class="switch {{edit.limited?'on':''}}"><view class="switch-dot"></view></view>
+      </view>
+    </view>
+    <view class="edit-portions">
+      <text class="edit-label">每份用料（食材采购清单用）</text>
+      <view class="por-row" wx:for="{{edit.portions}}" wx:key="index" wx:for-index="pi">
+        <input class="ipt por-mat" placeholder="材料（可带单位，如 里脊肉(g)）" value="{{item.mat}}" data-pi="{{pi}}" data-f="mat" bindinput="onPortion" />
+        <input class="ipt por-amt" type="digit" placeholder="每份用量" value="{{item.amt}}" data-pi="{{pi}}" data-f="amt" bindinput="onPortion" />
+        <view class="por-del" data-pi="{{pi}}" bindtap="removePortion">删</view>
+      </view>
+      <view class="btn btn-ghost por-add" bindtap="addPortion">+ 添加用料</view>
+    </view>
     <view class="btn" style="width:100%;" bindtap="saveDish">保存</view>
+  </view>
+</view>
+
+<!-- 电子收据详情（结论 #E） -->
+<view class="mask" wx:if="{{receiptDetail}}" bindtap="closeReceipt">
+  <view class="modal" catchtap="noop">
+    <view class="modal-title">{{receiptDetail.no}} · 电子收据</view>
+    <view class="r-meta">
+      <text>包厢：{{receiptDetail.room_name}}（{{receiptDetail.room_no}}号）</text>
+      <text>时间：{{receiptDetail.date}} {{receiptDetail.time}}</text>
+      <text>支付：{{receiptDetail.pmText}}（{{receiptDetail.paidText}}）</text>
+      <text>开票：{{receiptDetail.invText}}{{receiptDetail.phoneLast4 ? ' · 手机尾号' + receiptDetail.phoneLast4 : ''}}</text>
+    </view>
+    <view class="r-lines">
+      <view class="r-line" wx:for="{{receiptDetail.lines}}" wx:key="name">
+        <text class="r-name">{{item.name}}{{item.sel ? '（' + item.sel + '）' : ''}}</text>
+        <text class="r-qty">×{{item.qty}}</text>
+        <text class="r-sub">{{item.subText}}</text>
+      </view>
+    </view>
+    <view class="o-row r-total"><text>合计</text><text class="price-red">{{receiptDetail.totalText}}</text></view>
+    <view class="btn" style="width:100%;" bindtap="closeReceipt">关闭</view>
   </view>
 </view>

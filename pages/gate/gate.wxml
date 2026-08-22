@@ -31,6 +31,9 @@
     <cover-view class="plaque">半山·一席</cover-view>
     <cover-view class="gate-poem">择一席，品一味</cover-view>
     <cover-view class="gate-btn" bindtap="enter">推门入席</cover-view>
+    <cover-view class="gate-divider">— 或 —</cover-view>
+    <cover-view class="gate-btn-sub gate-btn-primary" style="left:135rpx;" bindtap="goReserve">订一席</cover-view>
+    <cover-view class="gate-btn-sub gate-btn-ghost" style="left:395rpx;" bindtap="goArrive">入席去</cover-view>
   </cover-view>
 
   <!-- 老板隐藏入口：视频模式下原生组件限制，用 cover-view + 点击触发 -->

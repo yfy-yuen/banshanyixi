@@ -25,9 +25,11 @@
                  bindscroll="onPanelScroll">
       <view class="sec" wx:for="{{sections}}" wx:key="cat" wx:for-index="si" id="dsec-{{si}}">
         <view class="sec-title"><text>{{item.cat}}</text><view class="sec-line"></view></view>
-        <view class="card" wx:for="{{item.items}}" wx:for-item="d" wx:key="id">
+        <view class="card {{d.soldOut?'sold-out':''}}" wx:for="{{item.items}}" wx:for-item="d" wx:key="id">
           <image wx:if="{{d.image}}" class="pic" src="{{d.image}}" mode="aspectFill" lazy-load />
           <view wx:else class="pic seal">{{d.ph}}</view>
+          <view wx:if="{{d.limited}}" class="corner limited">今日限定</view>
+          <view wx:if="{{d.soldOut}}" class="corner soldout">售罄</view>
           <view class="info">
             <view class="ttl">{{d.name}}</view>
             <view class="badges" wx:if="{{d.badges.length}}">
@@ -42,6 +44,13 @@
       </view>
       <view class="sec-foot"></view>
       <view class="tip">本页仅供查看，点单请进入「包厢」选择厢房后操作。</view>
+      <view class="about-entry" bindtap="goAbout">
+        <view class="ae-text">
+          <view class="ae-main">半山·一席 · 关于本店</view>
+          <view class="ae-sub">品牌故事 · 地址导航 · 一键致电</view>
+        </view>
+        <view class="ae-arrow">›</view>
+      </view>
     </scroll-view>
   </view>
 </view>
@@ -58,9 +67,11 @@
     <scroll-view class="search-res" scroll-y>
       <view wx:if="{{!searchKeyword}}" class="s-empty">输入菜名试试，如「东坡」「醉」</view>
       <view wx:elif="{{searchResults.length===0}}" class="s-empty">没有找到「{{searchKeyword}}」</view>
-      <view class="card" wx:for="{{searchResults}}" wx:key="id">
+      <view class="card {{item.soldOut?'sold-out':''}}" wx:for="{{searchResults}}" wx:key="id">
         <image wx:if="{{item.image}}" class="pic" src="{{item.image}}" mode="aspectFill" lazy-load />
         <view wx:else class="pic seal">{{item.ph}}</view>
+        <view wx:if="{{item.limited}}" class="corner limited">今日限定</view>
+        <view wx:if="{{item.soldOut}}" class="corner soldout">售罄</view>
         <view class="info">
           <view class="ttl">{{item.name}}</view>
           <view class="badges" wx:if="{{item.badges.length}}">
