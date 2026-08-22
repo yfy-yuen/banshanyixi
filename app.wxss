@@ -142,6 +142,22 @@ view, text, scroll-view, input { box-sizing: border-box; }
 .ipt {
   width: 100%;
   margin-top: 10px;
+  min-height: 44px;
+  line-height: 22px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  background: #ffffff;
+  color: var(--ink);
+  box-shadow: inset 0 1px 2px rgba(45, 40, 30, 0.06);
+}
+/* 多行文本域：长内容可滚动，文字同样垂直居中 */
+.ipt-area {
+  width: 100%;
+  margin-top: 10px;
+  min-height: 64px;
+  line-height: 22px;
   padding: 11px 14px;
   border: 1px solid var(--border);
   border-radius: 10px;
