@@ -1,5 +1,5 @@
 const { CATS, ROOMS, fmt } = require('../../utils/config');
-const { loadDishes, submitOrder, getReservation, savePreorder } = require('../../utils/api');
+const { loadDishes, submitOrder, getReservation, savePreorder, submitReservation } = require('../../utils/api');
 const { classifyError } = require('../../utils/cloudbase');
 const app = getApp();
 
