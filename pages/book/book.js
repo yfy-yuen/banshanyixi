@@ -74,8 +74,10 @@ Page({
   async loadMonthCounts(y, m) {
     try {
       const ym = y + '-' + pad(m);
-      const counts = await callApi('bookingCountsByMonth', { yearMonth: ym });
-      this.setData({ dateCounts: counts || {} });
+      const list = await callApi('bookings', { month: ym });
+      const counts = {};
+      (list || []).forEach((b) => { if (b.date) counts[b.date] = (counts[b.date] || 0) + 1; });
+      this.setData({ dateCounts: counts });
     } catch (e) { console.warn('[book] monthCounts', e); }
   },
   prevMonth() {

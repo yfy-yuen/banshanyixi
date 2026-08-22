@@ -228,6 +228,14 @@ exports.main = async (event) => {
         break;
       case 'bookings':
         if (p.date) rows = normalize((await db.collection('bookings').where({ date: p.date }).limit(1000).get()).data);
+        else if (p.month) {
+          // 按月份查询整月 booking（供店务日历聚合每日已订包厢数）
+          const ym = String(p.month);
+          const first = ym + '-01';
+          const lastDay = new Date(Number(ym.slice(0, 4)), Number(ym.slice(5, 7)), 0).getDate();
+          const last = `${ym}-${lastDay < 10 ? '0' + lastDay : lastDay}`;
+          rows = normalize((await db.collection('bookings').where({ date: _.gte(first).and(_.lte(last)) }).limit(1000).get()).data);
+        }
         else rows = normalize((await db.collection('bookings').limit(1000).get()).data);
         break;
       case 'bookingCountsByMonth': {
