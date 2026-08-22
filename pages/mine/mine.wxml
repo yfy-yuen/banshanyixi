@@ -46,13 +46,6 @@
     <view class="mcard-tip">如需改菜请联系门店（商家可代改）</view>
   </view>
 
-  <!-- 常点清单 -->
-  <view class="sec">常点清单</view>
-  <view wx:if="{{!favorites.length}}" class="empty">还没有常点记录</view>
-  <view wx:else class="fav-wrap">
-    <view wx:for="{{favorites}}" wx:key="name" class="fav">{{item.name}}<text class="fav-c">×{{item.count}}</text></view>
-  </view>
-
   <!-- 历史订位 -->
   <view class="sec">历史订位</view>
   <view wx:if="{{!history.length}}" class="empty">暂无历史订位</view>

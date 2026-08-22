@@ -78,11 +78,6 @@
   font-size: 15px; letter-spacing: 2px;
 }
 
-/* 常点清单 */
-.fav-wrap { display: flex; flex-wrap: wrap; gap: 10px; padding: 0 16px; }
-.fav { background: #f6f2ea; border: 1px solid #e3dccd; border-radius: 20px; padding: 6px 14px; font-size: 13px; color: #5a544d; }
-.fav-c { color: #9e3b2e; margin-left: 6px; }
-
 .empty { text-align: center; color: #a99e8c; font-size: 13px; padding: 12px 0 4px; }
 .entry { text-align: center; padding: 18px; color: #8a8175; font-size: 13px; margin-top: 8px; }
 

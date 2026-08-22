@@ -13,7 +13,7 @@ function maskPhone(p) {
 Page({
   data: {
     name: '', phoneMask: '',
-    active: [], history: [], preorders: [], favorites: [],
+    active: [], history: [], preorders: [],
     loading: false,
     showNameModal: false, nameInput: '',
   },
@@ -43,21 +43,12 @@ Page({
       const preorders = active
         .filter((r) => r.status === 'confirmed' && r.dishes.length)
         .map((r) => ({ id: r.id, date: r.date, roomText: r.roomText, dishes: r.dishes, locked: true }));
-      const agg = {};
-      mapped.forEach((r) => (r.dishes || []).forEach((d) => {
-        const k = d.name;
-        agg[k] = (agg[k] || 0) + (d.qty || 1);
-      }));
-      const favorites = Object.keys(agg)
-        .map((k) => ({ name: k, count: agg[k] }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 12);
       const stored = wx.getStorageSync('profile') || {};
       const phone = (list[0] && list[0].contactPhone) || stored.phone || '';
       this.setData({
         name: stored.name || '',
         phoneMask: maskPhone(phone),
-        active, history, preorders, favorites,
+        active, history, preorders,
       });
     } catch (e) {
       console.warn('[mine]', e);
