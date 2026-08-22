@@ -30,6 +30,7 @@ Page({
     dishCount: {},
     showDetail: false,
     detail: { roomNo: '', roomName: '', slot: '', slotText: '', type: '', typeText: '', label: '', guest_name: '', guest_phone: '', partySize: 0, dishes: [], note: '', id: '' },
+    showAddDish: false, addDishForm: { id: '', dishIds: [] },
   },
   onLoad() {
     const now = new Date();
@@ -158,6 +159,48 @@ Page({
     if (!ok) return;
     this.closeDetail();
     await this.cancelBooking(d.id);
+  },
+  // 详情页点加菜：打开菜品选择面板
+  doAddDishFromDetail() {
+    this.setData({
+      showAddDish: true,
+      addDishForm: { id: this.data.detail.id, dishIds: [] },
+    });
+  },
+  closeAddDish() { this.setData({ showAddDish: false }); },
+  toggleAddDish(e) {
+    const id = e.currentTarget.dataset.id;
+    const arr = this.data.addDishForm.dishIds.slice();
+    const i = arr.indexOf(id);
+    if (i >= 0) arr.splice(i, 1); else arr.push(id);
+    this.setData({ 'addDishForm.dishIds': arr });
+  },
+  async saveAddDish() {
+    const { id, dishIds } = this.data.addDishForm;
+    if (!id || !dishIds.length) { wx.showToast({ title: '请至少选择一道菜', icon: 'none' }); return; }
+    const additions = dishIds.map((did) => {
+      const d = this.data.dishes.find((x) => x.id === did);
+      return { dish_id: did, name: d.name, image: d.image || '', qty: 1, note: '', sel: '' };
+    });
+    wx.showLoading({ title: '加菜中' });
+    try {
+      await callApi('appendBookingDishes', { id, dishes: additions });
+      wx.hideLoading();
+      this.setData({ showAddDish: false });
+      // 刷新排席矩阵和详情数据
+      await this.loadMatrix(this.data.selected);
+      const d = this.data.detail;
+      const b = this.data.matrix[d.roomNo] && this.data.matrix[d.roomNo][d.slot];
+      if (b) {
+        this.setData({
+          'detail.dishes': (b.dishes || []).map((x) => ({ name: x.name || '', qty: x.qty || 1 })),
+        });
+      }
+      wx.showToast({ title: '已加 ' + additions.length + ' 道菜', icon: 'success' });
+    } catch (err) {
+      wx.hideLoading();
+      wx.showToast({ title: (err && err.message) || '加菜失败', icon: 'none' });
+    }
   },
   closeModal() { this.setData({ showModal: false }); },
   noop() {},

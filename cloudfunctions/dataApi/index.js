@@ -28,6 +28,24 @@ function normalize(rows) {
   return rows.map((r) => (r && r._id !== undefined ? { ...r, id: r._id } : r));
 }
 
+// 合并菜品列表：相同 dish_id/name 数量累加，保留原有字段
+function mergeDishes(base, additions) {
+  const map = {};
+  (base || []).forEach((d) => {
+    const key = d.dish_id || d.name;
+    if (!key) return;
+    if (!map[key]) map[key] = { ...d, qty: d.qty || 1 };
+    else map[key].qty += (d.qty || 1);
+  });
+  (additions || []).forEach((d) => {
+    const key = d.dish_id || d.name;
+    if (!key) return;
+    if (!map[key]) map[key] = { dish_id: d.dish_id || '', name: d.name, image: d.image || '', qty: d.qty || 1, note: d.note || '', sel: d.sel || '' };
+    else map[key].qty += (d.qty || 1);
+  });
+  return Object.values(map);
+}
+
 // 预订系统辅助：集合自创建 / 手机号脱敏 / 开席时间
 async function ensureCol(name) {
   try { await db.createCollection(name); } catch (e) { /* 已存在则忽略 */ }
@@ -376,6 +394,26 @@ exports.main = async (event) => {
       case 'deleteBooking':
         await db.collection('bookings').doc(p.id).remove();
         return { data: { ok: true } };
+      // 店员/老板：在排席详情弹窗直接追加菜品（同步回写关联 reservation，保证顾客端一致）
+      case 'appendBookingDishes': {
+        if (!(await isStaffOf())) return { error: '无权限' };
+        const b = (await db.collection('bookings').doc(p.id).get()).data;
+        if (!b) return { error: '排席不存在' };
+        const additions = Array.isArray(p.dishes) ? p.dishes : [];
+        if (!additions.length) return { error: '未选择菜品' };
+        const merged = mergeDishes(b.dishes, additions);
+        await db.collection('bookings').doc(p.id).update({ data: { dishes: merged } });
+        if (b.reservationRef) {
+          try {
+            const r = (await db.collection('reservations').doc(b.reservationRef).get()).data;
+            if (r) {
+              const resMerged = mergeDishes(r.dishes, additions);
+              await db.collection('reservations').doc(b.reservationRef).update({ data: { dishes: resMerged } });
+            }
+          } catch (e) { console.warn('[appendBookingDishes] sync reservation', e.message); }
+        }
+        return { data: { ok: true, count: additions.length } };
+      }
       case 'approveStaff': {
         if ((await roleOf()) !== 'manager') return { error: '无权限' };
         await db.collection('staff').add({ data: { openid: p.openid, name: p.name, role: p.role, invited_by: openid } });
