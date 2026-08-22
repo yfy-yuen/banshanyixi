@@ -145,6 +145,10 @@ async function getReservation(id) {
 async function savePreorder(id, dishes) {
   return await callApi('savePreorder', { id, dishes });
 }
+// 店员/老板：代客改预点（整体覆盖，不受状态限制）
+async function staffSavePreorder(id, dishes) {
+  return await callApi('staffSavePreorder', { id, dishes });
+}
 // 顾客：取消
 async function cancelReservation(id) {
   await callApi('cancelReservation', { id });
@@ -192,6 +196,6 @@ module.exports = {
   getMerchantOrders, settleOrder, clearOrder, listReceipts, pushReminders, resetDailyFlags,
   getDishesAdmin, saveDish, deleteDish, getPaymentQrcodes, saveQr, callApi,
   getRoom, saveRoom,
-  listSessions, sessionDetail, submitReservation, myReservations, getReservation, savePreorder, cancelReservation, markArrived,
+  listSessions, sessionDetail, submitReservation, myReservations, getReservation, savePreorder, staffSavePreorder, cancelReservation, markArrived,
   publishSession, listReservations, confirmReservation, rejectReservation, closeSession, sessionsAdmin, updateReservationDishes, sweepPending,
 };

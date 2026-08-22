@@ -28,8 +28,6 @@ Page({
     form: { roomNo: '', roomName: '', slot: 'lunch', type: 'meal', dishIds: [], guest_name: '', guest_phone: '', note: '', date: '', id: null, partySize: 0 },
     pub: { date: '', mealTime: 'lunch', capacity: '', note: '' },
     confirmed: [],
-    showPre: false, preForm: { id: null, roomText: '', dishes: [] },
-    dishCount: {},
     showDetail: false,
     detail: { roomNo: '', roomName: '', slot: '', slotText: '', type: '', typeText: '', label: '', guest_name: '', guest_phone: '', partySize: 0, dishes: [], note: '', id: '' },
   },
@@ -135,7 +133,7 @@ Page({
     }
     this.setData({
       showModal: true,
-      form: { roomNo: room, roomName, slot, type: 'meal', dishIds: [], guest_name: '', guest_phone: '', note: '', date: this.data.selected, id: null },
+      form: { roomNo: room, roomName, slot, type: 'meal', guest_name: '', guest_phone: '', note: '', date: this.data.selected, id: null },
     });
   },
   closeDetail() { this.setData({ showDetail: false }); },
@@ -150,13 +148,12 @@ Page({
     this.closeDetail();
     const b = this.data.matrix[d.roomNo] && this.data.matrix[d.roomNo][d.slot];
     if (!b) return;
-    const dishIds = (b.dishes || []).map((x) => x.dish_id).filter(Boolean);
     const roomIndex = Math.max(0, this.data.rooms.findIndex((r) => r.no === d.roomNo));
     this.setData({
       roomIndex,
       showModal: true,
       form: {
-        roomNo: d.roomNo, roomName: d.roomName, slot: b.slot, type: b.type, dishIds,
+        roomNo: d.roomNo, roomName: d.roomName, slot: b.slot, type: b.type,
         guest_name: b.guest_name || '', guest_phone: b.guest_phone || '', note: b.note || '',
         date: b.date, id: b.id,
       },
@@ -220,12 +217,9 @@ Page({
   },
   async save() {
     const f = this.data.form;
-    if (f.type === 'meal' && !f.dishIds.length) { wx.showToast({ title: '请至少选择一道菜', icon: 'none' }); return; }
     if (!f.date) { wx.showToast({ title: '请选择日期', icon: 'none' }); return; }
-    const dishes = f.dishIds.map((id) => {
-      const d = this.data.dishes.find((x) => x.id === id);
-      return { dish_id: id, name: d.name, image: d.image, qty: 1, note: '' };
-    });
+    // 排席=占包厢，菜品由店员在详情「加菜」跳真实菜单页补（方案 A）
+    const dishes = [];
     wx.showLoading({ title: '保存中' });
     try {
       if (f.id) {
@@ -309,61 +303,15 @@ Page({
       this.setData({ confirmed: cs });
     } catch (e) { console.warn('[book] confirmed', e); }
   },
-  // 商家打开改预点弹窗（结论 #5）
+  // 商家改预点：跳转正式菜单页（真实菜单，分类/规格/数量），整体保存回预订
   openPre(e) {
     const id = e.currentTarget.dataset.id;
     const item = (this.data.confirmed || []).find((c) => c.id === id);
     if (!item) return;
-    // 构建以菜名为键的计数映射，便于加减
-    const dishCount = {};
-    (item.dishes || []).forEach((d) => { dishCount[d.name] = (dishCount[d.name] || 0) + (d.qty || 1); });
-    this.setData({
-      showPre: true,
-      preForm: { id, roomText: item.roomText, dishes: item.dishes.slice() },
-      dishCount,
+    const label = encodeURIComponent((item.roomText || '该预订') + ' · 改预点');
+    wx.navigateTo({
+      url: '/pages/menu/menu?mode=append&target=reservation&reservationId=' + id + '&label=' + label,
     });
-  },
-  closePre() { this.setData({ showPre: false }); },
-  // 改预点：加减某道菜数量
-  changePre(e) {
-    const name = e.currentTarget.dataset.name;
-    const delta = Number(e.currentTarget.dataset.delta) || 0;
-    const dishCount = Object.assign({}, this.data.dishCount);
-    const cur = dishCount[name] || 0;
-    const next = Math.max(0, cur + delta);
-    if (next === 0) delete dishCount[name]; else dishCount[name] = next;
-    // 同步 preForm.dishes
-    const dishes = this.data.preForm.dishes.slice();
-    const idx = dishes.findIndex((d) => d.name === name);
-    if (next === 0) {
-      if (idx >= 0) dishes.splice(idx, 1);
-    } else {
-      const orig = idx >= 0 ? dishes[idx] : (() => {
-        const found = (this.data.dishes || []).find((x) => x.name === name);
-        return { dish_id: found ? found.id : '', name, qty: 0, sel: '', note: '' };
-      })();
-      orig.qty = next;
-      if (idx >= 0) dishes[idx] = orig; else dishes.push(orig);
-    }
-    this.setData({ dishCount, 'preForm.dishes': dishes });
-  },
-  async savePre() {
-    const id = this.data.preForm.id;
-    if (!id) return;
-    const dishes = (this.data.preForm.dishes || [])
-      .filter((d) => (d.qty || 0) > 0)
-      .map((d) => ({ dish_id: d.dish_id || '', name: d.name, qty: d.qty || 1, sel: d.sel || '', note: d.note || '' }));
-    wx.showLoading({ title: '保存中' });
-    try {
-      await updateReservationDishes(id, dishes);
-      wx.hideLoading();
-      this.setData({ showPre: false });
-      this.loadConfirmed();
-      wx.showToast({ title: '已更新预点', icon: 'success' });
-    } catch (err) {
-      wx.hideLoading();
-      wx.showToast({ title: (err && err.message) || '保存失败', icon: 'none' });
-    }
   },
   async confirmApp(e) {
     const id = e.currentTarget.dataset.id;

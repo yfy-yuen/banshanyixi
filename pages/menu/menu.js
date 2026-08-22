@@ -1,5 +1,5 @@
 const { CATS, ROOMS, fmt, canSelfEditPreorder, STORE_PHONE } = require('../../utils/config');
-const { callApi, loadDishes, submitOrder, getReservation, savePreorder, submitReservation } = require('../../utils/api');
+const { callApi, loadDishes, submitOrder, getReservation, savePreorder, staffSavePreorder, submitReservation } = require('../../utils/api');
 const { classifyError } = require('../../utils/cloudbase');
 const app = getApp();
 
@@ -32,18 +32,35 @@ Page({
     showSearch: false, searchKeyword: '', searchResults: [],
     // 店员追加菜品模式（从店务详情进入）
     appendMode: false, appendBookingId: '', appendTargetLabel: '',
+    appendTarget: 'booking', appendReservationId: '',
   },
   onLoad(options) {
     if (options.mode === 'append') {
+      const target = options.target || 'booking';
       const bookingId = options.bookingId || '';
-      const appendTargetLabel = options.label || '该排席';
-      if (!bookingId) {
+      const reservationId = options.reservationId || '';
+      const appendTargetLabel = options.label || (target === 'reservation' ? '该预订' : '该排席');
+      if (target === 'reservation' && !reservationId) {
+        wx.showToast({ title: '缺少预订信息', icon: 'none' });
+        setTimeout(() => wx.navigateBack(), 800);
+        return;
+      }
+      if (target === 'booking' && !bookingId) {
         wx.showToast({ title: '缺少排席信息', icon: 'none' });
         setTimeout(() => wx.navigateBack(), 800);
         return;
       }
+      // 改预点：预载顾客已点菜，店员可在真实菜单上加减后整体保存
+      if (target === 'reservation') {
+        this.setData({
+          appendMode: true, appendTarget: target, appendReservationId: reservationId, appendTargetLabel,
+          preorder: false,
+        });
+        this.loadMenu().then(() => this.prefillReservation(reservationId));
+        return;
+      }
       this.setData({
-        appendMode: true, appendBookingId: bookingId, appendTargetLabel,
+        appendMode: true, appendTarget: target, appendBookingId: bookingId, appendTargetLabel,
         preorder: false,
       });
       this.loadMenu();
@@ -315,25 +332,46 @@ Page({
     wx.makePhoneCall({ phoneNumber: phone });
   },
 
+  // 改预点：预载顾客已点菜到购物车（店员在真实菜单上加减后整体保存）
+  async prefillReservation(reservationId) {
+    try {
+      const r = await getReservation(reservationId);
+      const dishes = (r && r.dishes) || [];
+      const cart = dishes.map((d) => {
+        const doc = this.data.dishes.find((x) => x.id === d.dish_id);
+        return { dishId: d.dish_id, name: d.name, basePrice: doc ? doc.price : 0, category: doc ? doc.category : '', sel: d.sel || {}, unitPrice: doc ? doc.price : 0, qty: d.qty || 1 };
+      }).filter((c) => c.dishId);
+      this.updateCart(cart);
+    } catch (e) {
+      console.warn('[menu] 预载预订菜品失败', e);
+    }
+  },
   /* ===== 提交订单 ===== */
   async submitOrder() {
     if (!this.data.cart.length) return;
-    // 店员追加菜品模式：只把购物车菜品追加到指定 booking
+    // 店员追加菜品模式：把购物车菜品写回指定 booking 或 reservation
     if (this.data.appendMode) {
       const dishes = this.data.cart.map((c) => ({
         dish_id: c.dishId, name: c.name,
         image: (this.data.dishes.find((x) => x.id === c.dishId) || {}).image || '',
         qty: c.qty || 1, note: buildSelText(c.sel), sel: c.sel || {},
       }));
-      wx.showLoading({ title: '追加中' });
+      wx.showLoading({ title: '保存中' });
       try {
-        await callApi('appendBookingDishes', { id: this.data.appendBookingId, dishes });
-        wx.hideLoading();
-        wx.showToast({ title: '已追加 ' + dishes.length + ' 道菜', icon: 'success' });
+        if (this.data.appendTarget === 'reservation') {
+          // 改预点：店员代改，整体覆盖保存（云端 staffSavePreorder 走员工权限，不受状态限制）
+          await staffSavePreorder(this.data.appendReservationId, dishes);
+          wx.hideLoading();
+          wx.showToast({ title: '已保存预点菜', icon: 'success' });
+        } else {
+          await callApi('appendBookingDishes', { id: this.data.appendBookingId, dishes });
+          wx.hideLoading();
+          wx.showToast({ title: '已追加 ' + dishes.length + ' 道菜', icon: 'success' });
+        }
         setTimeout(() => wx.navigateBack(), 600);
       } catch (e) {
         wx.hideLoading();
-        wx.showToast({ title: '追加失败：' + (e.message || ''), icon: 'none' });
+        wx.showToast({ title: '保存失败：' + (e.message || ''), icon: 'none' });
       }
       return;
     }

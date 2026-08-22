@@ -6,7 +6,8 @@
     <view class="tb-left">
       <view class="tb-name">半山·一席</view>
       <view class="tb-sub">
-        <block wx:if="{{appendMode}}">为 {{appendTargetLabel}} 追加菜品</block>
+        <block wx:if="{{appendMode && appendTarget==='reservation'}}">为 {{appendTargetLabel}} 改预点</block>
+        <block wx:elif="{{appendMode}}">为 {{appendTargetLabel}} 追加菜品</block>
         <block wx:elif="{{preorder}}">预订预点菜</block>
         <block wx:else>{{roomName + ' · '}}<text class="link" bindtap="setPeople">{{people}}人</text></block>
       </view>

@@ -552,6 +552,16 @@ exports.main = async (event) => {
         await db.collection('reservations').doc(p.id).update({ data: { dishes } });
         return { data: { ok: true } };
       }
+      // 店员/老板：代客改预点（整体覆盖，不受状态限制，走员工权限）
+      case 'staffSavePreorder': {
+        if (!(await isStaffOf())) return { error: '无权限' };
+        await ensureCol('reservations');
+        const r = (await db.collection('reservations').doc(p.id).get()).data;
+        if (!r) return { error: '预订不存在' };
+        const dishes = Array.isArray(p.dishes) ? p.dishes : [];
+        await db.collection('reservations').doc(p.id).update({ data: { dishes } });
+        return { data: { ok: true } };
+      }
       // 顾客：读取单条预订（含预点菜），供预点菜页回显
       case 'getReservation': {
         if (!openid) return { error: '身份未就绪' };
