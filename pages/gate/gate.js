@@ -19,7 +19,7 @@ Page({
     const last = wx.getStorageSync('gateShownAt') || 0;
     const now = Date.now();
     if (last && now - last < GATE_REFRESH_MS) {
-      wx.switchTab({ url: '/pages/rooms/rooms' });
+      wx.switchTab({ url: '/pages/mine/mine' });
       return;
     }
     const raw = GATE_VIDEO_SRC || '';
@@ -63,14 +63,13 @@ Page({
   enter() {
     if (this.data.open) return;
     wx.setStorageSync('gateShownAt', Date.now());
-    wx.setStorageSync('enterFlash', '1'); // 通知包厢页播放进门转场
     if (this.data.fallbackMode) {
-      wx.switchTab({ url: '/pages/rooms/rooms' });
+      wx.switchTab({ url: '/pages/mine/mine' });
       return;
     }
     if (!this.data.videoSrc) {
       // 视频源尚未就绪（极少见：onLoad 解析未完成即点击）→ 直接进，避免卡死
-      wx.switchTab({ url: '/pages/rooms/rooms' });
+      wx.switchTab({ url: '/pages/mine/mine' });
       return;
     }
     this.setData({ open: true }); // 隐藏覆盖文字层
@@ -87,7 +86,7 @@ Page({
     this._playT = setTimeout(tryPlay, 120);
   },
   onVideoEnd() {
-    wx.switchTab({ url: '/pages/rooms/rooms' });
+    wx.switchTab({ url: '/pages/mine/mine' });
   },
   onVideoError() {
     // 视频加载/播放失败 → 退回静态兜底，避免黑屏卡死
