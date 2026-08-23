@@ -209,6 +209,7 @@ Page({
       this.setData({ showModal: false, showDetail: false });
       this.loadMatrix(this.data.selected);
       this.loadMonthCounts(this.data.year, this.data.month);
+      this.loadConfirmed();
       wx.showToast({ title: '已取消', icon: 'success' });
     } catch (err) {
       wx.hideLoading();

@@ -411,9 +411,24 @@ exports.main = async (event) => {
         }
         break;
       }
-      case 'deleteBooking':
+      case 'deleteBooking': {
+        if (!(await isStaffOf())) return { error: '无权限' };
+        const b = (await db.collection('bookings').doc(p.id).get()).data;
         await db.collection('bookings').doc(p.id).remove();
+        // 联动取消关联的预订（与 cancelReservation 行为一致：标记作废 + 清空预点菜），
+        // 否则「已确认预订·改预点」区块（来自 reservations）会残留这条记录。
+        if (b && b.reservationRef) {
+          try {
+            const r = (await db.collection('reservations').doc(b.reservationRef).get()).data;
+            if (r && r.status !== 'cancelled') {
+              await db.collection('reservations').doc(b.reservationRef).update({
+                data: { status: 'cancelled', dishes: [] },
+              });
+            }
+          } catch (e) { console.warn('[deleteBooking] sync reservation', e.message); }
+        }
         return { data: { ok: true } };
+      }
       // 店员/老板：在排席详情弹窗直接追加菜品（同步回写关联 reservation，保证顾客端一致）
       case 'appendBookingDishes': {
         if (!(await isStaffOf())) return { error: '无权限' };
