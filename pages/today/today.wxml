@@ -9,9 +9,9 @@
 
   <view wx:else class="card">
     <view class="title">今日为您备席</view>
-    <view class="row"><text class="k">包厢</text><text class="v">{{info.roomName ? info.roomName : '包厢' + info.roomNo + '号'}}</text></view>
+    <view class="row"><text class="k">包厢</text><text class="v">{{info.roomName || '—'}}</text></view>
     <view class="row"><text class="k">日期</text><text class="v">{{info.date}}</text></view>
-    <view class="row"><text class="k">到店</text><text class="v">{{info.arriveTime || info.mealTime || '—'}}</text></view>
+    <view class="row"><text class="k">到店</text><text class="v">{{info.arriveText || '—'}}</text></view>
     <view class="row"><text class="k">人数</text><text class="v">{{info.partySize}} 位</text></view>
     <view wx:if="{{info.note}}" class="row"><text class="k">备注</text><text class="v">{{info.note}}</text></view>
 
