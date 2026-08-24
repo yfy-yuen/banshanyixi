@@ -342,6 +342,8 @@ Page({
         return { dishId: d.dish_id, name: d.name, basePrice: doc ? doc.price : 0, category: doc ? doc.category : '', sel: d.sel || {}, unitPrice: doc ? doc.price : 0, qty: d.qty || 1 };
       }).filter((c) => c.dishId);
       this.updateCart(cart);
+      // 回显订单备注（点菜时填写），便于店员改预点时看到
+      this.setData({ note: (r && r.orderNote) || '' });
     } catch (e) {
       console.warn('[menu] 预载预订菜品失败', e);
     }
@@ -360,11 +362,11 @@ Page({
       try {
         if (this.data.appendTarget === 'reservation') {
           // 改预点：店员代改，整体覆盖保存（云端 staffSavePreorder 走员工权限，不受状态限制）
-          await staffSavePreorder(this.data.appendReservationId, dishes);
+          await staffSavePreorder(this.data.appendReservationId, dishes, this.data.note);
           wx.hideLoading();
           wx.showToast({ title: '已保存预点菜', icon: 'success' });
         } else {
-          await callApi('appendBookingDishes', { id: this.data.appendBookingId, dishes });
+          await callApi('appendBookingDishes', { id: this.data.appendBookingId, dishes, orderNote: this.data.note });
           wx.hideLoading();
           wx.showToast({ title: '已追加 ' + dishes.length + ' 道菜', icon: 'success' });
         }
@@ -399,7 +401,7 @@ Page({
           await submitReservation({
             date: d.date, expectedArrival: d.expectedArrival,
             partySize: d.partySize, contactPhone: d.contactPhone, note: d.note || '', dishes,
-            roomNo: d.roomNo || '',
+            roomNo: d.roomNo || '', orderNote: this.data.note,
           });
           wx.hideLoading();
           wx.showToast({ title: '已提交订位，等待确认', icon: 'none' });
@@ -413,7 +415,7 @@ Page({
       // 已有预订：保存预点菜
       wx.showLoading({ title: '保存中' });
       try {
-        await savePreorder(this.data.reservationId, dishes);
+        await savePreorder(this.data.reservationId, dishes, this.data.note);
         wx.hideLoading();
         wx.showToast({ title: '已保存预点菜', icon: 'success' });
         setTimeout(() => wx.navigateBack(), 600);

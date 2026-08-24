@@ -130,8 +130,8 @@ async function sessionDetail(id) {
   return await callApi('sessionDetail', { id });
 }
 // 顾客：提交订位申请（时间口径改为 date + expectedArrival，见结论 #G）
-async function submitReservation({ date, mealTime, expectedArrival, partySize, contactPhone, note, roomNo, dishes }) {
-  return await callApi('submitReservation', { date, mealTime, expectedArrival, partySize, contactPhone, note, roomNo, dishes });
+async function submitReservation({ date, mealTime, expectedArrival, partySize, contactPhone, note, roomNo, dishes, orderNote }) {
+  return await callApi('submitReservation', { date, mealTime, expectedArrival, partySize, contactPhone, note, roomNo, dishes, orderNote });
 }
 // 顾客：我的预订
 async function myReservations() {
@@ -142,12 +142,12 @@ async function getReservation(id) {
   return (await callApi('getReservation', { id })) || null;
 }
 // 顾客：保存/修改预点菜
-async function savePreorder(id, dishes) {
-  return await callApi('savePreorder', { id, dishes });
+async function savePreorder(id, dishes, orderNote) {
+  return await callApi('savePreorder', { id, dishes, orderNote });
 }
 // 店员/老板：代客改预点（整体覆盖，不受状态限制）
-async function staffSavePreorder(id, dishes) {
-  return await callApi('staffSavePreorder', { id, dishes });
+async function staffSavePreorder(id, dishes, orderNote) {
+  return await callApi('staffSavePreorder', { id, dishes, orderNote });
 }
 // 顾客：取消
 async function cancelReservation(id) {

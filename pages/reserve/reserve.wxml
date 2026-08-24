@@ -22,7 +22,7 @@
       <view class="badge badge-{{item.status}}">{{item.statusText}}</view>
     </view>
     <view class="mcard-info">人数 {{item.partySize}} 人 · {{item.arrivalText}}</view>
-    <view wx:if="{{item.note}}" class="mcard-note">备注：{{item.note}}</view>
+    <view wx:if="{{item.orderNote || item.note}}" class="mcard-note">备注：{{item.orderNote || item.note}}</view>
     <view wx:if="{{item.roomText}}" class="mcard-room">已为您排定：{{item.roomText}}</view>
     <view wx:if="{{item.preorderCount}}" class="mcard-note">已预点 {{item.preorderCount}} 道菜{{item.preorderable ? '' : '（已锁定）'}}</view>
     <view wx:if="{{item.preorderable}}" class="mcard-preorder" data-id="{{item.id}}" bindtap="editPreorder">去预点菜</view>

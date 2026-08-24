@@ -437,13 +437,18 @@ exports.main = async (event) => {
         const additions = Array.isArray(p.dishes) ? p.dishes : [];
         if (!additions.length) return { error: '未选择菜品' };
         const merged = mergeDishes(b.dishes, additions);
-        await db.collection('bookings').doc(p.id).update({ data: { dishes: merged } });
+        // 订单备注（点菜时填写）随追加一并保存
+        const upd = { dishes: merged };
+        if (typeof p.orderNote === 'string') upd.orderNote = p.orderNote;
+        await db.collection('bookings').doc(p.id).update({ data: upd });
         if (b.reservationRef) {
           try {
             const r = (await db.collection('reservations').doc(b.reservationRef).get()).data;
             if (r) {
               const resMerged = mergeDishes(r.dishes, additions);
-              await db.collection('reservations').doc(b.reservationRef).update({ data: { dishes: resMerged } });
+              const rupd = { dishes: resMerged };
+              if (typeof p.orderNote === 'string') rupd.orderNote = p.orderNote;
+              await db.collection('reservations').doc(b.reservationRef).update({ data: rupd });
             }
           } catch (e) { console.warn('[appendBookingDishes] sync reservation', e.message); }
         }
@@ -512,6 +517,7 @@ exports.main = async (event) => {
           data: {
             _openid: openid, date: p.date, mealTime, slot, expectedArrival: arrival, roomNo: suggestRoom,
             partySize: ps, contactPhone: p.contactPhone, note: p.note || '',
+            orderNote: p.orderNote || '',
             dishes: Array.isArray(p.dishes) ? p.dishes : [],
             status: 'pending', source: 'self', createdAt: db.serverDate(),
           },
@@ -534,6 +540,7 @@ exports.main = async (event) => {
           rejectReason: r.rejectReason || '', arrivedAt: r.arrivedAt || '',
           roomId: bkMap[r._id] || null,
           dishes: r.dishes || [],
+          orderNote: r.orderNote || '',
         }));
         break;
       }
@@ -564,7 +571,9 @@ exports.main = async (event) => {
         if (!r || r._openid !== openid) return { error: '无权限' };
         if (r.status !== 'pending') return { error: '仅待确认时可预点或修改' };
         const dishes = Array.isArray(p.dishes) ? p.dishes : [];
-        await db.collection('reservations').doc(p.id).update({ data: { dishes } });
+        const upd = { dishes };
+        if (typeof p.orderNote === 'string') upd.orderNote = p.orderNote;
+        await db.collection('reservations').doc(p.id).update({ data: upd });
         return { data: { ok: true } };
       }
       // 店员/老板：代客改预点（整体覆盖，不受状态限制，走员工权限）
@@ -574,7 +583,9 @@ exports.main = async (event) => {
         const r = (await db.collection('reservations').doc(p.id).get()).data;
         if (!r) return { error: '预订不存在' };
         const dishes = Array.isArray(p.dishes) ? p.dishes : [];
-        await db.collection('reservations').doc(p.id).update({ data: { dishes } });
+        const upd = { dishes };
+        if (typeof p.orderNote === 'string') upd.orderNote = p.orderNote;
+        await db.collection('reservations').doc(p.id).update({ data: upd });
         return { data: { ok: true } };
       }
       // 顾客：读取单条预订（含预点菜），供预点菜页回显
@@ -583,7 +594,7 @@ exports.main = async (event) => {
         await ensureCol('reservations');
         const r = (await db.collection('reservations').doc(p.id).get()).data;
         if (!r || r._openid !== openid) return { error: '无权限' };
-        return { data: { id: r._id, date: r.date, mealTime: r.mealTime, slot: r.slot || '', expectedArrival: r.expectedArrival || '', partySize: r.partySize, contactPhone: maskPhone(r.contactPhone), note: r.note || '', status: r.status, rejectReason: r.rejectReason || '', dishes: r.dishes || [] } };
+        return { data: { id: r._id, date: r.date, mealTime: r.mealTime, slot: r.slot || '', expectedArrival: r.expectedArrival || '', partySize: r.partySize, contactPhone: maskPhone(r.contactPhone), note: r.note || '', orderNote: r.orderNote || '', status: r.status, rejectReason: r.rejectReason || '', dishes: r.dishes || [] } };
       }
 
       /* ===== 以下为店员/老板 ===== */
