@@ -31,12 +31,21 @@ Component({
       const app = getApp();
       if (!app) return;
       const role = app.globalData.role;
+      const finish = () => {
+        this.applyTabs(app.globalData.role);
+        // 根据当前页面路由高亮对应 tab，避免与页面 onShow 设置 selectedKey 产生竞态覆盖
+        const pages = getCurrentPages();
+        const route = (pages[pages.length - 1] && pages[pages.length - 1].route) || '';
+        const found = Object.keys(META).find((k) => META[k].pagePath.replace(/^\//, '') === route);
+        const sel = found || this.data.selectedKey || 'rooms';
+        this.setData({ selectedKey: sel });
+      };
       if (role === '') {
         // 角色尚未初始化：等拉取完成后再渲染
-        if (app.refreshRole) app.refreshRole().then(() => this.applyTabs(app.globalData.role));
+        if (app.refreshRole) app.refreshRole().then(finish);
         return;
       }
-      this.applyTabs(role);
+      finish();
     },
     applyTabs(role) {
       const keys = ROLE_TABS[role] || ROLE_TABS.guest;
@@ -46,8 +55,7 @@ Component({
         if (k === 'merchant') t.text = role === 'manager' ? '商家' : '订单';
         return t;
       });
-      const sel = keys.includes(this.data.selectedKey) ? this.data.selectedKey : 'rooms';
-      this.setData({ role, tabs, selectedKey: sel });
+      this.setData({ role, tabs });
     },
     switchTab(e) {
       const key = e.currentTarget.dataset.key;

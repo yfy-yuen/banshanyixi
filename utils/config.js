@@ -75,4 +75,4 @@ function canSelfEditPreorder(date) {
 const fmt = (n) => '¥' + Number(n || 0).toFixed(2);
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-module.exports = { ENV, REGION, ROOMS, ROOM_CAP, ROOM_MAJIANG, BOSS_CODE, CATS, fmt, genId, GATE_VIDEO_SRC, GATE_VIDEO_POSTER, RESERVE_TPL_ID, STORE_ADDR, STORE_PHONE, STORE_LAT, STORE_LNG, STORE_NAME, PREORDER_LOCK_DAYS, canSelfEditPreorder };
+module.exports = { ENV, REGION, ROOMS, ROOM_CAP, ROOM_CAP_RANGE, ROOM_MAJIANG, BOSS_CODE, CATS, fmt, genId, GATE_VIDEO_SRC, GATE_VIDEO_POSTER, RESERVE_TPL_ID, STORE_ADDR, STORE_PHONE, STORE_LAT, STORE_LNG, STORE_NAME, PREORDER_LOCK_DAYS, canSelfEditPreorder };
