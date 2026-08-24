@@ -13,6 +13,9 @@
     <view class="h-phone">{{phoneMask || '未留手机号'}}</view>
   </view>
 
+  <!-- 快捷订席 -->
+  <view class="btn-apply btn-apply-top" bindtap="goReserve">订一席</view>
+
   <!-- 我的预订 -->
   <view class="sec">我的预订</view>
   <view wx:if="{{!active.length}}" class="empty">暂无进行中的预订</view>
@@ -35,7 +38,6 @@
       <view wx:if="{{item.status === 'confirmed'}}" class="op op-cancel" data-id="{{item.id}}" bindtap="cancelMine">取消重订</view>
     </view>
   </view>
-  <view class="btn-apply" bindtap="goReserve">订一席</view>
 
   <!-- 我的预点菜 -->
   <view class="sec">我的预点菜</view>

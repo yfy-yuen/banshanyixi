@@ -79,6 +79,10 @@
   text-align: center; padding: 12px; border-radius: 24px;
   font-size: 15px; letter-spacing: 2px;
 }
+.btn-apply-top {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
 
 .empty { text-align: center; color: #a99e8c; font-size: 13px; padding: 12px 0 4px; }
 .entry { text-align: center; padding: 18px; color: #8a8175; font-size: 13px; margin-top: 8px; }
