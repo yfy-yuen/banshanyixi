@@ -172,7 +172,7 @@
         <view class="qn">{{ch==='alipay'?'支付宝收款码':'微信收款码'}}</view>
         <image wx:if="{{qrMap[ch]}}" class="qr-img" src="{{qrMap[ch]}}" mode="aspectFit" />
         <view wx:else class="qt">未配置</view>
-        <input class="ipt" placeholder="粘贴图片 URL" value="{{qrMap[ch]}}" data-ch="{{ch}}" bindinput="onQrInput" />
+        <input class="ipt" placeholder="粘贴图片 URL" placeholder-class="ph-light" value="{{qrMap[ch]}}" data-ch="{{ch}}" bindinput="onQrInput" />
         <view class="btn" style="width:100%;" bindtap="saveQr" data-ch="{{ch}}">保存</view>
       </view>
     </view>
@@ -203,13 +203,13 @@
 <view class="mask" wx:if="{{showEdit}}" bindtap="closeEdit">
   <view class="modal" catchtap="noop">
     <view class="modal-title">编辑菜品</view>
-    <input class="ipt" placeholder="菜名" value="{{edit.name}}" data-field="name" bindinput="onEditInput" />
+    <input class="ipt" placeholder="菜名" placeholder-class="ph-light" value="{{edit.name}}" data-field="name" bindinput="onEditInput" />
     <picker mode="selector" range="{{cats}}" value="{{catsIndex}}" bindchange="onCatPick">
       <view class="ipt picker">{{edit.category}}</view>
     </picker>
-    <input class="ipt" placeholder="价格" type="digit" value="{{edit.price}}" data-field="price" bindinput="onEditInput" />
-    <input class="ipt" placeholder="图片 URL" value="{{edit.image}}" data-field="image" bindinput="onEditInput" />
-    <input class="ipt" placeholder="描述" value="{{edit.description}}" data-field="description" bindinput="onEditInput" />
+    <input class="ipt" placeholder="价格" placeholder-class="ph-light" type="digit" value="{{edit.price}}" data-field="price" bindinput="onEditInput" />
+    <input class="ipt" placeholder="图片 URL" placeholder-class="ph-light" value="{{edit.image}}" data-field="image" bindinput="onEditInput" />
+    <input class="ipt" placeholder="描述" placeholder-class="ph-light" value="{{edit.description}}" data-field="description" bindinput="onEditInput" />
     <view class="edit-tags">
       <text class="edit-label">标签</text>
       <view class="tag-row">
@@ -229,8 +229,8 @@
     <view class="edit-portions">
       <text class="edit-label">每份用料（食材采购清单用）</text>
       <view class="por-row" wx:for="{{edit.portions}}" wx:key="index" wx:for-index="pi">
-        <input class="ipt por-mat" placeholder="材料（可带单位，如 里脊肉(g)）" value="{{item.mat}}" data-pi="{{pi}}" data-f="mat" bindinput="onPortion" />
-        <input class="ipt por-amt" type="digit" placeholder="每份用量" value="{{item.amt}}" data-pi="{{pi}}" data-f="amt" bindinput="onPortion" />
+        <input class="ipt por-mat" placeholder="材料（可带单位，如 里脊肉(g)）" placeholder-class="ph-light" value="{{item.mat}}" data-pi="{{pi}}" data-f="mat" bindinput="onPortion" />
+        <input class="ipt por-amt" type="digit" placeholder="每份用量" placeholder-class="ph-light" value="{{item.amt}}" data-pi="{{pi}}" data-f="amt" bindinput="onPortion" />
         <view class="por-del" data-pi="{{pi}}" bindtap="removePortion">删</view>
       </view>
       <view class="btn btn-ghost por-add" bindtap="addPortion">+ 添加用料</view>

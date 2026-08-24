@@ -5,7 +5,8 @@
   border: 1px solid var(--border); border-radius: 10px; font-size: 14px;
   background: var(--card-soft); color: var(--ink);
 }
-.ipt.picker { color: #333; }
+.ipt.picker { color: #bcb2a3; }
+.ph-light { color: #bcb2a3; }
 
 /* 登录 */
 .login-wrap { display: flex; align-items: center; justify-content: center; min-height: 70vh; }

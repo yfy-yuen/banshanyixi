@@ -66,7 +66,7 @@
 <view class="mask" wx:if="{{showNameModal}}" bindtap="closeName">
   <view class="modal" catchtap="noop">
     <view class="modal-title">称呼</view>
-    <input class="ipt" value="{{nameInput}}" bindinput="onNameInput" placeholder="如何称呼您" placeholder-style="color:#5a544d;font-size:28rpx" />
+    <input class="ipt" value="{{nameInput}}" bindinput="onNameInput" placeholder="如何称呼您" placeholder-style="color:#bcb2a3;font-size:28rpx" />
     <view class="btn" style="width:100%;margin-top:14px;" bindtap="saveName">保存</view>
     <view class="btn-del" style="width:100%;margin-top:10px;" bindtap="closeName">返回</view>
   </view>
