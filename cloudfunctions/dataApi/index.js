@@ -356,6 +356,16 @@ exports.main = async (event) => {
         await db.collection('orders').doc(p.id).update({
           data: { status: 'paid', paymentMethod: pm, closed: true, closed_at: db.serverDate(), receipt_no: receipt.no },
         });
+        // 结账清台：连锁把「该餐段」的排席(booking)标记 closed（留底不删），使清台后该餐段预点菜在顾客端收起（结论：清台即关）
+        try {
+          const cd = new Date(order.created_at);
+          const bj = new Date(cd.getTime() + 8 * 3600 * 1000); // 转北京时间，与 booking 的 date/slot 口径一致
+          const odate = bj.toISOString().slice(0, 10);
+          const slot = bj.getUTCHours() < 14 ? 'lunch' : 'dinner';
+          await db.collection('bookings').where({ room_id: String(order.room_no), date: odate, slot }).update({
+            data: { closed: true, closed_at: db.serverDate() },
+          });
+        } catch (e) { console.warn('[clearOrder booking]', e.message); }
         return { data: { ok: true, receiptNo: receipt.no } };
       }
 
@@ -704,19 +714,24 @@ exports.main = async (event) => {
         }
         const bks = (await db.collection('bookings').where({ room_id: roomNo, date }).limit(1000).get()).data || [];
         const refs = [...new Set(bks.map((b) => b.reservationRef).filter(Boolean))];
-        let unlocked = false;
+        // 收集当前 OPENID 所属（owner/companion）的 reservation id 集合 → 只返回「本桌」私密数据
+        const myResIds = [];
         if (refs.length) {
           const rs = (await db.collection('reservations').where({ _id: _.in(refs) }).limit(1000).get()).data || [];
           for (const r of rs) {
-            if (r._openid === openid || (r.companions || []).includes(openid)) { unlocked = true; break; }
+            if (r._openid === openid || (r.companions || []).includes(openid)) myResIds.push(r._id);
           }
         }
-        if (!unlocked) return { data: { unlocked: false } };
-        const bookDishes = bks.map((b) => ({ slot: b.slot || '', type: b.type || 'meal', date: b.date, dishes: b.dishes || [] }));
+        if (!myResIds.length) return { data: { unlocked: false } };
+        // 只返本桌且未清台的预点菜（清台后该餐段收起，数据留底不删）
+        const bookDishes = bks
+          .filter((b) => myResIds.includes(b.reservationRef) && b.closed !== true)
+          .map((b) => ({ slot: b.slot || '', type: b.type || 'meal', date: b.date, dishes: b.dishes || [] }));
         let liveOrders = [];
         try {
-          const orders = (await db.collection('orders').where({ room_name: roomName, closed: _.neq(true) }).limit(1000).get()).data || [];
-          liveOrders = orders.filter((o) => String(o.created_at || '').slice(0, 10) === date);
+          // 现场单：只返「本桌预订」或「自己下的单」且未清台的（精确到本桌，避免同厢其他餐段互串）
+          const orders = (await db.collection('orders').where({ room_name: roomName }).limit(1000).get()).data || [];
+          liveOrders = orders.filter((o) => o.closed !== true && (myResIds.includes(o.reservation_id) || o.openid === openid));
         } catch (e) { console.warn('[roomAccess liveOrders]', e.message); }
         return { data: { unlocked: true, bookDishes, liveOrders } };
       }
