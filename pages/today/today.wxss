@@ -27,12 +27,13 @@
   margin: 48rpx auto 0;
   width: 300rpx;
   height: 76rpx;
-  line-height: 76rpx;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: #a63522;
   color: #fff;
   border-radius: 38rpx;
-  font-size: 30rpx;
+  font-size: 34rpx;
   letter-spacing: 4rpx;
 }
 .card {
