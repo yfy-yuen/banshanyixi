@@ -21,7 +21,7 @@
       <view class="mcard-date">{{item.date}} · {{item.mealText}}</view>
       <view class="badge badge-{{item.status}}">{{item.statusText}}</view>
     </view>
-    <view class="mcard-info">人数 {{item.partySize}} 人 · {{item.arrivalText}}</view>
+    <view class="mcard-info">人数 {{item.partySize}} 人 · {{item.arrivalText}}<text wx:if="{{item.needMahjong}}" class="mcard-tag">棋牌</text></view>
     <view wx:if="{{item.orderNote || item.note}}" class="mcard-note">备注：{{item.orderNote || item.note}}</view>
     <view wx:if="{{item.roomText}}" class="mcard-room">已为您排定：{{item.roomText}}</view>
     <view wx:if="{{item.preorderCount}}" class="mcard-note">已预点 {{item.preorderCount}} 道菜{{item.preorderable ? '' : '（已锁定）'}}</view>
@@ -49,6 +49,10 @@
       <view class="dl">人数</view>
       <input class="ipt" type="number" value="{{form.partySize}}" bindinput="onParty" placeholder="用餐人数" placeholder-style="color:#bcb2a3;font-size:28rpx" />
 
+      <view class="dl row-line">
+        <text>棋牌（需麻将机）</text>
+        <switch checked="{{form.needMahjong}}" bindchange="onMahjong" color="#a63522" />
+      </view>
       <view class="dl">偏好包厢（选填）</view>
       <picker mode="selector" range="{{roomOptions}}" range-key="display" value="{{roomIndex}}" bindchange="onRoom">
         <view class="ipt picker">{{form.roomName || '选择包厢'}}</view>

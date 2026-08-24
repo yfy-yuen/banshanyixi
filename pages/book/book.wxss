@@ -67,6 +67,7 @@
 .appr-top { display: flex; align-items: center; }
 .appr-date { font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: 1px; }
 .appr-people { margin-left: auto; font-size: 13px; color: var(--cinnabar); }
+.appr-tag { margin-left: 10rpx; padding: 2rpx 12rpx; font-size: 20rpx; color: #fff; background: #a63522; border-radius: 16rpx; letter-spacing: 1rpx; vertical-align: middle; }
 .appr-info { font-size: 13px; color: var(--ink-light); margin-top: 6px; }
 .appr-note { font-size: 12px; color: var(--muted); margin-top: 4px; }
 .appr-acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }

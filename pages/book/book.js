@@ -283,6 +283,7 @@ Page({
       const list = (await listReservations()) || [];
       const apps = list.filter((r) => r.status === 'pending').map((r) => ({
         id: r.id, partySize: r.partySize, contactPhone: r.contactPhone, note: r.note || '',
+        needMahjong: !!r.needMahjong,
         date: r.date || '', meal: mealText(r.mealTime || 'lunch'),
         roomText: r.roomNo ? (ROOMS[r.roomNo] || (r.roomNo + ' 号包厢')) : '',
       }));

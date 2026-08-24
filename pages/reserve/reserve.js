@@ -1,13 +1,17 @@
-const { ROOMS, ROOM_CAP, RESERVE_TPL_ID, canSelfEditPreorder, STORE_PHONE } = require('../../utils/config');
+const { ROOMS, ROOM_CAP, ROOM_MAJIANG, RESERVE_TPL_ID, canSelfEditPreorder, STORE_PHONE } = require('../../utils/config');
 const { submitReservation, myReservations, cancelReservation } = require('../../utils/api');
 
 // 包厢选择列表：第一项「由店家安排」表示不指定，交给云端自动预匹配
-const ROOM_OPTIONS = [{ no: '', name: '由店家安排', display: '由店家安排' }].concat(
-  Object.entries(ROOMS).map(([no, name]) => ({
-    no, name,
-    display: `${name}（${ROOM_CAP[no] || '?'}人）`,
-  }))
-);
+// needMahjong=true 时只列出有麻将机的包厢（满仓/枕山）
+function buildRoomOptions(needMahjong) {
+  const pool = needMahjong ? ROOM_MAJIANG : Object.keys(ROOMS);
+  return [{ no: '', name: '由店家安排', display: '由店家安排' }].concat(
+    pool.map((no) => ({
+      no, name: ROOMS[no],
+      display: `${ROOMS[no]}（${ROOM_CAP[no] || '?'}人）${needMahjong ? ' · 麻将机' : ''}`,
+    }))
+  );
+}
 
 function mealLabel(m) { return m === 'dinner' ? '晚市' : '午市'; }
 function statusText(s) {
@@ -29,8 +33,8 @@ Page({
   data: {
     mine: [], loading: false,
     showApply: false,
-    form: { date: '', expectedArrival: '18:00', partySize: '', contactPhone: '', note: '', roomNo: '', roomName: '由店家安排' },
-    roomOptions: ROOM_OPTIONS,
+    form: { date: '', expectedArrival: '18:00', partySize: '', contactPhone: '', note: '', roomNo: '', roomName: '由店家安排', needMahjong: false },
+    roomOptions: buildRoomOptions(false),
     roomIndex: 0,
     submitting: false,
   },
@@ -60,7 +64,7 @@ Page({
 
   /* 申请订位弹窗（不再依赖场次，顾客自选日期/餐段直接提交） */
   openApply() {
-    this.setData({ showApply: true, form: { date: todayStr(), expectedArrival: '18:00', partySize: '', contactPhone: '', note: '', roomNo: '', roomName: '由店家安排' }, roomIndex: 0 });
+    this.setData({ showApply: true, form: { date: todayStr(), expectedArrival: '18:00', partySize: '', contactPhone: '', note: '', roomNo: '', roomName: '由店家安排', needMahjong: false }, roomOptions: buildRoomOptions(false), roomIndex: 0 });
   },
   closeApply() { this.setData({ showApply: false }); },
   noop() {},
@@ -72,6 +76,17 @@ Page({
   },
   onPhone(e) { this.setData({ 'form.contactPhone': e.detail.value }); },
   onNote(e) { this.setData({ 'form.note': e.detail.value }); },
+  onMahjong(e) {
+    const needMahjong = !!e.detail.value;
+    // 切换棋牌：重置偏好包厢选择（避免选到无麻将机的厢），并重建可选包厢列表
+    this.setData({
+      'form.needMahjong': needMahjong,
+      'form.roomNo': '',
+      'form.roomName': '由店家安排',
+      roomIndex: 0,
+      roomOptions: buildRoomOptions(needMahjong),
+    });
+  },
   onRoom(e) {
     const idx = Number(e.detail.value) || 0;
     const opt = this.data.roomOptions[idx];
@@ -100,6 +115,7 @@ Page({
       date: form.date, expectedArrival: form.expectedArrival,
       partySize: form.partySize, contactPhone: form.contactPhone, note: form.note,
       roomNo: form.roomNo || '',
+      needMahjong: form.needMahjong || false,
     };
     this.setData({ showApply: false });
     wx.navigateTo({ url: '/pages/menu/menu?mode=preorder&create=1' });

@@ -69,7 +69,7 @@
     <view wx:if="{{!applications.length}}" class="r-empty">暂无待确认的顾客订位申请</view>
     <view wx:for="{{applications}}" wx:key="id" class="appr">
       <view class="appr-top">
-        <view class="appr-date">{{item.date}} · {{item.meal}}</view>
+        <view class="appr-date">{{item.date}} · {{item.meal}}<text wx:if="{{item.needMahjong}}" class="appr-tag">棋牌</text></view>
         <view class="appr-people">{{item.partySize}} 人</view>
       </view>
       <view class="appr-info">手机 {{item.contactPhone}}</view>

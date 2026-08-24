@@ -82,6 +82,8 @@
   color: var(--muted); border: 1rpx solid var(--border); font-size: 28rpx;
 }
 .dl { margin: 16rpx 0 8rpx; font-size: 25rpx; color: var(--ink); letter-spacing: 2rpx; font-weight: 500; }
+.dl.row-line { display: flex; align-items: center; justify-content: space-between; margin-top: 20rpx; }
+.mcard-tag { margin-left: 12rpx; padding: 2rpx 12rpx; font-size: 20rpx; color: #fff; background: #a63522; border-radius: 16rpx; letter-spacing: 1rpx; }
 .picker { display: flex; align-items: center; min-height: 84rpx; }
 
 /* 申请订位弹窗内优化：输入框文字垂直居中、按钮对比度、标题间距 */

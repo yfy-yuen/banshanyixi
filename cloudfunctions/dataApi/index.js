@@ -20,7 +20,10 @@ const tplId = process.env.RESERVE_TPL_ID || RESERVE_TPL_ID;
 // 包厢编号（与 utils/config.js ROOMS 一致，无 4 号）；确认预订时用于自动分配空闲包厢
 const ROOM_IDS = ['1', '2', '3', '5', '6'];
 // 各包厢容量（用于自动分配「最小合适包厢」；与 ROOMS 顺序一致，按容量升序）
-const ROOM_CAP = { '1': 4, '2': 6, '3': 8, '5': 10, '6': 14 };
+// 真实值（2026-08-24 用户口述，单值取容量上限）：谷山玥16 / 满仓12 / 枕山12 / 云起8 / 知来4
+const ROOM_CAP = { '1': 16, '2': 12, '3': 12, '5': 8, '6': 4 };
+// 有麻将机的包厢编号（仅满仓、枕山）。顾客选「棋牌」用途时只能选这些，自动分厢 likewise 仅在这些里挑
+const ROOM_MAJIANG = ['2', '3'];
 
 // 把文档库返回的 _id 暴露为 id（前端代码统一用 .id 匹配）
 function normalize(rows) {
@@ -75,14 +78,16 @@ function overlapWithin(aDate, aArr, bDate, bArr) {
   return Math.abs(pa - pb) < 4 * 3600 * 1000;
 }
 // 自动分配最小合适包厢（结论 #H）：容量 ≥ 人数 且 当日该窗口空闲；无合适则返回 ''
-async function pickFreeRoom(date, arrival, partySize) {
+// mahjong=true 时只在有麻将机的包厢里挑（满仓/枕山）
+async function pickFreeRoom(date, arrival, partySize, mahjong) {
   const slot = slotOf(arrival) || 'lunch';
+  const ids = mahjong ? ROOM_MAJIANG : ROOM_IDS;
   const occ = (await db.collection('bookings').where({ date, slot }).limit(1000).get()).data || [];
   const used = new Set();
   occ.forEach((b) => { if (overlapWithin(date, b.arrival || '', date, arrival)) used.add(String(b.room_id)); });
-  for (const no of ROOM_IDS) {
+  for (const no of ids) {
     if (used.has(no)) continue;
-    if ((ROOM_CAP[no] || 99) >= partySize) return no; // ROOM_IDS 已按容量升序
+    if ((ROOM_CAP[no] || 99) >= partySize) return no; // ids 已按容量升序
   }
   return '';
 }
@@ -510,13 +515,15 @@ exports.main = async (event) => {
         // 自动预匹配建议包厢（结论 #H/#10）：顾客若未指定包厢，则按容量≥人数且当日该窗口空闲挑最小合适厢，
         // 作为「建议包厢」写入 roomNo，供店员审批时直接看到；若顾客已指定则尊重其选择。
         let suggestRoom = p.roomNo || '';
+        const needMahjong = !!p.needMahjong;
         if (!suggestRoom) {
-          try { suggestRoom = await pickFreeRoom(p.date, arrival, ps) || ''; } catch (e) { console.warn('[submit] suggest', e.message); }
+          try { suggestRoom = await pickFreeRoom(p.date, arrival, ps, needMahjong) || ''; } catch (e) { console.warn('[submit] suggest', e.message); }
         }
         const _id = (await db.collection('reservations').add({
           data: {
             _openid: openid, date: p.date, mealTime, slot, expectedArrival: arrival, roomNo: suggestRoom,
             partySize: ps, contactPhone: p.contactPhone, note: p.note || '',
+            needMahjong,
             orderNote: p.orderNote || '',
             dishes: Array.isArray(p.dishes) ? p.dishes : [],
             status: 'pending', source: 'self', createdAt: db.serverDate(),
@@ -539,6 +546,7 @@ exports.main = async (event) => {
           status: r.status, source: r.source, createdAt: r.createdAt,
           rejectReason: r.rejectReason || '', arrivedAt: r.arrivedAt || '',
           roomId: bkMap[r._id] || null,
+          needMahjong: !!r.needMahjong,
           dishes: r.dishes || [],
           orderNote: r.orderNote || '',
         }));
@@ -626,6 +634,7 @@ exports.main = async (event) => {
           id: r._id, date: r.date, mealTime: r.mealTime, slot: r.slot || '', expectedArrival: r.expectedArrival || '', roomNo: r.roomNo || '',
           partySize: r.partySize, contactPhone: maskPhone(r.contactPhone), phonePlain: isMgr ? (r.contactPhone || '') : '',
           note: r.note || '', status: r.status, source: r.source, createdAt: r.createdAt,
+          needMahjong: !!r.needMahjong,
           rejectReason: r.rejectReason || '', dishes: r.dishes || [],
         }));
         break;
@@ -649,7 +658,7 @@ exports.main = async (event) => {
           if (clash.some((b) => overlapWithin(r.date, b.arrival || '', r.date, r.expectedArrival || ''))) roomId = '';
         }
         if (!roomId) {
-          try { roomId = await pickFreeRoom(r.date, r.expectedArrival || '', r.partySize); } catch (e) { console.warn('[confirm] alloc', e.message); }
+          try { roomId = await pickFreeRoom(r.date, r.expectedArrival || '', r.partySize, !!r.needMahjong); } catch (e) { console.warn('[confirm] alloc', e.message); }
         }
 
         // 满厢：转人工分配（结论 #10），不翻转 confirmed
@@ -672,7 +681,7 @@ exports.main = async (event) => {
           }
           bookingId = (await db.collection('bookings').add({
             data: {
-              room_id: roomId, date: r.date, slot, type: 'meal', arrival: r.expectedArrival || '',
+              room_id: roomId, date: r.date, slot, type: r.needMahjong ? 'game' : 'meal', arrival: r.expectedArrival || '',
               dishes: dishSnapshot, guest_name: '', guest_phone: r.contactPhone || '', note: r.note || '',
               partySize: Number(r.partySize) || 0,
               reservationRef: r._id, source: 'reservation', created_at: db.serverDate(),
@@ -709,7 +718,7 @@ exports.main = async (event) => {
 
         // 尝试自动挑一个当日该窗口空闲包厢直接重排
         let swapped = '';
-        try { swapped = await pickFreeRoom(r.date, r.expectedArrival || '', r.partySize); } catch (e) { console.warn('[reject] swap', e.message); }
+        try { swapped = await pickFreeRoom(r.date, r.expectedArrival || '', r.partySize, !!r.needMahjong); } catch (e) { console.warn('[reject] swap', e.message); }
         if (swapped) {
           let dishSnapshot;
           if (Array.isArray(r.dishes) && r.dishes.length) {

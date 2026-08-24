@@ -130,8 +130,8 @@ async function sessionDetail(id) {
   return await callApi('sessionDetail', { id });
 }
 // 顾客：提交订位申请（时间口径改为 date + expectedArrival，见结论 #G）
-async function submitReservation({ date, mealTime, expectedArrival, partySize, contactPhone, note, roomNo, dishes, orderNote }) {
-  return await callApi('submitReservation', { date, mealTime, expectedArrival, partySize, contactPhone, note, roomNo, dishes, orderNote });
+async function submitReservation({ date, mealTime, expectedArrival, partySize, contactPhone, note, roomNo, dishes, orderNote, needMahjong }) {
+  return await callApi('submitReservation', { date, mealTime, expectedArrival, partySize, contactPhone, note, roomNo, dishes, orderNote, needMahjong });
 }
 // 顾客：我的预订
 async function myReservations() {
