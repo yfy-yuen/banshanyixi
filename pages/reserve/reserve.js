@@ -26,7 +26,7 @@ Page({
   data: {
     mine: [], loading: false,
     showApply: false,
-    form: { date: '', expectedArrival: '18:00', partySize: 2, contactPhone: '', note: '', roomNo: '', roomName: '由店家安排' },
+    form: { date: '', expectedArrival: '18:00', partySize: '', contactPhone: '', note: '', roomNo: '', roomName: '由店家安排' },
     roomOptions: ROOM_OPTIONS,
     roomIndex: 0,
     submitting: false,
@@ -57,13 +57,16 @@ Page({
 
   /* 申请订位弹窗（不再依赖场次，顾客自选日期/餐段直接提交） */
   openApply() {
-    this.setData({ showApply: true, form: { date: todayStr(), expectedArrival: '18:00', partySize: 2, contactPhone: '', note: '', roomNo: '', roomName: '由店家安排' }, roomIndex: 0 });
+    this.setData({ showApply: true, form: { date: todayStr(), expectedArrival: '18:00', partySize: '', contactPhone: '', note: '', roomNo: '', roomName: '由店家安排' }, roomIndex: 0 });
   },
   closeApply() { this.setData({ showApply: false }); },
   noop() {},
   onDate(e) { this.setData({ 'form.date': e.detail.value }); },
   onArrival(e) { this.setData({ 'form.expectedArrival': e.detail.value }); },
-  onParty(e) { this.setData({ 'form.partySize': Math.max(1, parseInt(e.detail.value) || 1) }); },
+  onParty(e) {
+    const v = e.detail.value;
+    this.setData({ 'form.partySize': v === '' ? '' : Math.max(1, parseInt(v) || 1) });
+  },
   onPhone(e) { this.setData({ 'form.contactPhone': e.detail.value }); },
   onNote(e) { this.setData({ 'form.note': e.detail.value }); },
   onRoom(e) {
