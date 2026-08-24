@@ -33,9 +33,17 @@
     </view>
 
     <view class="mtitle">{{selected}} 排席</view>
+    <view class="mhead">
+      <view class="mhead-room">包厢</view>
+      <view class="mhead-slot">午市</view>
+      <view class="mhead-slot">晚市</view>
+    </view>
     <view class="matrix">
       <view class="mrow" wx:for="{{rooms}}" wx:key="no" wx:for-item="rm">
-        <view class="mroom">{{rm.name}}</view>
+        <view class="mroom">
+          <view class="mroom-name">{{rm.name}}</view>
+          <view class="mroom-cap">{{rm.capacity}}人</view>
+        </view>
         <view class="mslot {{matrix[rm.no].lunch ? 'busy':''}}" data-room="{{rm.no}}" data-slot="lunch" bindtap="openCell">
           <block wx:if="{{matrix[rm.no].lunch}}">
             <view class="mslot-lbl">{{matrix[rm.no].lunch.type==='game'?(matrix[rm.no].lunch.slot==='lunch'?'午间棋牌':'晚间棋牌'):(matrix[rm.no].lunch.slot==='lunch'?'午餐订餐':'晚餐订餐')}}</view>

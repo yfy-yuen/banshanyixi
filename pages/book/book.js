@@ -36,7 +36,7 @@ Page({
     this.setData({
       year: now.getFullYear(), month: now.getMonth() + 1, selected: todayStr(),
       rooms: Object.entries(ROOMS).map(([no, name]) => ({
-        no, name,
+        no, name, capacity: ROOM_CAP[no],
         display: `${name}（${ROOM_CAP[no] || '?'}人）`,
       })),
     });
