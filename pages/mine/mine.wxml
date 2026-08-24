@@ -36,6 +36,7 @@
       <view wx:if="{{item.status === 'confirmed' && item.step >= 2}}" class="op op-lock">预点已锁定</view>
       <view wx:if="{{item.status === 'pending'}}" class="op" data-id="{{item.id}}" bindtap="cancelMine">取消</view>
       <view wx:if="{{item.status === 'confirmed'}}" class="op op-cancel" data-id="{{item.id}}" bindtap="cancelMine">取消重订</view>
+      <view class="op op-share" data-id="{{item.id}}" bindtap="openShare">邀请同桌</view>
     </view>
   </view>
 
@@ -71,5 +72,26 @@
     <input class="ipt" value="{{nameInput}}" bindinput="onNameInput" placeholder="如何称呼您" placeholder-style="color:#bcb2a3;font-size:28rpx" />
     <view class="btn" style="width:100%;margin-top:14px;" bindtap="saveName">保存</view>
     <view class="btn-del" style="width:100%;margin-top:10px;" bindtap="closeName">返回</view>
+  </view>
+</view>
+
+<!-- 同桌邀请面板 -->
+<view class="mask" wx:if="{{showShare}}" bindtap="closeShare">
+  <view class="modal" catchtap="noop">
+    <view class="modal-title">邀请同桌</view>
+    <view class="share-code-row">
+      <text class="share-code">{{shareCode || '...'}}</text>
+      <view class="share-copy" bindtap="copyCode">复制</view>
+    </view>
+    <view class="share-tip">把邀请码或下方方式发给同桌，对方输入/点开即可加入本桌（仅本桌可见菜单，加不进别的订单）</view>
+    <image wx:if="{{shareQrcode}}" src="{{shareQrcode}}" mode="aspectFit" class="share-qr" />
+    <view wx:else class="share-qr-ph">{{shareBusy ? '小程序码生成中…' : '该桌暂无小程序码'}}</view>
+    <button class="btn share-forward" open-type="share">转发给好友</button>
+    <view wx:if="{{shareItem.companionCount > 0}}" class="share-meta">已加入 {{shareItem.companionCount}} 位同桌</view>
+    <view class="share-ops">
+      <view class="share-op" bindtap="resetCode">重置邀请码</view>
+      <view wx:if="{{shareItem.companionCount > 0}}" class="share-op" bindtap="kickCompanion">移除同桌</view>
+    </view>
+    <view class="btn-del" bindtap="closeShare">关闭</view>
   </view>
 </view>

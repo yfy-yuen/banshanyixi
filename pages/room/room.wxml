@@ -49,41 +49,63 @@
 
   <!-- 订单 -->
   <view wx:if="{{tab==='order'}}" class="pane">
-    <view class="subseg">
-      <view class="subseg-btn {{orderSub==='book'?'on':''}}" data-sub="book" bindtap="switchOrderSub">订餐菜品</view>
-      <view class="subseg-btn {{orderSub==='live'?'on':''}}" data-sub="live" bindtap="switchOrderSub">现场下单菜品</view>
+    <!-- 未解锁：包厢门禁，硬拦截，不渲染任何私密菜品数据 -->
+    <view wx:if="{{!unlocked}}" class="lock-box">
+      <view class="lock-icon">🔒</view>
+      <view class="lock-tip">本桌菜单仅同桌可见</view>
+      <view class="lock-sub">请输入同桌邀请码，查看本桌订餐与现场单</view>
+      <input class="lock-input" placeholder="请输入 6 位邀请码" placeholder-style="color:#bcb2a3" value="{{codeInput}}" bindinput="onCodeInput" maxlength="6" />
+      <view wx:if="{{joinErr}}" class="lock-err">{{joinErr}}</view>
+      <view class="btn-apply" bindtap="joinWithCode">{{joining ? '加入中…' : '加入本桌'}}</view>
     </view>
 
-    <!-- 订餐菜品 -->
-    <view wx:if="{{orderSub==='book'}}">
-      <block wx:if="{{dishes.length}}">
-        <view class="order-bar">{{dateLabel}} · {{typeLabel}}</view>
-        <view class="card dish-row" wx:for="{{dishes}}" wx:key="index">
-          <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" class="dish-img" />
-          <view wx:else class="dish-img ph">{{item.name}}</view>
-          <view class="dish-info">
-            <view class="dish-name">{{item.name}}</view>
-            <view class="dish-sub">{{item.note || '招牌'}} · {{item.qty}}</view>
-          </view>
-        </view>
-      </block>
-      <view wx:else class="empty">本厢尚未排定订餐</view>
-    </view>
+    <!-- 已解锁：主订人/同桌/店家 -->
+    <block wx:else>
+      <view class="subseg">
+        <view class="subseg-btn {{orderSub==='book'?'on':''}}" data-sub="book" bindtap="switchOrderSub">订餐菜品</view>
+        <view class="subseg-btn {{orderSub==='live'?'on':''}}" data-sub="live" bindtap="switchOrderSub">现场下单菜品</view>
+      </view>
 
-    <!-- 现场下单菜品 -->
-    <view wx:if="{{orderSub==='live'}}">
-      <block wx:if="{{liveOrders.length}}">
-        <view class="card" wx:for="{{liveOrders}}" wx:key="id">
-          <view class="o-row">
-            <text class="muted">{{item.createdText}}</text>
-            <text class="pill {{item.status==='paid'?'paid':'unpaid'}}">{{item.statusText}}</text>
+      <!-- 订餐菜品（分餐段） -->
+      <view wx:if="{{orderSub==='book'}}">
+        <block wx:if="{{lunchDishes.length || dinnerDishes.length}}">
+          <view wx:if="{{lunchDishes.length}}" class="order-bar">午市订餐</view>
+          <view class="card dish-row" wx:for="{{lunchDishes}}" wx:key="index">
+            <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" class="dish-img" />
+            <view wx:else class="dish-img ph">{{item.name}}</view>
+            <view class="dish-info">
+              <view class="dish-name">{{item.name}}</view>
+              <view class="dish-sub">{{item.note || '招牌'}} · {{item.qty}}</view>
+            </view>
           </view>
-          <view class="o-items"><text wx:for="{{item.items}}" wx:for-item="i" wx:key="k">{{i.name}}{{i.selText}} ×{{i.qty}}　</text></view>
-          <view wx:if="{{item.noteText}}" class="o-note">备注：{{item.noteText}}</view>
-          <view class="o-row"><text class="price-red">{{item.totalText}}</text></view>
-        </view>
-      </block>
-      <view wx:else class="empty">本厢暂无现场下单</view>
-    </view>
+          <view wx:if="{{dinnerDishes.length}}" class="order-bar">晚市订餐</view>
+          <view class="card dish-row" wx:for="{{dinnerDishes}}" wx:key="index">
+            <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" class="dish-img" />
+            <view wx:else class="dish-img ph">{{item.name}}</view>
+            <view class="dish-info">
+              <view class="dish-name">{{item.name}}</view>
+              <view class="dish-sub">{{item.note || '招牌'}} · {{item.qty}}</view>
+            </view>
+          </view>
+        </block>
+        <view wx:else class="empty">本桌尚未排定订餐</view>
+      </view>
+
+      <!-- 现场下单菜品 -->
+      <view wx:if="{{orderSub==='live'}}">
+        <block wx:if="{{liveOrders.length}}">
+          <view class="card" wx:for="{{liveOrders}}" wx:key="id">
+            <view class="o-row">
+              <text class="muted">{{item.createdText}}</text>
+              <text class="pill {{item.status==='paid'?'paid':'unpaid'}}">{{item.statusText}}</text>
+            </view>
+            <view class="o-items"><text wx:for="{{item.items}}" wx:for-item="i" wx:key="k">{{i.name}}{{i.selText}} ×{{i.qty}}　</text></view>
+            <view wx:if="{{item.noteText}}" class="o-note">备注：{{item.noteText}}</view>
+            <view class="o-row"><text class="price-red">{{item.totalText}}</text></view>
+          </view>
+        </block>
+        <view wx:else class="empty">本桌暂无现场下单</view>
+      </view>
+    </block>
   </view>
 </view>

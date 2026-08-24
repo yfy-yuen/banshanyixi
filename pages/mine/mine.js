@@ -1,5 +1,5 @@
 const { ROOMS } = require('../../utils/config');
-const { myReservations, cancelReservation, markArrived } = require('../../utils/api');
+const { myReservations, cancelReservation, markArrived, genInvite, resetInvite, removeCompanion } = require('../../utils/api');
 
 function mealLabel(m) { return m === 'dinner' ? '晚市' : '午市'; }
 function statusText(s) {
@@ -16,6 +16,7 @@ Page({
     active: [], history: [], preorders: [],
     loading: false,
     showNameModal: false, nameInput: '',
+    showShare: false, shareItem: null, shareCode: '', shareQrcode: '', shareBusy: false,
   },
   onShow() {
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
@@ -61,6 +62,62 @@ Page({
   onNameInput(e) { this.setData({ nameInput: e.detail.value }); },
   closeName() { this.setData({ showNameModal: false }); },
   noop() {},
+  // 同桌邀请：打开分享面板（自动取/生成邀请码 + 小程序码）
+  openShare(e) {
+    const id = e.currentTarget.dataset.id;
+    const item = this.data.active.find((x) => x.id === id) || this.data.history.find((x) => x.id === id);
+    if (!item) return;
+    this.setData({ showShare: true, shareItem: item, shareCode: item.inviteCode || '', shareQrcode: '', shareBusy: false });
+    this.genCode(id);
+  },
+  async genCode(id) {
+    this.setData({ shareBusy: true });
+    try {
+      const r = await genInvite(id);
+      this.setData({ shareCode: r.code || '', shareQrcode: r.qrcode || '' });
+    } catch (err) { console.warn('[genInvite]', err.message); }
+    this.setData({ shareBusy: false });
+  },
+  closeShare() { this.setData({ showShare: false }); },
+  copyCode() {
+    if (!this.data.shareCode) return;
+    wx.setClipboardData({ data: this.data.shareCode, success: () => wx.showToast({ title: '已复制邀请码', icon: 'success' }) });
+  },
+  async resetCode() {
+    const item = this.data.shareItem;
+    if (!item) return;
+    const ok = await new Promise((res) => wx.showModal({ title: '重置邀请码', content: '旧码将立即失效，已加入的同桌不受影响。', success: (r) => res(r.confirm) }));
+    if (!ok) return;
+    try {
+      const r = await resetInvite(item.id);
+      this.setData({ shareCode: r.code || '', shareQrcode: '' });
+      wx.showToast({ title: '已重置', icon: 'success' });
+    } catch (e) { wx.showToast({ title: '重置失败', icon: 'none' }); }
+  },
+  async kickCompanion() {
+    const item = this.data.shareItem;
+    if (!item) return;
+    const ok = await new Promise((res) => wx.showModal({ title: '移除同桌', content: '将把同桌移出本桌，对方需重新扫码/输码加入。', success: (r) => res(r.confirm) }));
+    if (!ok) return;
+    try {
+      const r = await removeCompanion(item.id);
+      if (r && r.ok) {
+        const active = this.data.active.map((x) => x.id === item.id ? { ...x, companionCount: r.companionCount } : x);
+        this.setData({ active, shareItem: { ...item, companionCount: r.companionCount } });
+        wx.showToast({ title: '已移除', icon: 'success' });
+      }
+    } catch (e) { wx.showToast({ title: '操作失败', icon: 'none' }); }
+  },
+  onShareAppMessage() {
+    const item = this.data.shareItem || {};
+    const code = this.data.shareCode || '';
+    const room = item.roomNo || '';
+    const id = item.id || '';
+    return {
+      title: '半山·一席 | ' + (item.date || '') + ' 邀您同桌入席',
+      path: '/pages/room/room?room=' + room + '&join=' + id + '&code=' + code,
+    };
+  },
   saveName() {
     const name = (this.data.nameInput || '').trim();
     const stored = wx.getStorageSync('profile') || {};

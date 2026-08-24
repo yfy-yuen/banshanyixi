@@ -98,6 +98,25 @@ function tsOf(v) {
   return new Date(v).getTime();
 }
 
+// 生成 6 位同桌邀请码（大写字母+数字，剔除易混字符 0/O/1/I）
+function genInviteCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+// 生成小程序码（扫码直接进 room 页并自动 join）；失败返回空串，不影响主流程
+async function genWxacode(code) {
+  try {
+    const res = await cloud.openapi.wxacode.getUnlimited({ scene: code, page: 'pages/room/room', width: 280, checkPath: false });
+    const buf = (res && (res.buffer || (res.result && res.result.buffer))) || null;
+    if (!buf) return '';
+    const cloudPath = 'invite/' + code + '_' + Date.now() + '.png';
+    const up = await cloud.uploadFile({ cloudPath, fileContent: buf });
+    return up.fileID || '';
+  } catch (e) { console.warn('[genWxacode]', e.message); return ''; }
+}
+
 // 定时触发器入口：每日自动执行「清过期申请 / 发到店提醒 / 清零售罄限定」。
 // 注意：定时触发时云函数上下文无 OPENID，无法走 staff 权限校验，故直接以云函数管理员身份执行。
 async function runDailyCron() {
@@ -526,6 +545,7 @@ exports.main = async (event) => {
             needMahjong,
             orderNote: p.orderNote || '',
             dishes: Array.isArray(p.dishes) ? p.dishes : [],
+            companions: [], inviteCode: genInviteCode(),
             status: 'pending', source: 'self', createdAt: db.serverDate(),
           },
         }))._id;
@@ -549,6 +569,8 @@ exports.main = async (event) => {
           needMahjong: !!r.needMahjong,
           dishes: r.dishes || [],
           orderNote: r.orderNote || '',
+          inviteCode: r.inviteCode || '',
+          companionCount: (r.companions || []).length,
         }));
         break;
       }
@@ -602,7 +624,101 @@ exports.main = async (event) => {
         await ensureCol('reservations');
         const r = (await db.collection('reservations').doc(p.id).get()).data;
         if (!r || r._openid !== openid) return { error: '无权限' };
-        return { data: { id: r._id, date: r.date, mealTime: r.mealTime, slot: r.slot || '', expectedArrival: r.expectedArrival || '', partySize: r.partySize, contactPhone: maskPhone(r.contactPhone), note: r.note || '', orderNote: r.orderNote || '', status: r.status, rejectReason: r.rejectReason || '', dishes: r.dishes || [] } };
+        return { data: { id: r._id, date: r.date, mealTime: r.mealTime, slot: r.slot || '', expectedArrival: r.expectedArrival || '', partySize: r.partySize, contactPhone: maskPhone(r.contactPhone), note: r.note || '', orderNote: r.orderNote || '', status: r.status, rejectReason: r.rejectReason || '', dishes: r.dishes || [], inviteCode: r.inviteCode || '', companionCount: (r.companions || []).length } };
+      }
+
+      /* ===== 同桌邀请 / 包厢门禁（结论 #209） ===== */
+      // 主订人获取本桌邀请码（无则生成）；附带生成小程序码（失败不影响主流程）
+      case 'genInvite': {
+        if (!openid) return { error: '身份未就绪' };
+        await ensureCol('reservations');
+        const r = (await db.collection('reservations').doc(p.id).get()).data;
+        if (!r || r._openid !== openid) return { error: '无权限' };
+        let code = r.inviteCode;
+        if (!code) {
+          code = genInviteCode();
+          await db.collection('reservations').doc(p.id).update({ data: { inviteCode: code } });
+        }
+        let qrcode = '';
+        try { qrcode = await genWxacode(code); } catch (e) { console.warn('[genInvite wxacode]', e.message); }
+        return { data: { code, qrcode } };
+      }
+      // 主订人重置邀请码（旧码失效；已加入的同桌保留）
+      case 'resetInvite': {
+        if (!openid) return { error: '身份未就绪' };
+        await ensureCol('reservations');
+        const r = (await db.collection('reservations').doc(p.id).get()).data;
+        if (!r || r._openid !== openid) return { error: '无权限' };
+        const code = genInviteCode();
+        await db.collection('reservations').doc(p.id).update({ data: { inviteCode: code } });
+        return { data: { code } };
+      }
+      // 主订人移除某个同桌（按 OPENID；不传 target 则移除自己——即退桌）
+      case 'removeCompanion': {
+        if (!openid) return { error: '身份未就绪' };
+        await ensureCol('reservations');
+        const r = (await db.collection('reservations').doc(p.id).get()).data;
+        if (!r || r._openid !== openid) return { error: '无权限' };
+        const target = p.target || openid;
+        const companions = (r.companions || []).filter((x) => x !== target);
+        await db.collection('reservations').doc(p.id).update({ data: { companions } });
+        return { data: { ok: true, companionCount: companions.length } };
+      }
+      // 同桌凭邀请码加入（绑定到这一个 reservation，加不进别的订单）
+      case 'joinByInvite': {
+        if (!openid) return { error: '身份未就绪' };
+        await ensureCol('reservations');
+        const code = String(p.code || '').toUpperCase();
+        if (!/^[A-Z0-9]{6}$/.test(code)) return { error: '邀请码格式错误' };
+        const list = (await db.collection('reservations').where({ inviteCode: code }).limit(1).get()).data || [];
+        if (!list.length) return { error: '邀请码无效' };
+        const r = list[0];
+        if (r.status === 'cancelled' || r.status === 'rejected') return { error: '该预订已失效' };
+        if (r._openid === openid) return { data: { already: true, id: r._id } };
+        const companions = r.companions || [];
+        if (!companions.includes(openid)) {
+          if (companions.length >= 20) return { error: '同桌人数已达上限' };
+          companions.push(openid);
+          await db.collection('reservations').doc(r._id).update({ data: { companions } });
+        }
+        return { data: { ok: true, id: r._id, date: r.date, roomNo: r.roomNo } };
+      }
+      // 包厢门禁：判断当前 OPENID 是否为该 room 今日任一预订的关联人；
+      // 解锁则返回该 room 今日所有预点菜(分餐段) 与现场单；否则返回 unlocked:false（前端不渲染私密数据）
+      case 'roomAccess': {
+        if (!openid) return { error: '身份未就绪' };
+        await ensureCol('bookings'); await ensureCol('reservations'); await ensureCol('orders');
+        const roomNo = String(p.roomNo || '');
+        const roomName = p.roomName || '';
+        const date = p.date || new Date().toISOString().slice(0, 10);
+        if (!roomNo) return { data: { unlocked: false } };
+        // 店员/老板：直接放行（店家需看全部包厢菜单/现场单）
+        if (await isStaffOf()) {
+          const bksAll = (await db.collection('bookings').where({ room_id: roomNo, date }).limit(1000).get()).data || [];
+          let liveAll = [];
+          try {
+            const orders = (await db.collection('orders').where({ room_name: roomName, closed: _.neq(true) }).limit(1000).get()).data || [];
+            liveAll = orders.filter((o) => String(o.created_at || '').slice(0, 10) === date);
+          } catch (e) { console.warn('[roomAccess staff live]', e.message); }
+          return { data: { unlocked: true, staff: true, bookDishes: bksAll.map((b) => ({ slot: b.slot || '', type: b.type || 'meal', date: b.date, dishes: b.dishes || [] })), liveOrders: liveAll } };
+        }
+        const bks = (await db.collection('bookings').where({ room_id: roomNo, date }).limit(1000).get()).data || [];
+        const refs = [...new Set(bks.map((b) => b.reservationRef).filter(Boolean))];
+        let unlocked = false;
+        if (refs.length) {
+          const rs = (await db.collection('reservations').where({ _id: _.in(refs) }).limit(1000).get()).data || [];
+          for (const r of rs) {
+            if (r._openid === openid || (r.companions || []).includes(openid)) { unlocked = true; break; }
+          }
+        }
+        if (!unlocked) return { data: { unlocked: false } };
+        const bookDishes = bks.map((b) => ({ slot: b.slot || '', type: b.type || 'meal', date: b.date, dishes: b.dishes || [] }));
+        let liveOrders = [];
+        try {
+          const orders = (await db.collection('orders').where({ room_name: roomName, closed: _.neq(true) }).limit(1000).get()).data || [];
+          liveOrders = orders.filter((o) => String(o.created_at || '').slice(0, 10) === date);
+        } catch (e) { console.warn('[roomAccess liveOrders]', e.message); }
+        return { data: { unlocked: true, bookDishes, liveOrders } };
       }
 
       /* ===== 以下为店员/老板 ===== */

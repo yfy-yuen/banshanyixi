@@ -141,6 +141,26 @@ async function myReservations() {
 async function getReservation(id) {
   return (await callApi('getReservation', { id })) || null;
 }
+// 主订人：获取本桌邀请码 + 小程序码（无则生成）
+async function genInvite(id) {
+  return (await callApi('genInvite', { id })) || { code: '', qrcode: '' };
+}
+// 主订人：重置邀请码（旧码失效）
+async function resetInvite(id) {
+  return (await callApi('resetInvite', { id })) || { code: '' };
+}
+// 主订人：移除某个同桌（不传 target 则移除自己=退桌）
+async function removeCompanion(id, target) {
+  return (await callApi('removeCompanion', { id, target: target || '' })) || { ok: false };
+}
+// 同桌：凭邀请码加入本桌（绑定到这一个 reservation）
+async function joinByInvite(code) {
+  return (await callApi('joinByInvite', { code })) || { ok: false };
+}
+// 包厢门禁：判断当前 OPENID 是否为该 room 今日任一预订的关联人；解锁返回私密数据
+async function roomAccess(roomNo, roomName, date) {
+  return (await callApi('roomAccess', { roomNo, roomName, date })) || { unlocked: false };
+}
 // 顾客：保存/修改预点菜
 async function savePreorder(id, dishes, orderNote) {
   return await callApi('savePreorder', { id, dishes, orderNote });
@@ -198,4 +218,5 @@ module.exports = {
   getRoom, saveRoom,
   listSessions, sessionDetail, submitReservation, myReservations, getReservation, savePreorder, staffSavePreorder, cancelReservation, markArrived,
   publishSession, listReservations, confirmReservation, rejectReservation, closeSession, sessionsAdmin, updateReservationDishes, sweepPending,
+  genInvite, resetInvite, removeCompanion, joinByInvite, roomAccess,
 };

@@ -1,5 +1,5 @@
 const { ROOMS } = require('../../utils/config');
-const { getOrdersByRoomName, callApi, markArrived } = require('../../utils/api');
+const { callApi, markArrived, roomAccess, joinByInvite } = require('../../utils/api');
 const app = getApp();
 
 function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -33,54 +33,63 @@ Page({
     orderSub: 'book', // book 订餐菜品 | live 现场下单菜品
     envPhotos: [], restaurantPhotos: [],
     cover: '', introHtml: '',
-    dateLabel: '', typeLabel: '', dishes: [],
+    unlocked: false, // 包厢门禁：是否为本桌关联人（主订人/同桌/店家）
+    lunchDishes: [], dinnerDishes: [], // 分餐段聚合的预点菜
     liveOrders: [],
+    codeInput: '', // 同桌邀请码输入
+    joining: false,
+    joinErr: '',
     loading: true,
   },
-  onLoad(options) {
+  async onLoad(options) {
     const no = options.room || app.globalData.roomNo || '1';
     const name = ROOMS[no] || ('厢' + no);
     const tab = options.tab === 'order' ? 'order' : 'env';
     const orderSub = options.sub === 'live' ? 'live' : 'book';
-    this.setData({ roomNo: no, roomName: name, tab, orderSub });
+    this.setData({ roomNo: no, roomName: name, tab, orderSub, loading: true });
     wx.setStorageSync('roomNo', no);
     wx.setStorageSync('roomName', name);
+    // 分享链接 / 小程序码进入：自动凭码加入本桌（绑定到该 reservation，加不进别的订单）
+    const code = (options.code || (options.scene ? decodeURIComponent(options.scene) : '')) || '';
+    if (code) {
+      try {
+        const jr = await joinByInvite(code);
+        if (jr && jr.id) wx.showToast({ title: '已加入本桌', icon: 'success' });
+        else if (jr && jr.error) wx.showToast({ title: jr.error, icon: 'none' });
+      } catch (e) { console.warn('[room join]', e.message); }
+    }
     // 结论 #1：进入「自己预订的」包厢内页即静默标记到店（须该厢+已到预计时间，后端校验防误标）
-    markArrived(this.data.roomNo).catch(() => {});
-    this.loadData(no);
+    markArrived(no).catch(() => {});
+    await this.loadData(no);
   },
   async loadData(no) {
     this.setData({ loading: true });
     try {
-      // 三个云调用并行，冷启动叠加时长从「串行之和」降为「单次最慢」，明显缩短白屏
-      const [rooms, bookings, o] = await Promise.all([
+      // 并行：公开房间信息 + 按身份裁剪的包厢门禁数据（私密菜品只在该用户授权时返回）
+      const [rooms, acc] = await Promise.all([
         callApi('rooms'),
-        callApi('bookings'),
-        getOrdersByRoomName(this.data.roomName).catch(() => []),
+        roomAccess(no, this.data.roomName, todayStr()).catch(() => ({ unlocked: false })),
       ]);
       const room = (rooms || []).find((x) => x.id === no || x.room_no === no) || {};
-      const today = todayStr();
-      // 结论 #F：包厢页仅显示当天排席，过期（非当天）预订不回退展示
-      const list = (bookings || []).filter((x) => x.room_id === no && x.date === today);
-      const pick = list[0];
-      let dateLabel = '', typeLabel = '', dishes = [];
-      if (pick) {
-        dateLabel = pick.date;
-        typeLabel = bookingLabel(pick);
-        dishes = pick.dishes || [];
-      } else {
-        dateLabel = today;
-        typeLabel = '今日无排席';
-      }
       const cover = room.cover || (room.env_photos && room.env_photos[0]) || '';
       let introHtml = room.intro || '';
       if (introHtml) introHtml = await this.introToDisplay(introHtml); // 富文本插图 cloud:// → 临时链
-      const liveOrders = (o || []).filter((x) => !x.closed).map(decorateOrder);
+
+      const unlocked = !!(acc && acc.unlocked);
+      const lunchDishes = [], dinnerDishes = [];
+      let liveOrders = [];
+      if (unlocked && acc.bookDishes) {
+        acc.bookDishes.forEach((b) => {
+          const arr = (b.slot === 'lunch') ? lunchDishes : dinnerDishes;
+          (b.dishes || []).forEach((d) => arr.push(d));
+        });
+        liveOrders = (acc.liveOrders || []).map(decorateOrder);
+      }
       this.setData({
         envPhotos: room.env_photos || [],
         restaurantPhotos: room.restaurant_photos || [],
         cover, introHtml,
-        dateLabel, typeLabel, dishes, liveOrders,
+        unlocked, lunchDishes, dinnerDishes, liveOrders,
         loading: false,
       });
     } catch (e) {
@@ -98,7 +107,34 @@ Page({
   },
   // 醒目「去点单」入口：从包厢详情直接进点菜页（带 roomNo），打通「看厢 → 点单」闭环
   goMenu() {
+    if (!this.data.unlocked) {
+      wx.showToast({ title: '请先加入本桌再点单', icon: 'none' });
+      this.setData({ tab: 'order' });
+      return;
+    }
     wx.navigateTo({ url: '/pages/menu/menu?roomNo=' + this.data.roomNo });
+  },
+  onCodeInput(e) { this.setData({ codeInput: (e.detail.value || '').toUpperCase(), joinErr: '' }); },
+  async joinWithCode() {
+    const code = (this.data.codeInput || '').trim().toUpperCase();
+    if (!/^[A-Z0-9]{6}$/.test(code)) { this.setData({ joinErr: '请输入 6 位邀请码' }); return; }
+    this.setData({ joining: true, joinErr: '' });
+    try {
+      const jr = await joinByInvite(code);
+      if (jr && jr.id) {
+        wx.showToast({ title: '已加入本桌', icon: 'success' });
+        this.setData({ codeInput: '' });
+        await this.loadData(this.data.roomNo); // 重新拉取（此时已解锁）
+      } else if (jr && jr.error) {
+        this.setData({ joinErr: jr.error });
+      } else {
+        this.setData({ joinErr: '加入失败，请重试' });
+      }
+    } catch (e) {
+      this.setData({ joinErr: '网络异常，请重试' });
+    } finally {
+      this.setData({ joining: false });
+    }
   },
   switchOrderSub(e) {
     this.setData({ orderSub: e.currentTarget.dataset.sub });
