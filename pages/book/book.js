@@ -1,4 +1,4 @@
-const { ROOMS, ROOM_CAP } = require('../../utils/config');
+const { ROOMS, ROOM_CAP, ROOM_CAP_RANGE } = require('../../utils/config');
 const { callApi, getDishesAdmin, listReservations, confirmReservation, rejectReservation, publishSession, closeSession, sessionsAdmin, updateReservationDishes } = require('../../utils/api');
 const app = getApp();
 
@@ -36,8 +36,10 @@ Page({
     this.setData({
       year: now.getFullYear(), month: now.getMonth() + 1, selected: todayStr(),
       rooms: Object.entries(ROOMS).map(([no, name]) => ({
-        no, name, capacity: ROOM_CAP[no],
-        display: `${name}（${ROOM_CAP[no] || '?'}人）`,
+        no, name,
+        capRange: ROOM_CAP_RANGE[no] || '?',
+        capacity: ROOM_CAP_RANGE[no] || '?',
+        display: `${name}（${ROOM_CAP_RANGE[no] || '?'}人）`,
       })),
     });
   },
@@ -335,7 +337,7 @@ Page({
       const autoRoom = res && res.roomId ? String(res.roomId) : '';
       // 商家可手动改厢（结论 #H）：弹窗选择包厢覆盖自动分配
       const rooms = this.data.rooms.slice().sort((a, b) => Number(a.no) - Number(b.no));
-      const itemList = rooms.map((r) => (r.no === autoRoom ? r.name + '（已分配）' : r.name));
+      const itemList = rooms.map((r) => (r.no === autoRoom ? r.name + '（' + (ROOM_CAP_RANGE[r.no] || '') + '人·已分配）' : r.name + '（' + (ROOM_CAP_RANGE[r.no] || '') + '人）'));
       const pick = await new Promise((res2) => wx.showActionSheet({
         itemList,
         success: (s) => res2(rooms[s.tapIndex].no),
