@@ -47,7 +47,7 @@
       </picker>
 
       <view class="dl">人数</view>
-      <input class="ipt" type="number" value="{{form.partySize}}" bindinput="onParty" placeholder="用餐人数" placeholder-style="color:#5a544d;font-size:28rpx" />
+      <input class="ipt" type="number" value="{{form.partySize}}" bindinput="onParty" placeholder="用餐人数" placeholder-style="color:#bcb2a3;font-size:28rpx" />
 
       <view class="dl">偏好包厢（选填）</view>
       <picker mode="selector" range="{{roomOptions}}" range-key="name" value="{{roomIndex}}" bindchange="onRoom">
@@ -55,10 +55,10 @@
       </picker>
 
       <view class="dl">手机号</view>
-      <input class="ipt" type="number" value="{{form.contactPhone}}" bindinput="onPhone" placeholder="用于接收确认通知" placeholder-style="color:#5a544d;font-size:28rpx" />
+      <input class="ipt" type="number" value="{{form.contactPhone}}" bindinput="onPhone" placeholder="用于接收确认通知" placeholder-style="color:#bcb2a3;font-size:28rpx" />
 
       <view class="dl">备注（选填）</view>
-      <input class="ipt" value="{{form.note}}" bindinput="onNote" placeholder="忌口 / 过敏 / 其他" placeholder-style="color:#5a544d;font-size:28rpx" />
+      <input class="ipt" value="{{form.note}}" bindinput="onNote" placeholder="忌口 / 过敏 / 其他" placeholder-style="color:#bcb2a3;font-size:28rpx" />
 
       <view class="modal-note">订厢须先预点菜（必填）</view>
       <view class="btn" style="width:100%;margin-top:10px;" bindtap="goPreorder">去预点菜并提交</view>
