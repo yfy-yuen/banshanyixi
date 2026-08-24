@@ -31,7 +31,7 @@
 .sess-state.off { color: var(--muted); background: var(--paper); }
 .sess-info { font-size: 12px; color: var(--ink-light); margin-top: 6px; }
 .sess-acts { display: flex; justify-content: flex-end; margin-top: 10px; }
-.mhead { display: flex; align-items: center; background: var(--card-soft); border: 1px solid var(--border); border-bottom: none; border-radius: 14px 14px 0 0; padding: 10px 0; font-size: 13px; color: var(--muted); }
+.mhead { display: flex; align-items: center; background: var(--card-soft); border: 1px solid var(--border); border-bottom: none; border-radius: 14px 14px 0 0; padding: 10px 0; font-size: 13px; color: var(--ink); font-weight: 500; }
 .mhead-room { width: 84px; text-align: center; border-right: 1px solid var(--border-light); }
 .mhead-slot { flex: 1; text-align: center; }
 .matrix { background: var(--card); border: 1px solid var(--border); border-top: none; border-radius: 0 0 14px 14px; overflow: hidden; }
