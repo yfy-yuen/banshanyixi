@@ -50,7 +50,7 @@
       <input class="ipt" type="number" value="{{form.partySize}}" bindinput="onParty" placeholder="用餐人数" placeholder-style="color:#bcb2a3;font-size:28rpx" />
 
       <view class="dl">偏好包厢（选填）</view>
-      <picker mode="selector" range="{{roomOptions}}" range-key="name" value="{{roomIndex}}" bindchange="onRoom">
+      <picker mode="selector" range="{{roomOptions}}" range-key="display" value="{{roomIndex}}" bindchange="onRoom">
         <view class="ipt picker">{{form.roomName || '选择包厢'}}</view>
       </picker>
 

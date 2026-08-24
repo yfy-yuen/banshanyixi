@@ -110,7 +110,7 @@
       <view class="modal-title">{{form.id ? '改包厢 / 改期 · ' : ''}}{{form.roomName}} · {{form.slot==='lunch'?'午餐':'晚餐'}}</view>
 
       <view class="dl">包厢</view>
-      <picker mode="selector" range="{{rooms}}" range-key="name" value="{{roomIndex}}" bindchange="onRoom">
+      <picker mode="selector" range="{{rooms}}" range-key="display" value="{{roomIndex}}" bindchange="onRoom">
         <view class="ipt picker">{{form.roomName || '选择包厢'}}</view>
       </picker>
 

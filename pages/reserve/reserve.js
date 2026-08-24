@@ -1,9 +1,12 @@
-const { ROOMS, RESERVE_TPL_ID, canSelfEditPreorder, STORE_PHONE } = require('../../utils/config');
+const { ROOMS, ROOM_CAP, RESERVE_TPL_ID, canSelfEditPreorder, STORE_PHONE } = require('../../utils/config');
 const { submitReservation, myReservations, cancelReservation } = require('../../utils/api');
 
 // 包厢选择列表：第一项「由店家安排」表示不指定，交给云端自动预匹配
-const ROOM_OPTIONS = [{ no: '', name: '由店家安排' }].concat(
-  Object.entries(ROOMS).map(([no, name]) => ({ no, name }))
+const ROOM_OPTIONS = [{ no: '', name: '由店家安排', display: '由店家安排' }].concat(
+  Object.entries(ROOMS).map(([no, name]) => ({
+    no, name,
+    display: `${name}（${ROOM_CAP[no] || '?'}人）`,
+  }))
 );
 
 function mealLabel(m) { return m === 'dinner' ? '晚市' : '午市'; }

@@ -1,4 +1,4 @@
-const { ROOMS } = require('../../utils/config');
+const { ROOMS, ROOM_CAP } = require('../../utils/config');
 const { callApi, getDishesAdmin, listReservations, confirmReservation, rejectReservation, publishSession, closeSession, sessionsAdmin, updateReservationDishes } = require('../../utils/api');
 const app = getApp();
 
@@ -35,7 +35,10 @@ Page({
     const now = new Date();
     this.setData({
       year: now.getFullYear(), month: now.getMonth() + 1, selected: todayStr(),
-      rooms: Object.entries(ROOMS).map(([no, name]) => ({ no, name })),
+      rooms: Object.entries(ROOMS).map(([no, name]) => ({
+        no, name,
+        display: `${name}（${ROOM_CAP[no] || '?'}人）`,
+      })),
     });
   },
   onShow() {

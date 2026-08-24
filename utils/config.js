@@ -5,6 +5,7 @@ const REGION = 'ap-shanghai';
 
 // 包厢（与 Web 版一致，无 4 号）
 const ROOMS = { '1': '谷山玥', '2': '满仓', '3': '枕山', '5': '云起', '6': '知来' };
+const ROOM_CAP = { '1': 4, '2': 6, '3': 8, '5': 10, '6': 14 };
 
 /* 老板身份现已改为云端 staff.openid(OPENID) 静默判定（见 app.js initRole + 云函数 whoami），
  * 不再依赖此处硬编码的匿名 uid。该常量已弃用，保留说明以免误用。 */
@@ -68,4 +69,4 @@ function canSelfEditPreorder(date) {
 const fmt = (n) => '¥' + Number(n || 0).toFixed(2);
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-module.exports = { ENV, REGION, ROOMS, BOSS_CODE, CATS, fmt, genId, GATE_VIDEO_SRC, GATE_VIDEO_POSTER, RESERVE_TPL_ID, STORE_ADDR, STORE_PHONE, STORE_LAT, STORE_LNG, STORE_NAME, PREORDER_LOCK_DAYS, canSelfEditPreorder };
+module.exports = { ENV, REGION, ROOMS, ROOM_CAP, BOSS_CODE, CATS, fmt, genId, GATE_VIDEO_SRC, GATE_VIDEO_POSTER, RESERVE_TPL_ID, STORE_ADDR, STORE_PHONE, STORE_LAT, STORE_LNG, STORE_NAME, PREORDER_LOCK_DAYS, canSelfEditPreorder };
