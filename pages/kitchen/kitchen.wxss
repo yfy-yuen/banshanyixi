@@ -13,6 +13,22 @@
 .kseg-btn { flex: 1; text-align: center; padding: 10px; border-radius: 10px; background: var(--paper); color: var(--ink-light); font-size: 14px; border: 1px solid var(--border); }
 .kseg-btn.on { background: var(--ink-light); color: var(--card); border-color: var(--ink-light); }
 
+/* 日期切换栏 */
+.kdatebar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.kdatepick { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; background: var(--paper); color: var(--ink); font-size: 14px; border: 1px solid var(--border); letter-spacing: 1px; }
+.kcaret { font-size: 11px; color: var(--muted); }
+.kchips { display: flex; gap: 8px; }
+.kchip { padding: 8px 14px; border-radius: 10px; background: var(--paper); color: var(--ink-light); font-size: 13px; border: 1px solid var(--border); }
+.kchip.on { background: var(--cinnabar); color: #fff; border-color: var(--cinnabar); }
+
+/* 餐段筛选 */
+.kslot { display: flex; gap: 8px; margin-bottom: 8px; }
+.kslot-btn { flex: 1; text-align: center; padding: 9px; border-radius: 10px; background: var(--paper); color: var(--ink-light); font-size: 13px; border: 1px solid var(--border); }
+.kslot-btn.on { background: var(--ink-light); color: var(--card); border-color: var(--ink-light); }
+
+/* 未来日期提示 */
+.kfuture { font-size: 12px; color: var(--cinnabar); background: #f7ede9; border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; line-height: 1.5; }
+
 /* 空态 */
 .kempty { text-align: center; color: var(--muted); font-size: 14px; padding: 50px 0; }
 

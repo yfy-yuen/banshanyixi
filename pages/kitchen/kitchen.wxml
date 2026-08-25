@@ -18,6 +18,25 @@
       </view>
     </view>
 
+    <!-- 日期切换：日历选择器 + 今天/明天/后天快捷 -->
+    <view class="kdatebar">
+      <picker mode="date" value="{{date}}" bindchange="onDatePick">
+        <view class="kdatepick">📅 {{date}}<text class="kcaret">▾</text></view>
+      </picker>
+      <view class="kchips">
+        <view wx:for="{{chips}}" wx:key="date" class="kchip {{date===item.date?'on':''}}" data-date="{{item.date}}" bindtap="pickChip">{{item.label}}</view>
+      </view>
+    </view>
+
+    <!-- 餐段筛选 -->
+    <view class="kslot">
+      <view class="kslot-btn {{slot==='all'?'on':''}}" data-slot="all" bindtap="switchSlot">全天</view>
+      <view class="kslot-btn {{slot==='lunch'?'on':''}}" data-slot="lunch" bindtap="switchSlot">午市</view>
+      <view class="kslot-btn {{slot==='dinner'?'on':''}}" data-slot="dinner" bindtap="switchSlot">晚市</view>
+    </view>
+
+    <view wx:if="{{futureHint}}" class="kfuture">未来日期：仅显示预点菜，现场单需到店后生成</view>
+
     <view class="kseg">
       <view class="kseg-btn {{view==='kitchen'?'on':''}}" data-view="kitchen" bindtap="switchView">后厨出餐单</view>
       <view class="kseg-btn {{view==='summary'?'on':''}}" data-view="summary" bindtap="switchView">配菜汇总</view>
@@ -26,7 +45,7 @@
 
     <!-- 后厨出餐单：按包厢 -->
     <view wx:if="{{view==='kitchen'}}">
-      <view wx:if="{{empty}}" class="kempty">今日暂无已确认预订 / 现场下单</view>
+      <view wx:if="{{empty}}" class="kempty">{{date}} 暂无已确认预订 / 现场下单</view>
       <view class="kroom" wx:for="{{rooms}}" wx:key="no">
         <view class="kroom-h">{{item.name}}<text class="kroom-no">{{item.no}}号</text></view>
 
@@ -53,9 +72,9 @@
 
     <!-- 配菜汇总 -->
     <view wx:if="{{view==='summary'}}">
-      <view wx:if="{{empty}}" class="kempty">今日暂无配菜数据</view>
+      <view wx:if="{{empty}}" class="kempty">{{date}} 暂无配菜数据</view>
       <view class="ksum-top" wx:if="{{!empty}}">
-        <text>今日合计</text>
+        <text>合计</text>
         <text class="ksum-total">{{totalQty}} 份</text>
       </view>
       <view class="ksum" wx:for="{{summary}}" wx:key="name">
@@ -66,9 +85,9 @@
 
     <!-- 食材采购清单（结论 #D：按今日预点+现场单反算每份用料） -->
     <view wx:if="{{view==='procure'}}">
-      <view wx:if="{{procure.length===0}}" class="kempty">今日暂无可用料数据（请先在菜品编辑里填「每份用料」）</view>
+      <view wx:if="{{procure.length===0}}" class="kempty">{{date}} 暂无可用料数据（请先在菜品编辑里填「每份用料」）</view>
       <view class="ksum-top" wx:if="{{procure.length}}">
-        <text>今日采购合计</text>
+        <text>采购合计</text>
         <text class="ksum-total">{{procure.length}} 种材料</text>
       </view>
       <view class="ksum" wx:for="{{procure}}" wx:key="mat">
