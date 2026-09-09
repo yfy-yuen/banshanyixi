@@ -1,6 +1,7 @@
 const { CATS, ROOMS, fmt, canSelfEditPreorder, STORE_PHONE } = require('../../utils/config');
 const { callApi, loadDishes, submitOrder, getReservation, savePreorder, staffSavePreorder, submitReservation } = require('../../utils/api');
 const { classifyError } = require('../../utils/cloudbase');
+const { detectTablet } = require('../../utils/tablet');
 const app = getApp();
 
 // 徽章：菜品文档 tags 数组 -> 展示元数据；无 tags 时优雅降级（不渲染）
@@ -18,6 +19,7 @@ function buildSelText(sel) {
 
 Page({
   data: {
+    isTablet: false,
     preorder: false, reservationId: '', locked: false, storePhone: '',
     roomNo: '', roomName: '', people: 1,
     cats: [], sections: [], activeCat: '',
@@ -30,11 +32,14 @@ Page({
     showBill: false, bill: null,
     showCart: false, showConfirm: false, note: '',
     showSearch: false, searchKeyword: '', searchResults: [],
+    previewSrc: '', // 菜品图放大预览地址（cloud:// 或 https，<image> 原生支持）
+    emptyPreview: null, // 占位图放大：{ name, ph }
     // 店员追加菜品模式（从店务详情进入）
     appendMode: false, appendBookingId: '', appendTargetLabel: '',
     appendTarget: 'booking', appendReservationId: '',
   },
   onLoad(options) {
+    this.setData({ isTablet: detectTablet() });
     if (options.mode === 'append') {
       const target = options.target || 'booking';
       const bookingId = options.bookingId || '';
@@ -165,6 +170,27 @@ Page({
     });
   },
   noop() {},
+
+  // 点击菜品图放大预览：页面内遮罩 <image> 直接渲染（原生支持 cloud://，比 wx.previewImage 稳）
+  previewImage(e) {
+    const file = e.currentTarget.dataset.img;
+    console.log('[previewImage] open overlay file=', file);
+    if (!file) { wx.showToast({ title: '该菜品暂无图片', icon: 'none' }); return; }
+    wx.showToast({ title: '已放大', icon: 'none', duration: 500 });
+    this.setData({ previewSrc: file });
+  },
+  closePreview() {
+    this.setData({ previewSrc: '' });
+  },
+
+  // 占位图点击：暂无真实图片，弹全屏占位放大（让每次点击都有明显反馈）
+  previewEmpty(e) {
+    const { name, ph } = e.currentTarget.dataset;
+    this.setData({ emptyPreview: { name: name || '', ph: ph || '' } });
+  },
+  closeEmptyPreview() {
+    this.setData({ emptyPreview: null });
+  },
 
   /* ===== 搜索 ===== */
   openSearch() { this.setData({ showSearch: true, searchKeyword: '', searchResults: [] }); },

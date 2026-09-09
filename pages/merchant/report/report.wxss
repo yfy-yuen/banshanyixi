@@ -1,0 +1,18 @@
+.total-card {
+  text-align: center;
+}
+.big-price {
+  font-size: 56rpx;
+  font-weight: 500;
+  color: #d85a30;
+}
+.r-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+/* ===== AUTO .is-tablet boost (generated) ===== */
+.is-tablet .big-price { font-size: 123.2rpx;
+  font-weight: 500;
+  color: #d85a30; }

@@ -1,4 +1,4 @@
-<view class="page kpage">
+<view class="page kpage {{isTablet ? 'is-tablet' : ''}}">
   <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
 
   <view wx:if="{{noPerm}}" class="login-wrap">
@@ -70,17 +70,31 @@
       </view>
     </view>
 
-    <!-- 配菜汇总 -->
+    <!-- 配菜汇总（数量可改 + 手工补充项） -->
     <view wx:if="{{view==='summary'}}">
-      <view wx:if="{{empty}}" class="kempty">{{date}} 暂无配菜数据</view>
-      <view class="ksum-top" wx:if="{{!empty}}">
-        <text>合计</text>
+      <!-- 顶部条（含手动添加按钮）始终显示，避免空态时新功能入口消失 -->
+      <view class="ksum-top">
+        <text>{{summary.length ? '合计' : '今日配菜'}}</text>
         <text class="ksum-total">{{totalQty}} 份</text>
+        <view class="kadd-btn" bindtap="openManual">＋ 手动添加</view>
       </view>
-      <view class="ksum" wx:for="{{summary}}" wx:key="name">
-        <text class="ksum-name">{{item.name}}</text>
-        <text class="ksum-qty">×{{item.qty}}</text>
+      <!-- 空态引导（无客人点单时） -->
+      <view wx:if="{{summary.length===0}}" class="kempty">{{date}} 暂无自动汇总（尚无预点或现场下单），可点右上角「＋手动添加」补充非菜品项</view>
+      <!-- 已有数据列表 -->
+      <view class="ksum" wx:for="{{summary}}" wx:key="key" wx:for-item="it">
+        <view class="ksum-left">
+          <text class="ksum-name {{it.manual ? 'ksum-name-manual' : ''}}">{{it.manual ? '✋ ' : ''}}{{it.name}}</text>
+          <text wx:if="{{it.manual && it.note}}" class="ksum-note">备注：{{it.note}}</text>
+        </view>
+        <view class="ksum-right">
+<view class="ksum-qty-edit" data-name="{{it.name}}" data-qty="{{it.qty}}" data-manual="{{it.manual}}" bindtap="openQtyEdit">
+              <text class="ksum-qty">{{it.qty}} {{it.unit || '份'}}</text>
+              <text class="ksum-qty-unit">· 修改</text>
+            </view>
+          <text wx:if="{{it.manual}}" class="ksum-del" data-name="{{it.name}}" catchtap="removeExtra">删除</text>
+        </view>
       </view>
+      <view class="ktip" wx:if="{{summary.length}}">✋ = 手工补充项（不计入食材采购）。点「份数·修改」可改数量——只影响配菜单，不影响顾客订单。</view>
     </view>
 
     <!-- 食材采购清单（结论 #D：按今日预点+现场单反算每份用料） -->
@@ -97,5 +111,33 @@
     </view>
 
     <view class="ktip">屏幕出单：截图即可投屏 / 打印。后续可接入打印机自动出小票。</view>
+
+    <!-- 手工添加 / 数量修改 弹窗 -->
+    <view wx:if="{{manualDlg.show}}" class="kmask" bindtap="closeManual">
+      <view class="kdlg" catchtap="noop">
+        <view class="kdlg-title">{{manualDlg.mode === 'add' ? '手动添加' : '修改数量'}}</view>
+        <block wx:if="{{manualDlg.mode === 'add'}}">
+          <input class="kdlg-input" placeholder="名称，如：加一副碗筷 / 加一壶老白茶" value="{{manualDlg.name}}" bindinput="onDlgInput" data-f="name" focus />
+          <view class="kdlg-row">
+            <input class="kdlg-input kdlg-half" type="digit" placeholder="数量（支持 0.5）" value="{{manualDlg.qty}}" bindinput="onDlgInput" data-f="qty" />
+            <input class="kdlg-input kdlg-half" placeholder="单位" value="{{manualDlg.unit}}" bindinput="onDlgInput" data-f="unit" />
+          </view>
+          <!-- 单位快捷选择（点选填入；右侧输入框可自由填自定义单位） -->
+          <view class="kdlg-units">
+            <text wx:for="{{['份','把','个','件','斤','克(g)','毫升(ml)','颗']}}" wx:key="*this" class="kdlg-unit-chip {{manualDlg.unit === item ? 'on' : ''}}" data-u="{{item}}" bindtap="pickUnit">{{item}}</text>
+          </view>
+          <input class="kdlg-input" placeholder="备注（选填），如：客人自备" value="{{manualDlg.note}}" bindinput="onDlgInput" data-f="note" />
+        </block>
+        <block wx:else>
+          <view class="kdlg-edit-name">{{manualDlg.name}}{{manualDlg.isManual ? '（手工项）' : ''}}</view>
+          <view class="kdlg-auto" wx:if="{{!manualDlg.isManual}}">系统份数：{{manualDlg.autoQty}} 份 · 改动只影响配菜单</view>
+          <input class="kdlg-input" type="number" placeholder="输入新份数" value="{{manualDlg.qty}}" bindinput="onDlgInput" data-f="qty" focus />
+        </block>
+        <view class="kdlg-btns">
+          <view class="kdlg-btn kdlg-cancel" bindtap="closeManual">取消</view>
+          <view class="kdlg-btn kdlg-ok" bindtap="saveManual">保存</view>
+        </view>
+      </view>
+    </view>
   </block>
 </view>

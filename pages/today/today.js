@@ -2,6 +2,7 @@
 // 显示对应包厢与预点菜；若无预订则引导去订位。无操作、只读，符合私人小馆「客人只点菜」定位。
 const { ROOMS } = require('../../utils/config');
 const { whoami, myReservations, markArrived } = require('../../utils/api');
+const { detectTablet } = require('../../utils/tablet');
 
 function mealLabel(m) { return m === 'dinner' ? '晚市' : '午市'; }
 // 到店可读时间：优先顾客填的预计到店时间，否则回退午市 11:30 / 晚市 17:30
@@ -12,12 +13,17 @@ function arriveText(r) {
 
 Page({
   data: {
+    isTablet: false,
     loading: true,
     has: false,
     info: null,
     dishes: [],
   },
-  onShow() {
+  
+  onLoad() {
+    this.setData({ isTablet: detectTablet() });
+  },
+onShow() {
     // 结论 #1：「我的今日」页无包厢上下文，不自动标到店（避免误标）；到店标记改由进入具体包厢内页触发
     markArrived('').catch(() => {});
     this.load();

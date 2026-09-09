@@ -1,0 +1,42 @@
+.ops {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+.op {
+  flex: 1;
+  margin: 0 8rpx;
+  font-size: 28rpx;
+}
+.op:first-child {
+  margin-left: 0;
+}
+.op:last-child {
+  margin-right: 0;
+}
+.o-head {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+}
+.o-items {
+  margin: 12rpx 0;
+}
+.o-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8rpx;
+}
+.settle {
+  margin: 0;
+  padding: 0 40rpx;
+  font-size: 26rpx;
+}
+/* ===== AUTO .is-tablet boost (generated) ===== */
+.is-tablet .op { flex: 1;
+  margin: 0 17.6rpx;
+  font-size: 61.6rpx; }
+.is-tablet .settle { margin: 0;
+  padding: 0 88.0rpx;
+  font-size: 57.2rpx; }

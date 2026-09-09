@@ -1,54 +1,104 @@
-.page { padding: 14px; }
+.page { padding: 28rpx; }
 .app-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
 
 /* 头部 */
-.khead { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px 12px; }
-.kdate { font-size: 16px; font-weight: 600; color: var(--cinnabar); letter-spacing: 1px; }
-.kacts { display: flex; gap: 8px; }
-.kbtn { padding: 7px 14px; border-radius: 10px; background: var(--paper); color: var(--ink-light); font-size: 13px; border: 1px solid var(--border); }
+.khead { display: flex; justify-content: space-between; align-items: center; padding: 8rpx 4rpx 24rpx; }
+.kdate { font-size: 32rpx; font-weight: 600; color: var(--cinnabar); letter-spacing: 2rpx; }
+.kacts { display: flex; gap: 16rpx; }
+.kbtn { padding: 14rpx 28rpx; border-radius: 20rpx; background: var(--paper); color: var(--ink-light); font-size: 26rpx; border: 2rpx solid var(--border); }
 .kbtn:active { background: var(--ink-light); color: var(--card); }
 
 /* 视图切换 */
-.kseg { display: flex; gap: 8px; margin-bottom: 14px; }
-.kseg-btn { flex: 1; text-align: center; padding: 10px; border-radius: 10px; background: var(--paper); color: var(--ink-light); font-size: 14px; border: 1px solid var(--border); }
+.kseg { display: flex; gap: 16rpx; margin-bottom: 28rpx; }
+.kseg-btn { flex: 1; text-align: center; padding: 20rpx; border-radius: 20rpx; background: var(--paper); color: var(--ink-light); font-size: 28rpx; border: 2rpx solid var(--border); }
 .kseg-btn.on { background: var(--ink-light); color: var(--card); border-color: var(--ink-light); }
 
 /* 日期切换栏 */
-.kdatebar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-.kdatepick { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; background: var(--paper); color: var(--ink); font-size: 14px; border: 1px solid var(--border); letter-spacing: 1px; }
-.kcaret { font-size: 11px; color: var(--muted); }
-.kchips { display: flex; gap: 8px; }
-.kchip { padding: 8px 14px; border-radius: 10px; background: var(--paper); color: var(--ink-light); font-size: 13px; border: 1px solid var(--border); }
+.kdatebar { display: flex; align-items: center; gap: 20rpx; margin-bottom: 20rpx; flex-wrap: wrap; }
+.kdatepick { display: inline-flex; align-items: center; gap: 12rpx; padding: 16rpx 28rpx; border-radius: 20rpx; background: var(--paper); color: var(--ink); font-size: 28rpx; border: 2rpx solid var(--border); letter-spacing: 2rpx; }
+.kcaret { font-size: 22rpx; color: var(--muted); }
+.kchips { display: flex; gap: 16rpx; }
+.kchip { padding: 16rpx 28rpx; border-radius: 20rpx; background: var(--paper); color: var(--ink-light); font-size: 26rpx; border: 2rpx solid var(--border); }
 .kchip.on { background: var(--cinnabar); color: #fff; border-color: var(--cinnabar); }
 
 /* 餐段筛选 */
-.kslot { display: flex; gap: 8px; margin-bottom: 8px; }
-.kslot-btn { flex: 1; text-align: center; padding: 9px; border-radius: 10px; background: var(--paper); color: var(--ink-light); font-size: 13px; border: 1px solid var(--border); }
+.kslot { display: flex; gap: 16rpx; margin-bottom: 16rpx; }
+.kslot-btn { flex: 1; text-align: center; padding: 18rpx; border-radius: 20rpx; background: var(--paper); color: var(--ink-light); font-size: 26rpx; border: 2rpx solid var(--border); }
 .kslot-btn.on { background: var(--ink-light); color: var(--card); border-color: var(--ink-light); }
 
 /* 未来日期提示 */
-.kfuture { font-size: 12px; color: var(--cinnabar); background: #f7ede9; border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; line-height: 1.5; }
+.kfuture { font-size: 24rpx; color: var(--cinnabar); background: #f7ede9; border-radius: 16rpx; padding: 16rpx 20rpx; margin-bottom: 24rpx; line-height: 1.5; }
 
 /* 空态 */
-.kempty { text-align: center; color: var(--muted); font-size: 14px; padding: 50px 0; }
+.kempty { text-align: center; color: var(--muted); font-size: 28rpx; padding: 100rpx 0; }
 
 /* 后厨出餐单：按包厢 */
-.kroom { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 14px; box-shadow: 0 3px 12px var(--shadow); }
-.kroom-h { font-size: 18px; font-weight: 600; color: var(--ink); letter-spacing: 1px; margin-bottom: 8px; }
-.kroom-no { font-size: 13px; color: var(--muted); margin-left: 8px; font-weight: 400; }
-.klabel { font-size: 13px; color: var(--cinnabar); letter-spacing: 2px; margin: 10px 0 6px; border-left: 3px solid var(--cinnabar); padding-left: 8px; }
-.kdish { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; padding: 6px 0; border-bottom: 1px dashed var(--border-light); }
-.kdish-name { font-size: 16px; color: var(--ink); letter-spacing: 1px; }
-.kdish-qty { font-size: 16px; font-weight: 600; color: var(--cinnabar); }
-.kdish-note { font-size: 12px; color: var(--cinnabar); width: 100%; }
-.korder-note { font-size: 13px; color: var(--cinnabar); background: #f7ede9; border-radius: 8px; padding: 8px 10px; margin-top: 10px; line-height: 1.5; }
+.kroom { background: var(--card); border: 2rpx solid var(--border); border-radius: 28rpx; padding: 28rpx; margin-bottom: 28rpx; box-shadow: 0 6rpx 24rpx var(--shadow); }
+.kroom-h { font-size: 36rpx; font-weight: 600; color: var(--ink); letter-spacing: 2rpx; margin-bottom: 16rpx; }
+.kroom-no { font-size: 26rpx; color: var(--muted); margin-left: 16rpx; font-weight: 400; }
+.klabel { font-size: 26rpx; color: var(--cinnabar); letter-spacing: 4rpx; margin: 20rpx 0 12rpx; border-left: 6rpx solid var(--cinnabar); padding-left: 16rpx; }
+.kdish { display: flex; align-items: baseline; flex-wrap: wrap; gap: 16rpx; padding: 12rpx 0; border-bottom: 2rpx dashed var(--border-light); }
+.kdish-name { font-size: 32rpx; color: var(--ink); letter-spacing: 2rpx; }
+.kdish-qty { font-size: 32rpx; font-weight: 600; color: var(--cinnabar); }
+.kdish-note { font-size: 24rpx; color: var(--cinnabar); width: 100%; }
+.korder-note { font-size: 26rpx; color: var(--cinnabar); background: #f7ede9; border-radius: 16rpx; padding: 16rpx 20rpx; margin-top: 20rpx; line-height: 1.5; }
 
 /* 配菜汇总 */
-.ksum-top { display: flex; justify-content: space-between; align-items: center; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; box-shadow: 0 3px 12px var(--shadow); }
-.ksum-top text { font-size: 15px; color: var(--ink); letter-spacing: 1px; }
-.ksum-total { font-size: 18px; font-weight: 600; color: var(--cinnabar); }
-.ksum { display: flex; justify-content: space-between; align-items: center; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
-.ksum-name { font-size: 16px; color: var(--ink); letter-spacing: 1px; }
-.ksum-qty { font-size: 17px; font-weight: 600; color: var(--cinnabar); }
+.ksum-top { display: flex; justify-content: space-between; align-items: center; background: var(--card); border: 2rpx solid var(--border); border-radius: 24rpx; padding: 28rpx; margin-bottom: 24rpx; box-shadow: 0 6rpx 24rpx var(--shadow); }
+.ksum-top text { font-size: 30rpx; color: var(--ink); letter-spacing: 2rpx; }
+.ksum-total { font-size: 36rpx; font-weight: 600; color: var(--cinnabar); }
+.ksum { display: flex; justify-content: space-between; align-items: center; background: var(--card); border: 2rpx solid var(--border); border-radius: 24rpx; padding: 28rpx; margin-bottom: 20rpx; }
+.ksum-name { font-size: 32rpx; color: var(--ink); letter-spacing: 2rpx; }
+.ksum-qty { font-size: 34rpx; font-weight: 600; color: var(--cinnabar); }
 
-.ktip { text-align: center; color: var(--muted); font-size: 12px; line-height: 1.6; margin: 18px 0 8px; }
+.ktip { text-align: center; color: var(--muted); font-size: 24rpx; line-height: 1.6; margin: 36rpx 0 16rpx; }
+
+/* ===== 配菜汇总增强：手工项 + 数量修改 ===== */
+.ksum-left { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ksum-name-manual { color: #8a6d3b; }
+.ksum-note { font-size: 22rpx; color: var(--muted); margin-top: 6rpx; }
+.ksum-right { display: flex; align-items: center; gap: 12rpx; flex-shrink: 0; }
+.ksum-qty-edit {
+  display: inline-flex; align-items: baseline; gap: 8rpx;
+  background: #f7ede9; border: 2rpx solid var(--cinnabar);
+  border-radius: 1998rpx; padding: 8rpx 22rpx;
+}
+.ksum-qty { font-size: 34rpx; font-weight: 600; color: var(--cinnabar); }
+.ksum-qty-unit { font-size: 22rpx; color: var(--cinnabar); }
+.ksum-qty-edit:active { opacity: 0.8; }
+.ksum-del { font-size: 22rpx; color: #b5562f; padding: 8rpx 10rpx; }
+.kadd-btn { background: var(--cinnabar); color: #fff; font-size: 26rpx; padding: 12rpx 26rpx; border-radius: 1998rpx; letter-spacing: 2rpx; }
+.kadd-btn:active { opacity: 0.85; }
+
+/* 手工添加 / 数量修改 弹窗 */
+.kmask {
+  position: fixed; left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(55, 52, 46, 0.5);
+  z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  padding: 60rpx;
+}
+.kdlg { width: 100%; max-width: 640rpx; background: var(--card); border-radius: 28rpx; padding: 40rpx; box-shadow: 0 12rpx 48rpx rgba(0,0,0,0.2); }
+.kdlg-title { font-size: 34rpx; font-weight: 600; color: var(--ink); letter-spacing: 2rpx; margin-bottom: 28rpx; text-align: center; }
+.kdlg-input { background: var(--paper); border: 2rpx solid var(--border); border-radius: 16rpx; height: 88rpx; padding: 0 24rpx; font-size: 30rpx; color: var(--ink); margin-bottom: 20rpx; box-sizing: border-box; }
+.kdlg-row { display: flex; align-items: center; gap: 16rpx; }
+.kdlg-half { flex: 1; }
+.kdlg-hint { font-size: 24rpx; color: var(--muted); }
+.kdlg-edit-name { font-size: 32rpx; color: var(--ink); font-weight: 500; text-align: center; margin-bottom: 12rpx; word-break: break-all; }
+.kdlg-auto { font-size: 24rpx; color: var(--muted); text-align: center; margin-bottom: 20rpx; }
+.kdlg-btns { display: flex; gap: 20rpx; margin-top: 12rpx; }
+.kdlg-btn { flex: 1; text-align: center; padding: 20rpx; border-radius: 20rpx; font-size: 30rpx; }
+.kdlg-cancel { background: var(--paper); color: var(--ink-light); border: 2rpx solid var(--border); }
+.kdlg-ok { background: var(--cinnabar); color: #fff; }
+.kdlg-btn:active { opacity: 0.85; }
+
+/* 单位快捷选择（手动添加弹窗里） */
+.kdlg-units { display: flex; flex-wrap: wrap; gap: 12rpx; margin: -8rpx 0 20rpx; }
+.kdlg-unit-chip {
+  padding: 8rpx 22rpx; font-size: 24rpx;
+  background: var(--paper); color: var(--ink-light);
+  border: 2rpx solid var(--border); border-radius: 1998rpx;
+  letter-spacing: 1rpx;
+}
+.kdlg-unit-chip.on { background: var(--cinnabar); color: #fff; border-color: var(--cinnabar); }
+.kdlg-unit-chip:active { opacity: 0.8; }

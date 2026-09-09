@@ -1,4 +1,5 @@
 const { CATS, fmt, ROOMS } = require('../../utils/config');
+const { detectTablet } = require('../../utils/tablet');
 const {
   getMerchantOrders, settleOrder, clearOrder, listReceipts, pushReminders, resetDailyFlags, getDishesAdmin, saveDish, deleteDish, getPaymentQrcodes, saveQr, callApi, sweepPending,
 } = require('../../utils/api');
@@ -24,6 +25,7 @@ function bookingLabel(b) {
 
 Page({
   data: {
+    isTablet: false,
     role: '', isManager: false, isStaff: false, noPerm: false,
     tab: 'orders',
     orderSub: 'book',
@@ -39,6 +41,7 @@ Page({
     mRooms: [],
   },
   onLoad() {
+    this.setData({ isTablet: detectTablet() });
     this.setData({ repDate: new Date().toISOString().slice(0, 10) });
   },
   onShow() {
@@ -231,6 +234,32 @@ Page({
     this.setData({ 'edit.portions': portions });
   },
   closeEdit() { this.setData({ showEdit: false }); },
+  // 菜品图：相册选图 → 上传云存储 → 自动回填 cloud:// 地址（无需手动填 URL）
+  async pickDishImage() {
+    const r = await new Promise((res) => wx.chooseMedia({
+      count: 1, mediaType: ['image'], sizeType: ['compressed'], success: res, fail: res,
+    }));
+    if (!r || !r.tempFiles || !r.tempFiles[0]) return;
+    wx.showLoading({ title: '上传中' });
+    try {
+      const f = r.tempFiles[0];
+      const ext = (f.tempFilePath.split('.').pop() || 'jpg').split('?')[0];
+      const cloudPath = `dishes/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const up = await wx.cloud.uploadFile({ cloudPath, filePath: f.tempFilePath });
+      if (up && up.fileID) {
+        this.setData({ 'edit.image': up.fileID });
+        wx.showToast({ title: '图片已选好', icon: 'success' });
+      } else {
+        wx.showToast({ title: '上传失败，请重试', icon: 'none' });
+      }
+    } catch (e) {
+      console.error('[merchant] upload dish image fail', e);
+      wx.showToast({ title: '上传失败，请重试', icon: 'none' });
+    } finally { wx.hideLoading(); }
+  },
+  clearDishImage() {
+    this.setData({ 'edit.image': '' });
+  },
   async saveDish() {
     const ed = this.data.edit;
     if (!ed.name || !ed.name.trim()) { wx.showToast({ title: '请填写菜名', icon: 'none' }); return; }
@@ -277,6 +306,9 @@ Page({
         name: d.name, category: d.category, price: d.price, image: d.image || '',
         description: d.description || '', specs: d.specs || [], tags: d.tags || [],
         soldOut: !d.soldOut, limited: !!d.limited,
+        // 必须带上原 portions：云函数里是 portions: d.portions || {}，
+        // 不传就会被覆盖成空 {}，导致该菜「每份用料」被清空、食材采购清单算不出来
+        portions: d.portions || {},
       });
       this.renderMDishes();
     } catch (err) { wx.showToast({ title: '操作失败', icon: 'none' }); }
@@ -292,6 +324,8 @@ Page({
         name: d.name, category: d.category, price: d.price, image: d.image || '',
         description: d.description || '', specs: d.specs || [], tags: d.tags || [],
         soldOut: !!d.soldOut, limited: !d.limited,
+        // 同上：必须带上原 portions，否则会被云函数覆盖成空 {} 清空每份用料
+        portions: d.portions || {},
       });
       this.renderMDishes();
     } catch (err) { wx.showToast({ title: '操作失败', icon: 'none' }); }

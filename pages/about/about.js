@@ -2,9 +2,11 @@
 // 纯前端页，不依赖 dataApi 部署与订阅推送。门店地址/电话/经纬度统一从 utils/config 的 STORE_* 读取。
 
 const { STORE_ADDR, STORE_PHONE, STORE_LAT, STORE_LNG, STORE_NAME } = require('../../utils/config');
+const { detectTablet } = require('../../utils/tablet');
 
 Page({
   data: {
+    isTablet: false,
     // 品牌故事
     story: '半山·一席，藏于山坡 22 号的私人菜馆。不接待散客，只待有约之人。\n\n一席之地，半山之间。循时令而食，依客意而烹——这是我们对「吃」这件事的全部讲究。',
     hours: '午市 11:00 – 14:00　晚市 17:00 – 22:00',
@@ -16,7 +18,11 @@ Page({
     lng: STORE_LNG,
   },
 
-  // 地图导航
+  
+  onLoad() {
+    this.setData({ isTablet: detectTablet() });
+  },
+// 地图导航
   goNav() {
     const { lat, lng, address, storeName } = this.data;
     if (!lat || !lng) {

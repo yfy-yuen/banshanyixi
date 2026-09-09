@@ -16,46 +16,46 @@ page {
   background-color: var(--bg);
   font-family: "PingFang SC", "Noto Serif SC", "Source Han Serif SC", SimSun, serif;
   color: var(--ink);
-  font-size: 15px;
+  font-size: 30rpx;
   line-height: 1.6;
 }
 
 view, text, scroll-view, input { box-sizing: border-box; }
 
 /* 通用容器 */
-.page { position: relative; z-index: 1; padding: 16px 16px 100px; }
+.page { position: relative; z-index: 1; padding: 32rpx 32rpx 200rpx; }
 
 /* 卡片：宣纸底 + 淡墨线 + 水墨晕染阴影 */
 .card {
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 14px;
-  box-shadow: 0 4px 18px var(--shadow);
+  border: 2rpx solid var(--border);
+  border-radius: 32rpx;
+  padding: 32rpx;
+  margin-bottom: 28rpx;
+  box-shadow: 0 8rpx 36rpx var(--shadow);
 }
 
 /* 文字层级 */
-.muted { color: var(--muted); font-size: 13px; }
+.muted { color: var(--muted); font-size: 26rpx; }
 .price { color: var(--cinnabar); font-weight: 500; }
-.price-red { color: var(--cinnabar); font-size: 17px; font-weight: 500; }
+.price-red { color: var(--cinnabar); font-size: 34rpx; font-weight: 500; }
 
 /* 按钮：宣纸底 + 墨线 */
 .btn {
   background: var(--card);
   color: var(--ink);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 11px 24px;
-  font-size: 15px;
+  border: 2rpx solid var(--border);
+  border-radius: 1998rpx;
+  padding: 22rpx 48rpx;
+  font-size: 30rpx;
   text-align: center;
-  letter-spacing: 1px;
-  box-shadow: 0 2px 8px var(--shadow);
+  letter-spacing: 2rpx;
+  box-shadow: 0 4rpx 16rpx var(--shadow);
 }
 .btn-ghost {
   background: transparent;
   color: var(--ink);
-  border: 1px solid var(--border);
+  border: 2rpx solid var(--border);
   box-shadow: none;
 }
 .btn[disabled] { opacity: 0.45; }
@@ -63,57 +63,57 @@ view, text, scroll-view, input { box-sizing: border-box; }
 /* 状态标签 */
 .pill {
   display: inline-block;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 12px;
+  padding: 6rpx 20rpx;
+  border-radius: 1998rpx;
+  font-size: 24rpx;
   background: var(--paper);
   color: var(--ink-light);
-  border: 1px solid var(--border-light);
+  border: 2rpx solid var(--border-light);
 }
 .pill.paid { background: #e8ede4; color: #4a6b4a; border-color: #d4e0cd; }
 .pill.unpaid { background: #f2e6e2; color: var(--cinnabar); border-color: #ead5ce; }
 
 /* 嵌套分段（订单页：订餐菜品 / 现场下单菜品） */
-.subseg { display: flex; background: var(--paper); border: 1px solid var(--border); border-radius: 999px; padding: 4px; margin-bottom: 16px; }
-.subseg-btn { flex: 1; text-align: center; padding: 9px 0; font-size: 13px; color: var(--muted); border-radius: 999px; letter-spacing: 1px; }
+.subseg { display: flex; background: var(--paper); border: 2rpx solid var(--border); border-radius: 1998rpx; padding: 8rpx; margin-bottom: 32rpx; }
+.subseg-btn { flex: 1; text-align: center; padding: 18rpx 0; font-size: 26rpx; color: var(--muted); border-radius: 1998rpx; letter-spacing: 2rpx; }
 .subseg-btn.on { color: var(--card); background: var(--ink-light); font-weight: 500; }
 
 /* 双选项分段切换（全局，reserve/book 通用） */
-.seg2 { display: flex; background: var(--paper); border: 1px solid var(--border-light); border-radius: 999px; padding: 4px; }
-.seg2-btn { flex: 1; text-align: center; padding: 9px 0; font-size: 14px; color: var(--muted); border-radius: 999px; }
+.seg2 { display: flex; background: var(--paper); border: 2rpx solid var(--border-light); border-radius: 1998rpx; padding: 8rpx; }
+.seg2-btn { flex: 1; text-align: center; padding: 18rpx 0; font-size: 28rpx; color: var(--muted); border-radius: 1998rpx; }
 .seg2-btn.on { background: var(--cinnabar); color: #fff; font-weight: 500; }
 
-.loading { text-align: center; color: var(--muted); padding: 40px; font-size: 14px; }
+.loading { text-align: center; color: var(--muted); padding: 80rpx; font-size: 28rpx; }
 
 /* 印章 logo */
 .seal {
-  width: 48px;
-  height: 56px;
+  width: 96rpx;
+  height: 112rpx;
   flex-shrink: 0;
 }
 
 /* 中式标题区 */
 .hero {
-  padding: 10px 4px 22px;
+  padding: 20rpx 8rpx 44rpx;
 }
 .hero-title {
-  font-size: 24px;
+  font-size: 48rpx;
   color: var(--ink);
-  letter-spacing: 4px;
+  letter-spacing: 8rpx;
   font-weight: 500;
 }
 .hero-sub {
-  font-size: 13px;
+  font-size: 26rpx;
   color: var(--muted);
-  margin-top: 6px;
-  letter-spacing: 1px;
+  margin-top: 12rpx;
+  letter-spacing: 2rpx;
 }
 
 /* 分隔线：两头淡去，像水墨笔触 */
 .divider {
-  height: 1px;
+  height: 2rpx;
   background: linear-gradient(90deg, transparent, var(--border) 40%, var(--border) 60%, transparent);
-  margin: 14px 0;
+  margin: 28rpx 0;
 }
 
 /* 模态层：加深遮罩、做实弹窗底，避免浅山水背景透出导致文字看不清 */
@@ -128,45 +128,45 @@ view, text, scroll-view, input { box-sizing: border-box; }
 }
 .modal {
   background: rgba(253, 251, 246, 0.98);
-  border-radius: 18px;
-  padding: 22px;
+  border-radius: 36rpx;
+  padding: 44rpx;
   width: 86%;
   max-height: 86vh;
   overflow: auto;
-  border: 1px solid var(--border);
-  box-shadow: 0 12px 40px rgba(30, 28, 24, 0.22);
+  border: 2rpx solid var(--border);
+  box-shadow: 0 24rpx 80rpx rgba(30, 28, 24, 0.22);
 }
-.modal-title { font-size: 18px; margin-bottom: 14px; color: var(--ink); letter-spacing: 2px; font-weight: 600; }
+.modal-title { font-size: 36rpx; margin-bottom: 28rpx; color: var(--ink); letter-spacing: 4rpx; font-weight: 600; }
 
 /* 输入框（白底凸出，解决浅山水背景/宣纸弹窗下输入框看不清） */
 .ipt {
   width: 100%;
-  margin-top: 10px;
-  min-height: 44px;
-  line-height: 22px;
-  padding: 11px 14px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  font-size: 14px;
+  margin-top: 20rpx;
+  min-height: 88rpx;
+  line-height: 44rpx;
+  padding: 22rpx 28rpx;
+  border: 2rpx solid var(--border);
+  border-radius: 20rpx;
+  font-size: 28rpx;
   background: #ffffff;
   color: var(--ink);
-  box-shadow: inset 0 1px 2px rgba(45, 40, 30, 0.06);
+  box-shadow: inset 0 2rpx 4rpx rgba(45, 40, 30, 0.06);
 }
 /* picker 未选中时的占位提示：用更淡的颜色，与已选中（真实值）区分 */
 .ipt.picker { color: #bcb2a3; }
 /* 多行文本域：长内容可滚动，文字同样垂直居中 */
 .ipt-area {
   width: 100%;
-  margin-top: 10px;
-  min-height: 64px;
-  line-height: 22px;
-  padding: 11px 14px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  font-size: 14px;
+  margin-top: 20rpx;
+  min-height: 128rpx;
+  line-height: 44rpx;
+  padding: 22rpx 28rpx;
+  border: 2rpx solid var(--border);
+  border-radius: 20rpx;
+  font-size: 28rpx;
   background: #ffffff;
   color: var(--ink);
-  box-shadow: inset 0 1px 2px rgba(45, 40, 30, 0.06);
+  box-shadow: inset 0 2rpx 4rpx rgba(45, 40, 30, 0.06);
 }
 
 /* ===== 全局水墨背景层（用 <image> 组件，本地路径生效，gate 页不使用） ===== */
@@ -178,3 +178,24 @@ view, text, scroll-view, input { box-sizing: border-box; }
   height: 100%;
   z-index: -1;
 }
+
+/* ===== 平板专用放大：由 app.js 运行时判定 isTablet 后，页面根节点挂 .is-tablet 类（类选择器 100% 触发）；
+   手机(<960px) 不挂类 → 完全无感知。开门页 gate 不参与（其尺寸由 gate.js 内联 px 锁死）===== */
+.is-tablet { font-size: 73.6rpx; }
+.page.is-tablet { padding: 40.5rpx 40.5rpx 478.4rpx; }
+.is-tablet .card { padding: 40.5rpx; }
+.is-tablet .muted { font-size: 66.2rpx; }
+.is-tablet .price-red { font-size: 84.6rpx; }
+.is-tablet .btn { font-size: 73.6rpx; padding: 29.4rpx 58.9rpx; }
+.is-tablet .btn-ghost { padding: 29.4rpx 58.9rpx; }
+.is-tablet .pill { font-size: 58.9rpx; padding: 14.7rpx 47.8rpx; }
+.is-tablet .subseg-btn { font-size: 66.2rpx; padding: 22.1rpx 0; }
+.is-tablet .seg2-btn { font-size: 69.9rpx; padding: 22.1rpx 0; }
+.is-tablet .loading { font-size: 66.2rpx; padding: 95.7rpx; }
+.is-tablet .hero { padding: 25.8rpx 11rpx 55.2rpx; }
+.is-tablet .hero-title { font-size: 117.8rpx; letter-spacing: 11rpx; }
+.is-tablet .hero-sub { font-size: 66.2rpx; }
+.is-tablet .modal { padding: 55.2rpx; }
+.is-tablet .modal-title { font-size: 88.3rpx; margin-bottom: 36.8rpx; }
+.is-tablet .ipt { font-size: 69.9rpx; padding: 29.4rpx 40.5rpx; }
+.is-tablet .ipt-area { font-size: 69.9rpx; padding: 29.4rpx 40.5rpx; }

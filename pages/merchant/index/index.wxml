@@ -1,0 +1,23 @@
+<view class="container {{isTablet ? 'is-tablet' : ''}}">
+  <view class="ops">
+    <button class="btn-ghost op" bindtap="goDishes">菜品管理</button>
+    <button class="btn-ghost op" bindtap="goReport">营收报表</button>
+  </view>
+
+  <view class="card" wx:for="{{orders}}" wx:key="_id" wx:for-item="o">
+    <view class="o-head">
+      <text>桌号 {{o.tableNo}}</text>
+      <text class="muted">{{o.status}}</text>
+    </view>
+    <view class="o-items muted">
+      <text wx:for="{{o.items}}" wx:key="_id" wx:for-item="it">{{it.name}}×{{it.qty}} </text>
+    </view>
+    <view class="o-foot">
+      <text class="price">¥{{o.totalAmount}}</text>
+      <button wx:if="{{o.status !== '已结账'}}" class="btn settle" data-id="{{o._id}}" bindtap="settle">结账</button>
+      <text wx:else class="muted">已结清</text>
+    </view>
+  </view>
+
+  <view wx:if="{{orders.length === 0}}" class="card muted">暂无订单</view>
+</view>

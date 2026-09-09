@@ -1,0 +1,17 @@
+.bill-title {
+  font-size: 34rpx;
+  font-weight: 500;
+  margin-bottom: 12rpx;
+}
+.bill-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 32rpx;
+  font-weight: 500;
+}

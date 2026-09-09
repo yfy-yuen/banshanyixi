@@ -1,4 +1,4 @@
-<view class="page">
+<view class="page {{isTablet ? 'is-tablet' : ''}}">
   <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
 
   <!-- 顶栏 -->
@@ -26,8 +26,8 @@
       <view class="sec" wx:for="{{sections}}" wx:key="cat" wx:for-index="si" id="dsec-{{si}}">
         <view class="sec-title"><text>{{item.cat}}</text><view class="sec-line"></view></view>
         <view class="card {{d.soldOut?'sold-out':''}}" wx:for="{{item.items}}" wx:for-item="d" wx:key="id">
-          <image wx:if="{{d.image}}" class="pic" src="{{d.image}}" mode="aspectFill" lazy-load />
-          <view wx:else class="pic seal">{{d.ph}}</view>
+          <image wx:if="{{d.image}}" class="pic" src="{{d.image}}" mode="aspectFill" lazy-load bindtap="previewImage" data-img="{{d.image}}" hover-class="pic-hover" hover-stay-time="120" />
+          <view wx:else class="pic seal" bindtap="previewEmpty" data-name="{{d.name}}" data-ph="{{d.ph}}" hover-class="pic-hover" hover-stay-time="120">{{d.ph}}</view>
           <view wx:if="{{d.limited}}" class="corner limited">今日限定</view>
           <view wx:if="{{d.soldOut}}" class="corner soldout">售罄</view>
           <view class="info">
@@ -55,6 +55,19 @@
   </view>
 </view>
 
+<!-- 图片放大预览：点菜品小图即弹出全屏大图，<image> 原生支持 cloud:// -->
+<view wx:if="{{previewSrc}}" class="img-preview" bindtap="closePreview">
+  <image class="img-preview-pic" src="{{previewSrc}}" mode="aspectFit" catchtap="noop" />
+  <view class="img-preview-close" catchtap="closePreview">×</view>
+  <view class="img-preview-tip">点击任意处关闭</view>
+</view>
+<view wx:if="{{emptyPreview}}" class="img-preview" bindtap="closeEmptyPreview">
+  <view class="img-preview-placeholder">{{emptyPreview.ph}}</view>
+  <view class="img-preview-name">{{emptyPreview.name}}</view>
+  <view class="img-preview-close" catchtap="closeEmptyPreview">×</view>
+  <view class="img-preview-tip">暂无菜品照片 · 点击任意处关闭</view>
+</view>
+
 <!-- 搜索浮层（只读） -->
 <view class="mask search-mask" wx:if="{{showSearch}}" bindtap="closeSearch">
   <view class="search-page" catchtap="noop">
@@ -68,8 +81,8 @@
       <view wx:if="{{!searchKeyword}}" class="s-empty">输入菜名试试，如「东坡」「醉」</view>
       <view wx:elif="{{searchResults.length===0}}" class="s-empty">没有找到「{{searchKeyword}}」</view>
       <view class="card {{item.soldOut?'sold-out':''}}" wx:for="{{searchResults}}" wx:key="id">
-        <image wx:if="{{item.image}}" class="pic" src="{{item.image}}" mode="aspectFill" lazy-load />
-        <view wx:else class="pic seal">{{item.ph}}</view>
+        <image wx:if="{{item.image}}" class="pic" src="{{item.image}}" mode="aspectFill" lazy-load bindtap="previewImage" data-img="{{item.image}}" hover-class="pic-hover" hover-stay-time="120" />
+        <view wx:else class="pic seal" bindtap="previewEmpty" data-name="{{item.name}}" data-ph="{{item.ph}}" hover-class="pic-hover" hover-stay-time="120">{{item.ph}}</view>
         <view wx:if="{{item.limited}}" class="corner limited">今日限定</view>
         <view wx:if="{{item.soldOut}}" class="corner soldout">售罄</view>
         <view class="info">

@@ -1,5 +1,6 @@
 const { ROOMS, ROOM_CAP, ROOM_CAP_RANGE } = require('../../utils/config');
 const { callApi, getDishesAdmin, listReservations, confirmReservation, rejectReservation, publishSession, closeSession, sessionsAdmin, updateReservationDishes } = require('../../utils/api');
+const { detectTablet } = require('../../utils/tablet');
 const app = getApp();
 
 function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -16,6 +17,7 @@ function bookingLabel(b) {
 
 Page({
   data: {
+    isTablet: false,
     role: '', uid: '', noPerm: false, isManager: false,
     year: 2026, month: 8, cells: [], selected: '',
     rooms: [], dishes: [],
@@ -32,6 +34,7 @@ Page({
     detail: { roomNo: '', roomName: '', slot: '', slotText: '', type: '', typeText: '', label: '', guest_name: '', guest_phone: '', partySize: 0, dishes: [], note: '', id: '' },
   },
   onLoad() {
+    this.setData({ isTablet: detectTablet() });
     const now = new Date();
     this.setData({
       year: now.getFullYear(), month: now.getMonth() + 1, selected: todayStr(),

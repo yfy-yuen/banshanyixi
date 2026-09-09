@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#f4f6f8"/>
+  <ellipse cx="200" cy="320" rx="120" ry="28" fill="#e6e9ed"/>
+  <path d="M120 215 Q200 195 280 215 L262 300 Q200 320 138 300 Z" fill="#ffffff" stroke="#d8dde3" stroke-width="3"/>
+  <path d="M138 240 Q200 225 262 240 L255 295 Q200 308 145 295 Z" fill="#f3f5f7"/>
+  <path d="M150 200 Q200 150 250 200 Q230 185 200 185 Q170 185 150 200 Z" fill="#ffffff"/>
+  <g fill="#f7f9fb">
+    <circle cx="185" cy="190" r="9"/>
+    <circle cx="205" cy="185" r="9"/>
+    <circle cx="220" cy="192" r="8"/>
+    <circle cx="170" cy="196" r="7"/>
+    <circle cx="195" cy="200" r="8"/>
+  </g>
+  <g stroke="#caa46a" stroke-width="5" stroke-linecap="round">
+    <path d="M300 150 L320 280"/>
+    <path d="M315 150 L335 280"/>
+  </g>
+  <text x="200" y="365" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="20" fill="#9aa0a6">米饭</text>
+</svg>

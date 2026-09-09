@@ -3,6 +3,16 @@ const { ensureCloud, preflight } = require('./utils/cloudbase');
 const { callApi, ownerBoot } = require('./utils/api');
 const { ENV } = require('./utils/config'); // ENV 用于初始化微信云能力
 
+// 平板判定：逻辑宽 >= 600 视为平板（手机竖屏 375、横屏 667 仍算手机；iPad/安卓平板 >=768 判平板）。
+// 用 getSystemInfoSync，兼容性最好（所有基础库都有）；getWindowInfo 某些版本行为异常，故统一用 sync。
+function detectTablet() {
+  try {
+    const info = wx.getSystemInfoSync();
+    const w = info.windowWidth || info.screenWidth || 375;
+    return w >= 600;
+  } catch (e) { return false; }
+}
+
 App({
   globalData: {
     roomNo: '',
@@ -10,10 +20,13 @@ App({
     people: 1,
     uid: '',          // 微信 OPENID（云函数上下文自动附带，稳定身份，作为 staff 锚定）
     role: '',         // ''=加载中 | 'guest' | 'clerk' | 'manager'
+    isTablet: false,  // 运行时平板判定（windowWidth >= 600），驱动 .is-tablet 类放大内页
   },
   onLaunch() {
     // 初始化微信原生云能力（顾客/下单/查询统一经云函数调用，云函数再访问 cloud1 文档库）
     try { wx.cloud.init({ env: ENV, traceUser: false }); } catch (e) { console.warn('[app] wx.cloud.init 已初始化或失败', e); }
+    // 平板判定：逻辑宽 >= 600 → 驱动 .is-tablet 放大内页；手机不触发
+    this.globalData.isTablet = detectTablet();
     // 恢复上次选择的包厢
     const roomNo = wx.getStorageSync('roomNo');
     const roomName = wx.getStorageSync('roomName');
@@ -78,3 +91,21 @@ App({
     return Promise.resolve(this.globalData.role);
   },
 });
+
+// ===== 全局注入 isTablet 到每个页面 data（无需逐页改 JS）=====
+// 微信 WXSS 的 @media(min-width) 宽度查询在真机/模拟器经常不触发，故改用 JS 判定 + 挂 .is-tablet 类，
+// 类选择器 100% 生效；手机 isTablet=false 不挂类，样式零变化。
+(function () {
+  const _Page = Page;
+  Page = function (opts) {
+    opts.data = Object.assign({}, opts.data, { isTablet: detectTablet() });
+    const origOnLoad = opts.onLoad;
+    opts.onLoad = function (q) {
+      const t = detectTablet();
+      this.setData({ isTablet: t });
+      console.log('[tablet] isTablet =', t);
+      if (origOnLoad) origOnLoad.call(this, q);
+    };
+    return _Page(opts);
+  };
+})();

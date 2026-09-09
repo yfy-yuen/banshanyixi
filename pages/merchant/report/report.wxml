@@ -1,0 +1,15 @@
+<view class="container {{isTablet ? 'is-tablet' : ''}}">
+  <view class="card total-card">
+    <view class="muted">总营收</view>
+    <view class="big-price">¥{{total}}</view>
+  </view>
+
+  <view class="card">
+    <view class="muted">按分类</view>
+    <view class="r-row" wx:for="{{byCategory}}" wx:key="_id" wx:for-item="c">
+      <text>{{c._id}}</text>
+      <text class="price">¥{{c.total}}</text>
+    </view>
+    <view wx:if="{{byCategory.length === 0}}" class="muted">暂无数据</view>
+  </view>
+</view>

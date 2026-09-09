@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#f4f6f8"/>
+  <ellipse cx="200" cy="220" rx="155" ry="125" fill="#ffffff" stroke="#e3e6ea" stroke-width="2"/>
+  <ellipse cx="200" cy="220" rx="120" ry="95" fill="#fbfbfc"/>
+  <g>
+    <circle cx="160" cy="190" r="38" fill="#eaf6df" stroke="#5fae4f" stroke-width="8"/>
+    <circle cx="245" cy="205" r="34" fill="#eaf6df" stroke="#5fae4f" stroke-width="8"/>
+    <circle cx="200" cy="255" r="40" fill="#eaf6df" stroke="#5fae4f" stroke-width="8"/>
+    <circle cx="160" cy="190" r="26" fill="#f4faf0"/>
+    <circle cx="245" cy="205" r="23" fill="#f4faf0"/>
+    <circle cx="200" cy="255" r="27" fill="#f4faf0"/>
+  </g>
+  <g fill="#fbf3d8">
+    <circle cx="150" cy="200" r="4"/>
+    <circle cx="170" cy="182" r="3"/>
+    <circle cx="252" cy="198" r="3.5"/>
+    <circle cx="238" cy="214" r="3"/>
+    <circle cx="208" cy="248" r="4"/>
+    <circle cx="195" cy="265" r="3"/>
+  </g>
+  <text x="200" y="360" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="20" fill="#9aa0a6">凉拌黄瓜</text>
+</svg>

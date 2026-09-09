@@ -1,5 +1,6 @@
 const { ROOMS, ROOM_CAP, ROOM_CAP_RANGE, ROOM_MAJIANG, RESERVE_TPL_ID, canSelfEditPreorder, STORE_PHONE } = require('../../utils/config');
 const { submitReservation, myReservations, cancelReservation } = require('../../utils/api');
+const { detectTablet } = require('../../utils/tablet');
 
 // 包厢选择列表：第一项「由店家安排」表示不指定，交给云端自动预匹配
 // needMahjong=true 时只列出有麻将机的包厢（满仓/枕山）
@@ -31,6 +32,7 @@ function todayStr() {
 
 Page({
   data: {
+    isTablet: false,
     mine: [], loading: false,
     showApply: false,
     form: { date: '', expectedArrival: '18:00', partySize: '', contactPhone: '', note: '', roomNo: '', roomName: '由店家安排', needMahjong: false },
@@ -38,7 +40,11 @@ Page({
     roomIndex: 0,
     submitting: false,
   },
-  onShow() {
+  
+  onLoad() {
+    this.setData({ isTablet: detectTablet() });
+  },
+onShow() {
     this.refresh();
   },
   async refresh() {

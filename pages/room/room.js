@@ -1,5 +1,6 @@
 const { ROOMS } = require('../../utils/config');
 const { callApi, markArrived, roomAccess, joinByInvite } = require('../../utils/api');
+const { detectTablet } = require('../../utils/tablet');
 const app = getApp();
 
 function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -28,6 +29,7 @@ function decorateOrder(o) {
 
 Page({
   data: {
+    isTablet: false,
     roomNo: '', roomName: '',
     tab: 'env', // env | order | menu
     orderSub: 'book', // book 订餐菜品 | live 现场下单菜品
@@ -42,6 +44,7 @@ Page({
     loading: true,
   },
   async onLoad(options) {
+    this.setData({ isTablet: detectTablet() });
     const no = options.room || app.globalData.roomNo || '1';
     const name = ROOMS[no] || ('厢' + no);
     const tab = options.tab === 'order' ? 'order' : 'env';

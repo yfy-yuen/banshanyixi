@@ -1,0 +1,23 @@
+<view class="container {{isTablet ? 'is-tablet' : ''}}" wx:if="{{order}}">
+  <view class="card">
+    <view class="bill-title">结账单</view>
+    <view class="muted">桌号：{{order.tableNo}}</view>
+    <view class="muted">状态：{{order.status}}</view>
+  </view>
+
+  <view class="card">
+    <view class="bill-row" wx:for="{{order.items}}" wx:key="_id" wx:for-item="it">
+      <text>{{it.name}} ×{{it.qty}}</text>
+      <text class="price">¥{{it.price * it.qty}}</text>
+    </view>
+  </view>
+
+  <view class="card total-row">
+    <text>合计</text>
+    <text class="price">¥{{order.totalAmount}}</text>
+  </view>
+</view>
+
+<view class="container" wx:else>
+  <view class="card muted">账单加载中…</view>
+</view>

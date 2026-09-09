@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>点菜记账 Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f6f8; color: #1a1a1a; font-size: 15px;
+  }
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: #185FA5; color: #fff; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topbar h1 { font-size: 17px; font-weight: 500; }
+  .tabs { display: flex; gap: 8px; }
+  .tabs button {
+    border: none; background: rgba(255,255,255,.18); color: #fff;
+    padding: 6px 14px; border-radius: 999px; font-size: 14px; cursor: pointer;
+  }
+  .tabs button.active { background: #fff; color: #185FA5; font-weight: 500; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 16px; padding-bottom: 150px; }
+  .card { background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+  .muted { color: #888780; font-size: 13px; }
+  .price { color: #d85a30; font-weight: 500; }
+  .table-input { width: 100%; margin-top: 8px; padding: 10px 12px; border: 1px solid #e3e6ea; border-radius: 10px; font-size: 15px; }
+  .order-msg { color: #c0392b; font-size: 13px; margin-top: 6px; min-height: 16px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .chip { padding: 6px 14px; border-radius: 999px; background: #eef1f5; color: #444; cursor: pointer; font-size: 13px; }
+  .chip.active { background: #185FA5; color: #fff; }
+  .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .dish-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.05); display: flex; flex-direction: column; }
+  .dish-card .pic { width: 100%; aspect-ratio: 1/1; object-fit: cover; background: #eef1f5; display: block; }
+  .dish-card .info { padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .dish-card .name { font-size: 15px; }
+  .dish-card .bottom { display: flex; align-items: center; justify-content: space-between; }
+  .step { display: flex; align-items: center; gap: 8px; }
+  .step button { width: 28px; height: 28px; border-radius: 50%; border: none; background: #e6f1fb; color: #185FA5; font-size: 17px; cursor: pointer; line-height: 1; }
+  .step .n { min-width: 16px; text-align: center; font-size: 14px; }
+  .dish { display: flex; justify-content: space-between; align-items: center; }
+  .dish-name { font-size: 16px; }
+  .m-row { display: flex; align-items: center; gap: 10px; }
+  .m-row img { width: 46px; height: 46px; border-radius: 8px; object-fit: cover; background: #eef1f5; }
+  .m-actions { display: flex; gap: 6px; }
+  .m-actions button { border: none; border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
+  .m-edit { background: #e6f1fb; color: #185FA5; }
+  .m-del { background: #fdeaea; color: #c0392b; }
+  .m-soldout { background: #f0f0f0; color: #999; }
+  .cartbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    max-width: 720px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; background: #fff; box-shadow: 0 -1px 6px rgba(0,0,0,.08);
+  }
+  .cartbar .sum { display: flex; flex-direction: column; }
+  .btn { background: #185FA5; color: #fff; border: none; border-radius: 999px; padding: 10px 22px; font-size: 15px; cursor: pointer; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-ghost { background: #e6f1fb; color: #185FA5; }
+  /* merchant */
+  .mtabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .mtabs button { flex: 1; border: none; background: #eef1f5; color: #444; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 14px; }
+  .mtabs button.active { background: #185FA5; color: #fff; }
+  /* customer sub tabs */
+  .ctabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .ctabs button { flex: 1; border: none; background: #eef1f5; color: #444; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 14px; }
+  .ctabs button.active { background: #185FA5; color: #fff; }
+  .badge { background: #d85a30; color: #fff; font-size: 11px; border-radius: 999px; padding: 1px 7px; margin-left: 6px; }
+  .o-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .o-items { color: #888780; font-size: 13px; margin: 6px 0; }
+  .form-row { display: flex; gap: 8px; margin: 8px 0; }
+  .form-row input, .form-row select { flex: 1; padding: 9px 10px; border: 1px solid #e3e6ea; border-radius: 10px; font-size: 14px; }
+  .bar { height: 10px; background: #e6f1fb; border-radius: 6px; overflow: hidden; margin-top: 4px; }
+  .bar > span { display: block; height: 100%; background: #185FA5; }
+  /* modal */
+  .mask { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; z-index: 20; }
+  .modal { background: #fff; border-radius: 16px; padding: 20px; width: 88%; max-width: 420px; }
+  .modal h2 { font-size: 18px; margin-bottom: 8px; }
+  .b-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+  .reset { background: transparent; border: none; color: rgba(255,255,255,.8); font-size: 12px; cursor: pointer; text-decoration: underline; }
+  /* 规格选择 */
+  .spec-group { margin: 14px 0; }
+  .spec-group .g-name { font-size: 14px; margin-bottom: 8px; }
+  .spec-group .g-name small { color: #999; font-size: 12px; margin-left: 6px; }
+  .spec-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .spec-chip { padding: 6px 12px; border-radius: 999px; border: 1px solid #e3e6ea; background: #fff; font-size: 13px; cursor: pointer; color: #444; }
+  .spec-chip.on { background: #185FA5; color: #fff; border-color: #185FA5; }
+  .spec-chip small { margin-left: 4px; opacity: .85; }
+  .spec-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+  .qty-stepper { display: flex; align-items: center; gap: 12px; }
+  .qty-stepper button { width: 30px; height: 30px; border-radius: 50%; border: none; background: #e6f1fb; color: #185FA5; font-size: 18px; cursor: pointer; }
+  .spec-preview { color: #d85a30; font-weight: 500; font-size: 16px; }
+  /* 包厢入口 */
+  .room-tag { background: #fff0f0; color: #f04f4f; font-size: 12px; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+  .room-name { font-size: 21px; font-weight: 600; color: #f04f4f; margin-top: 2px; }
+  .link-btn { background: none; border: none; color: #185FA5; font-size: 13px; cursor: pointer; text-decoration: underline; padding: 0; }
+  /* 二维码管理 */
+  .qr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .qr-card { background: #fff; border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .qr-card img { width: 100%; max-width: 160px; aspect-ratio: 1/1; background: #fff; }
+  .qr-card .qn { font-size: 17px; font-weight: 600; margin-top: 8px; }
+  .qr-card .qt { font-size: 12px; color: #999; margin-top: 2px; }
+  /* 报表 */
+  .seg { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .seg button { flex: 1; min-width: 56px; border: 1px solid #e3e6ea; background: #fff; color: #444; padding: 8px; border-radius: 10px; font-size: 13px; cursor: pointer; }
+  .seg button.on { background: #185FA5; color: #fff; border-color: #185FA5; }
+  .seg input[type=date] { flex: 1; min-width: 120px; padding: 8px 10px; border: 1px solid #e3e6ea; border-radius: 10px; font-size: 13px; }
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+  .kpi { background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+  .kpi-v { font-size: 22px; font-weight: 600; color: #185FA5; margin-top: 4px; }
+  .section-title { font-size: 15px; font-weight: 500; margin-bottom: 8px; }
+  /* 参考图风格：顾客点餐页 */
+  .customer-layout { display: flex; gap: 10px; }
+  .cat-sidebar {
+    width: 84px; flex-shrink: 0; position: sticky; top: 58px; align-self: flex-start;
+    background: #f5f6f8; border-radius: 12px; overflow: hidden;
+  }
+  .cat-item {
+    padding: 14px 6px; text-align: center; font-size: 13px; color: #666;
+    cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    border-left: 3px solid transparent;
+  }
+  .cat-item.active { background: #fff; color: #f04f4f; font-weight: 500; border-left-color: #f04f4f; }
+  .cat-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .customer-main { flex: 1; min-width: 0; }
+  .store-header { background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+  .store-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .store-name { font-size: 18px; font-weight: 600; color: #333; }
+  .store-loc { font-size: 13px; color: #888; margin-top: 4px; }
+  .store-tag { background: #fff0f0; color: #f04f4f; font-size: 12px; padding: 4px 10px; border-radius: 6px; border: 1px solid #ffd0d0; white-space: nowrap; }
+  .product-list { display: flex; flex-direction: column; gap: 10px; }
+  .product-item {
+    display: flex; gap: 12px; background: #fff; border-radius: 12px; padding: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  }
+  .product-img { width: 80px; height: 80px; border-radius: 10px; object-fit: cover; background: #f0f0f0; flex-shrink: 0; }
+  .product-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }
+  .product-title { font-size: 15px; font-weight: 500; color: #333; }
+  .product-desc { font-size: 12px; color: #999; margin-top: 4px; }
+  .product-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+  .price-red { color: #f04f4f; font-size: 18px; font-weight: 600; }
+  .product-bottom .step button {
+    width: 26px; height: 26px; border-radius: 50%; border: 1px solid #e3e3e3;
+    background: #fff; color: #333; font-size: 16px; cursor: pointer; line-height: 1;
+  }
+  .product-bottom .step button.add-red { background: #f04f4f; color: #fff; border-color: #f04f4f; }
+  .product-bottom .step button:disabled { opacity: .35; cursor: not-allowed; }
+  .product-bottom .step .n { min-width: 22px; text-align: center; font-size: 14px; color: #333; }
+  /* 底部购物车条 */
+  .cartbar {
+    position: fixed; left: 0; right: 0; bottom: 64px; z-index: 10;
+    max-width: 720px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; background: #fff; box-shadow: 0 -1px 8px rgba(0,0,0,.08);
+    border-radius: 999px; margin-bottom: 8px;
+  }
+  .cart-left { display: flex; align-items: center; gap: 12px; }
+  .bag-wrap { position: relative; width: 44px; height: 44px; background: #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .bag-icon { width: 24px; height: 24px; color: #fff; }
+  .bag-badge { position: absolute; top: -4px; right: -4px; background: #f04f4f; color: #fff; font-size: 11px; border-radius: 999px; padding: 2px 7px; }
+  .cart-sum { display: flex; flex-direction: column; }
+  .cart-total { color: #f04f4f; font-size: 18px; font-weight: 600; }
+  .cart-count { color: #999; font-size: 12px; }
+  .btn-checkout { background: #f04f4f; color: #fff; border: none; border-radius: 999px; padding: 12px 26px; font-size: 15px; cursor: pointer; font-weight: 500; }
+  .btn-checkout:disabled { opacity: .45; cursor: not-allowed; }
+  /* 底部 Tab 导航 */
+  .bottom-tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    max-width: 720px; margin: 0 auto;
+    display: flex; justify-content: space-around; align-items: flex-end;
+    background: #fff; padding: 6px 0 10px; box-shadow: 0 -1px 6px rgba(0,0,0,.06);
+  }
+  .btab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: #999; cursor: pointer; }
+  .btab .bicon { width: 22px; height: 22px; fill: #999; }
+  .btab.active { color: #f04f4f; }
+  .btab.active .bicon { fill: #f04f4f; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>点菜记账 Demo</h1>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button class="reset" onclick="resetData()">重置数据</button>
+      <div class="tabs">
+        <button id="tab-customer" class="active" onclick="switchTab('customer')">顾客点餐</button>
+        <button id="tab-merchant" onclick="switchTab('merchant')">商家后台</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- 顾客点餐 -->
+    <div id="view-customer">
+      <div id="cust-menu" class="customer-layout">
+        <aside class="cat-sidebar" id="catSidebar"></aside>
+        <main class="customer-main">
+          <div class="store-header">
+            <div class="store-top">
+              <div>
+                <div class="store-name">示例餐厅</div>
+                <div class="store-loc" id="roomSlot"></div>
+              </div>
+              <span class="store-tag">堂食</span>
+            </div>
+          </div>
+          <div id="menu"></div>
+        </main>
+      </div>
+      <div id="cust-orders" style="display:none;"></div>
+      <nav class="bottom-tabs">
+        <div class="btab" onclick="alert('首页功能敬请期待')">
+          <svg class="bicon" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          <span>首页</span>
+        </div>
+        <div class="btab active" id="btab-menu" onclick="switchCust('menu')">
+          <svg class="bicon" viewBox="0 0 24 24"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3.5V2h-2v3.5h-2V2h-2v3.5h-2V2h-2v5c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2V2h-2v3.5z"/></svg>
+          <span>点餐</span>
+        </div>
+        <div class="btab" id="btab-orders" onclick="switchCust('myorders')">
+          <svg class="bicon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+          <span>订单<span id="orderBadge" class="badge" style="display:none;"></span></span>
+        </div>
+        <div class="btab" onclick="alert('我的功能敬请期待')">
+          <svg class="bicon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          <span>我的</span>
+        </div>
+      </nav>
+    </div>
+
+    <!-- 商家后台 -->
+    <div id="view-merchant" style="display:none;">
+      <div class="mtabs" id="mtabs"></div>
+      <div id="merchant-body"></div>
+    </div>
+  </div>
+
+  <!-- 购物车栏 -->
+  <div class="cartbar" id="cartbar" style="display:none;">
+    <div class="cart-left">
+      <div class="bag-wrap">
+        <svg class="bag-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2h10V8h2v12z"/></svg>
+        <span id="bagBadge" class="bag-badge" style="display:none;"></span>
+      </div>
+      <div class="cart-sum">
+        <span class="cart-total" id="cartTotal">¥0.00</span>
+        <span class="cart-count" id="cartCountText">共 0 件商品</span>
+      </div>
+    </div>
+    <button class="btn-checkout" id="submitBtn" onclick="submitOrder()" disabled>去结算</button>
+  </div>
+
+  <!-- 结账单弹窗 -->
+  <div class="mask" id="billMask" style="display:none;" onclick="if(event.target===this)closeBill()">
+    <div class="modal" id="billModal"></div>
+  </div>
+
+  <!-- 修改菜品弹窗 -->
+  <div class="mask" id="editMask" style="display:none;" onclick="if(event.target===this)closeEdit()">
+    <div class="modal" id="editModal"></div>
+  </div>
+
+  <!-- 规格选择弹窗 -->
+  <div class="mask" id="specMask" style="display:none;" onclick="if(event.target===this)closeSpec()">
+    <div class="modal" id="specModal"></div>
+  </div>
+
+  <!-- 商家登录弹窗 -->
+  <div class="mask" id="loginMask" style="display:none;" onclick="if(event.target===this)closeLogin()">
+    <div class="modal" id="loginModal"></div>
+  </div>
+
+<script>
+const STORE = { dishes: 'demo_dishes', orders: 'demo_orders', ledger: 'demo_ledger', session: 'demo_session' };
+const CATS = ['热菜','凉菜','饮品','主食','其他'];
+// 包厢：编号给工作人员看，名称给顾客看（没有 4 号）
+const ROOMS = [
+  { no: '1', name: '谷山玥' },
+  { no: '2', name: '满仓' },
+  { no: '3', name: '枕山' },
+  { no: '5', name: '云起' }
+];
+const roomOf = no => ROOMS.find(r => r.no === no);
+const SEED = [
+  { name: '红烧肉', category: '热菜', price: 38, image: 'images/hongshao_rou.svg', status: '在售',
+    specs: [
+      { group: '份量', type: 'single', options: [{ label: '小份', delta: 0 }, { label: '大份', delta: 8 }] },
+      { group: '辣度', type: 'multi', options: [{ label: '微辣', delta: 0 }, { label: '特辣', delta: 0 }] }
+    ] },
+  { name: '清炒时蔬', category: '热菜', price: 18, image: 'images/qingchao_shushi.svg', status: '在售' },
+  { name: '凉拌黄瓜', category: '凉菜', price: 12, image: 'images/liangban_huanggua.svg', status: '在售',
+    specs: [
+      { group: '加料', type: 'multi', options: [{ label: '加花生', delta: 2 }, { label: '加木耳', delta: 3 }] }
+    ] },
+  { name: '可乐', category: '饮品', price: 6, image: 'images/kele.svg', status: '在售' },
+  { name: '米饭', category: '主食', price: 2, image: 'images/mifan.svg', status: '在售' }
+];
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) || d; } catch(e){ return d; } };
+const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+let cart = [];          // [{ key, dishId, name, basePrice, category, sel:{group:[labels]}, unitPrice, qty }]
+let specDraft = null;   // 规格弹窗临时状态 { dishId, sel, qty }
+let curCat = '全部';
+let merchantTab = 'orders';
+let custTab = 'menu';   // 顾客子页：menu | myorders
+let reportRange = 'today';   // today | 7d | all | date
+let reportDate = '';         // YYYY-MM-DD，range='date' 时生效
+let session = load(STORE.session, null);   // { role: '老板' | '店员' }
+// 包厢状态：roomNo 给工作人员看，roomName 给顾客看；people 用餐人数
+let roomNo = '';
+let roomName = '';
+let people = 1;
+const ACCOUNTS = { '老板': '8888', '店员': '1234' };  // 演示账号（正式版用微信 openid + 云开发权限）
+
+function ensureSeed() {
+  if (!localStorage.getItem(STORE.dishes)) {
+    save(STORE.dishes, SEED.map(d => ({ ...d, id: uid(), status: '在售' })));
+  }
+}
+function getDishes() { return load(STORE.dishes, []); }
+function getOrders() { return load(STORE.orders, []); }
+function getLedger() { return load(STORE.ledger, []); }
+const fmt = n => '¥' + (Number(n)).toFixed(2);
+// 规格：单价 = 基础价 + 各选中选项 delta 之和
+function specPrice(d, sel) {
+  let p = d.price;
+  (d.specs || []).forEach(g => {
+    (sel[g.group] || []).forEach(label => {
+      const opt = g.options.find(o => o.label === label);
+      if (opt) p += opt.delta;
+    });
+  });
+  return p;
+}
+// 某菜在购物车中的总份数
+function dishQty(dishId) {
+  return cart.filter(c => c.dishId === dishId).reduce((s, c) => s + c.qty, 0);
+}
+// 规格对象转文字：{份量:['大份'],辣度:['特辣']} -> "大份·特辣"
+function specText(sel) {
+  if (!sel) return '';
+  const parts = [];
+  Object.keys(sel).forEach(g => (sel[g] || []).forEach(l => parts.push(l)));
+  return parts.join('·');
+}
+// specs 数组 <-> 文本（用于商家编辑）： "份量:单选:小份0,大份8 | 加料:多选:加蛋2,加肠3"
+function specsToText(specs) {
+  return (specs || []).map(g => {
+    const opts = g.options.map(o => o.label + (o.delta ? o.delta : 0)).join(',');
+    return g.group + ':' + (g.type === 'single' ? '单选' : '多选') + ':' + opts;
+  }).join(' | ');
+}
+function parseSpecs(str) {
+  if (!str || !str.trim()) return [];
+  return str.split('|').map(s => s.trim()).filter(Boolean).map(part => {
+    const [g, t, opts] = part.split(':');
+    if (!g || !opts) return null;
+    const options = opts.split(',').map(o => {
+      const m = o.trim().match(/^(.*?)([+-]?\d+)?$/);
+      return { label: m[1].trim(), delta: m[2] !== undefined ? parseInt(m[2], 10) : 0 };
+    });
+    return { group: g.trim(), type: t.trim() === '多选' ? 'multi' : 'single', options };
+  }).filter(Boolean);
+}
+
+/* ---------- 顾客点餐 ---------- */
+function renderCats() {
+  const sidebar = document.getElementById('catSidebar');
+  if (!sidebar) return;
+  const all = ['全部', ...CATS];
+  const colors = { '全部':'#999', '热菜':'#f04f4f', '凉菜':'#4caf50', '饮品':'#2196f3', '主食':'#ff9800', '其他':'#9e9e9e' };
+  sidebar.innerHTML = all.map(c =>
+    `<div class="cat-item ${c===curCat?'active':''}" onclick="setCat('${c}')">
+      <span class="cat-dot" style="background:${colors[c]||'#999'}"></span>
+      <span>${c}</span>
+    </div>`).join('');
+}
+function setCat(c) { curCat = c; renderCats(); renderMenu(); }
+
+/* ---------- 包厢入口（扫码进入 + 选人数） ---------- */
+function parseRoomFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const t = params.get('tableNo');
+  if (t && roomOf(t)) { const r = roomOf(t); roomNo = r.no; roomName = r.name; people = 1; }
+}
+function renderRoomCard() {
+  const slot = document.getElementById('roomSlot');
+  const peopleCtl = `
+    <div class="o-row" style="margin-top:12px;">
+      <span>用餐人数</span>
+      <div class="step">
+        <button onclick="changePeople(-1)">−</button>
+        <span class="n" id="peopleN">${people}</span>
+        <button onclick="changePeople(1)">+</button>
+      </div>
+    </div>`;
+  if (roomNo) {
+    slot.innerHTML = `
+      <div class="o-row">
+        <div>
+          <div class="muted">欢迎光临</div>
+          <div class="room-name">${roomName}</div>
+        </div>
+        <span class="room-tag">${roomNo}号 · 工作人员</span>
+      </div>
+      ${peopleCtl}
+      <div style="margin-top:8px;"><button class="link-btn" onclick="clearRoom()">切换包厢</button></div>
+      <div id="orderMsg" class="order-msg"></div>`;
+  } else {
+    slot.innerHTML = `
+      <div class="muted">请选择包厢</div>
+      <select id="roomPick" class="table-input" onchange="pickRoom(this.value)" style="margin-top:8px;">
+        <option value="">— 请选择 —</option>
+        ${ROOMS.map(r => `<option value="${r.no}">${r.name}</option>`).join('')}
+      </select>
+      ${peopleCtl}
+      <div id="orderMsg" class="order-msg"></div>`;
+  }
+  syncSubmit();
+  updateOrderBadge();
+}
+function changePeople(d) { people = Math.max(1, Math.min(20, people + d)); const el = document.getElementById('peopleN'); if (el) el.textContent = people; }
+function pickRoom(no) {
+  const r = roomOf(no);
+  if (!r) { roomNo = ''; roomName = ''; }
+  else { roomNo = r.no; roomName = r.name; }
+  renderRoomCard();
+}
+function clearRoom() { roomNo = ''; roomName = ''; renderRoomCard(); }
+function syncSubmit() {
+  const btn = document.getElementById('submitBtn');
+  if (btn) btn.disabled = !roomNo;
+}
+function renderMenu() {
+  const dishes = getDishes().filter(d => curCat === '全部' || d.category === curCat);
+  const html = dishes.length ? `
+    <div class="product-list">
+      ${dishes.map(d => {
+        const addHandler = (d.specs && d.specs.length) ? `openSpec('${d.id}')` : `addSimple('${d.id}')`;
+        const qty = dishQty(d.id);
+        return `
+        <div class="product-item">
+          <img class="product-img" src="${d.image || 'images/mifan.svg'}" alt="${d.name}" />
+          <div class="product-info">
+            <div class="product-title">${d.name}</div>
+            <div class="product-desc">${(d.specs && d.specs.length) ? '可选规格' : '&nbsp;'}</div>
+            <div class="product-bottom">
+              <span class="price-red">${fmt(d.price)}</span>
+              <div class="step">
+                <button onclick="decDish('${d.id}')" ${qty===0?'disabled':''}>−</button>
+                <span class="n">${qty}</span>
+                <button class="add-red" onclick="${addHandler}">+</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>` : '<div class="card muted">该分类暂无菜品</div>';
+  document.getElementById('menu').innerHTML = html;
+  renderCart();
+}
+function addSimple(id) {
+  const d = getDishes().find(x => x.id === id); if (!d) return;
+  const ex = cart.find(c => c.dishId === id && (!c.sel || !Object.keys(c.sel).length));
+  if (ex) ex.qty++;
+  else cart.push({ key: uid(), dishId: id, name: d.name, basePrice: d.price, category: d.category, sel: {}, unitPrice: d.price, qty: 1 });
+  renderMenu();
+}
+function add(id) { addSimple(id); }   // 兼容无规格快捷加
+function decDish(id) {
+  let last = -1;
+  for (let i = cart.length - 1; i >= 0; i--) { if (cart[i].dishId === id && cart[i].qty > 0) { last = i; break; } }
+  if (last >= 0) { cart[last].qty--; if (cart[last].qty <= 0) cart.splice(last, 1); }
+  renderMenu();
+}
+function openSpec(id) {
+  const d = getDishes().find(x => x.id === id); if (!d) return;
+  const sel = {};
+  (d.specs || []).forEach(g => { sel[g.group] = g.type === 'single' ? [g.options[0].label] : []; });
+  specDraft = { dishId: id, sel, qty: 1 };
+  renderSpecModal();
+  document.getElementById('specMask').style.display = 'flex';
+}
+function renderSpecModal() {
+  const d = getDishes().find(x => x.id === specDraft.dishId); if (!d) return;
+  const groups = (d.specs || []).map(g => {
+    const chips = g.options.map(o => {
+      const on = (specDraft.sel[g.group] || []).includes(o.label);
+      const deltaTxt = o.delta ? ' +' + o.delta : '';
+      return `<span class="spec-chip ${on ? 'on' : ''}" onclick="toggleSpec('${g.group}','${o.label}','${g.type}')">${o.label}<small>${deltaTxt}</small></span>`;
+    }).join('');
+    return `<div class="spec-group"><div class="g-name">${g.group}<small>${g.type === 'single' ? '单选' : '可多选'}</small></div><div class="spec-chips">${chips}</div></div>`;
+  }).join('');
+  const unit = specPrice(d, specDraft.sel);
+  document.getElementById('specModal').innerHTML = `
+    <h2>${d.name}</h2>
+    ${groups || '<div class="muted">无可选规格</div>'}
+    <div class="spec-foot">
+      <div class="qty-stepper">
+        <button onclick="specQty(-1)">−</button>
+        <span>${specDraft.qty}</span>
+        <button onclick="specQty(1)">+</button>
+      </div>
+      <div class="spec-preview">${fmt(unit)}</div>
+    </div>
+    <button class="btn" style="width:100%;margin-top:14px;" onclick="confirmSpec()">加入购物车</button>`;
+}
+function toggleSpec(group, label, type) {
+  if (type === 'single') specDraft.sel[group] = [label];
+  else {
+    const arr = specDraft.sel[group] || [];
+    const i = arr.indexOf(label);
+    if (i >= 0) arr.splice(i, 1); else arr.push(label);
+    specDraft.sel[group] = arr;
+  }
+  renderSpecModal();
+}
+function specQty(delta) { specDraft.qty = Math.max(1, specDraft.qty + delta); renderSpecModal(); }
+function confirmSpec() {
+  const d = getDishes().find(x => x.id === specDraft.dishId); if (!d) return;
+  const unit = specPrice(d, specDraft.sel);
+  cart.push({ key: uid(), dishId: d.id, name: d.name, basePrice: d.price, category: d.category,
+    sel: JSON.parse(JSON.stringify(specDraft.sel)), unitPrice: unit, qty: specDraft.qty });
+  closeSpec(); renderMenu();
+}
+function closeSpec() { document.getElementById('specMask').style.display = 'none'; specDraft = null; }
+function renderCart() {
+  let count = 0, total = 0;
+  cart.forEach(c => { count += c.qty; total += c.unitPrice * c.qty; });
+  document.getElementById('cartTotal').textContent = fmt(total);
+  const countEl = document.getElementById('cartCountText');
+  if (countEl) countEl.textContent = '共 ' + count + ' 件商品';
+  const bagBadge = document.getElementById('bagBadge');
+  if (bagBadge) {
+    if (count > 0) { bagBadge.textContent = count; bagBadge.style.display = 'inline-block'; }
+    else bagBadge.style.display = 'none';
+  }
+  const btn = document.getElementById('submitBtn');
+  if (btn) btn.disabled = !(roomNo && count > 0);
+}
+
+/* ---------- 提交订单（自动记账） ---------- */
+function submitOrder() {
+  const msg = document.getElementById('orderMsg');
+  if (!roomNo) { if (msg) msg.textContent = '请先选择包厢再提交'; return; }
+  const items = cart.map(c => ({
+    name: c.name,
+    specsText: specText(c.sel),
+    unitPrice: c.unitPrice,
+    qty: c.qty,
+    category: c.category,
+    price: c.unitPrice
+  }));
+  if (!items.length) { if (msg) msg.textContent = '请先点菜'; return; }
+  const total = items.reduce((s, i) => s + i.price * i.qty, 0);
+  const orderId = uid();
+  // tableNo=包厢编号(工作人员看)，roomName=包厢名称(顾客看)，people=用餐人数
+  const order = { id: orderId, tableNo: roomNo, roomName, people, items, totalAmount: total, status: '已下单', createdAt: new Date().toISOString() };
+
+  // 自动写账目（对应你的记账结构：收入/分类/金额/包厢）；存储异常时容错，不阻断结账
+  let warn = '';
+  try { const orders = getOrders(); orders.unshift(order); save(STORE.orders, orders); }
+  catch (e) { warn += '（订单未能保存：当前环境存储不可用）'; }
+  try {
+    const ledger = getLedger();
+    ledger.push({ id: uid(), orderId, type: '收入', category: '餐饮', amount: total, date: new Date().toISOString(), tableNo: roomNo, roomName, 账本类型: '门店账本', remark: '包厢' + roomName + '(' + roomNo + '号)' });
+    save(STORE.ledger, ledger);
+  } catch (e) { warn += '（账目未能保存：当前环境存储不可用）'; }
+
+  showBill(order, warn);
+  updateOrderBadge();
+  cart = []; renderMenu();
+}
+function showBill(order, warn) {
+  document.getElementById('billModal').innerHTML = `
+    <h2>结账单</h2>
+    <div class="muted">${order.roomName}　状态：${order.status}${order.people ? '　' + order.people + '人' : ''}</div>
+    <div style="margin:12px 0;">
+      ${order.items.map(i => `<div class="b-row"><span>${i.name}${i.specsText ? `(${i.specsText})` : ''} ×${i.qty}</span><span class="price">${fmt(i.unitPrice*i.qty)}</span></div>`).join('')}
+    </div>
+    <div class="b-row" style="border:none;font-size:17px;font-weight:500;"><span>合计</span><span class="price">${fmt(order.totalAmount)}</span></div>
+    ${warn ? `<div class="order-msg" style="margin-top:8px;">${warn}</div>` : ''}
+    <button class="btn-ghost btn" style="background:#e6f1fb;color:#185FA5;width:100%;margin-top:10px;" onclick="closeBill();switchCust('myorders')">查看我的订单</button>
+    <button class="btn" style="width:100%;margin-top:10px;" onclick="closeBill()">继续点餐</button>`;
+  document.getElementById('billMask').style.display = 'flex';
+}
+function closeBill() { document.getElementById('billMask').style.display = 'none'; }
+
+/* ---------- 顾客：我的订单（按包厢查看已下订单） ---------- */
+function fmtTime(iso) {
+  const d = new Date(iso);
+  const p = n => (n < 10 ? '0' : '') + n;
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+function switchCust(t) {
+  custTab = t;
+  document.getElementById('cust-menu').style.display = t === 'menu' ? 'flex' : 'none';
+  document.getElementById('cust-orders').style.display = t === 'myorders' ? 'block' : 'none';
+  const bmenu = document.getElementById('btab-menu');
+  const bords = document.getElementById('btab-orders');
+  if (bmenu) bmenu.classList.toggle('active', t === 'menu');
+  if (bords) bords.classList.toggle('active', t === 'myorders');
+  // 在「我的订单」页隐藏购物车条，「点餐」页显示
+  const cartbar = document.getElementById('cartbar');
+  if (cartbar) cartbar.style.display = t === 'menu' ? 'flex' : 'none';
+  if (t === 'myorders') renderMyOrders();
+}
+function renderMyOrders() {
+  const el = document.getElementById('cust-orders');
+  if (!roomNo) {
+    el.innerHTML = '<div class="card muted">请先在「点餐」页选择包厢，即可查看本包厢的订单</div>';
+    return;
+  }
+  const orders = getOrders().filter(o => o.tableNo === roomNo);
+  if (!orders.length) {
+    el.innerHTML = `<div class="card muted">「${roomName}」还没有订单，去点餐吧</div>`;
+    return;
+  }
+  const sorted = orders.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  el.innerHTML = sorted.map(o => `
+    <div class="card">
+      <div class="o-row"><b>${roomName}</b><span class="muted">${o.status}${o.people ? ' · ' + o.people + '人' : ''}</span></div>
+      <div class="muted" style="font-size:12px;margin:2px 0 8px;">${fmtTime(o.createdAt)}</div>
+      <div>
+        ${o.items.map(i => `<div class="b-row"><span>${i.name}${i.specsText ? `(${i.specsText})` : ''} ×${i.qty}</span><span class="price">${fmt(i.unitPrice * i.qty)}</span></div>`).join('')}
+      </div>
+      <div class="o-row" style="border:none;margin-top:6px;"><span class="muted">合计</span><span class="price">${fmt(o.totalAmount)}</span></div>
+    </div>`).join('');
+}
+// 更新「我的订单」角标（当前包厢未完成单数量）
+function updateOrderBadge() {
+  const n = roomNo ? getOrders().filter(o => o.tableNo === roomNo).length : 0;
+  const badge = document.getElementById('orderBadge');
+  if (badge) {
+    if (n > 0) { badge.textContent = n; badge.style.display = 'inline-block'; }
+    else badge.style.display = 'none';
+  }
+}
+
+/* ---------- 商家后台（含登录/权限） ---------- */
+// 商家后台页签：店员只看 订单 / 菜品；报表与二维码仅老板可见、不显示按钮
+function renderMerchantTabs() {
+  const isBoss = session && session.role === '老板';
+  const tabs = [{ k: 'orders', t: '订单' }, { k: 'dishes', t: '菜品' }];
+  if (isBoss) { tabs.push({ k: 'report', t: '报表' }); tabs.push({ k: 'qr', t: '二维码' }); }
+  document.getElementById('mtabs').innerHTML = tabs.map(x =>
+    `<button id="m-${x.k}" class="${x.k === merchantTab ? 'active' : ''}" onclick="switchMerchant('${x.k}')">${x.t}</button>`).join('');
+}
+function renderMerchant() {
+  const body = document.getElementById('merchant-body');
+  if (!session) {
+    body.innerHTML = '<div class="card muted">请先点击右上角「商家后台」登录账号</div>';
+    return;
+  }
+  const isBoss = session.role === '老板';
+  // 店员没有 报表/二维码 入口，若当前停留在这两个页签则回退到「订单」
+  if (!isBoss && (merchantTab === 'report' || merchantTab === 'qr')) merchantTab = 'orders';
+  renderMerchantTabs();
+  const roleHeader = `<div class="card m-row">
+    <div><b>当前登录：${session.role}</b><div class="muted" style="font-size:12px;">${isBoss ? '可管理菜单 / 查看报表 / 生成二维码 / 处理订单' : '可查看订单、管理菜品并结账'}</div></div>
+    <button class="m-del" onclick="logout()">退出</button>
+  </div>`;
+  let content = '';
+  if (merchantTab === 'orders') {
+    const orders = getOrders();
+    content = orders.length ? orders.map(o => `
+      <div class="card">
+        <div class="o-row"><b>包厢 ${o.roomName || o.tableNo}</b><span class="muted">${o.tableNo ? o.tableNo + '号 · ' : ''}${o.people ? o.people + '人 · ' : ''}${o.status}</span></div>
+        <div class="o-items">${o.items.map(i => `${i.name}${i.specsText ? `(${i.specsText})` : ''}×${i.qty}`).join('，')}</div>
+        <div class="o-row"><span class="price">${fmt(o.totalAmount)}</span>
+          ${o.status==='已下单' ? `<button class="btn" onclick="settle('${o.id}')">结账</button>` : '<span class="muted">已结清</span>'}</div>
+      </div>`).join('') : '<div class="card muted">暂无订单</div>';
+  } else if (merchantTab === 'dishes') {
+    if (!isBoss) {
+      content = '<div class="card muted">仅老板可管理菜单（新增 / 改价 / 下架 / 删除）</div>' +
+        getDishes().map(d => `<div class="card m-row"><img src="${d.image||'images/mifan.svg'}" alt="${d.name}" /><div style="flex:1;"><div class="dish-name">${d.name} <span class="muted" style="font-size:12px;">${d.category} · ${d.status}</span></div><div class="price">${fmt(d.price)}</div></div></div>`).join('');
+    } else {
+      const dishes = getDishes();
+      content = `
+        <div class="card">
+          <div class="muted">新增菜品（名称、价格必填，图片地址可留空用默认图）</div>
+          <div class="form-row"><input id="d-name" placeholder="菜品名称" /></div>
+          <div class="form-row">
+            <select id="d-cat">${CATS.map(c=>`<option>${c}</option>`).join('')}</select>
+            <input id="d-price" type="number" placeholder="价格" />
+          </div>
+          <div class="form-row"><input id="d-image" placeholder="图片地址（可选，如 images/xxx.svg 或网络图片 URL）" /></div>
+          <div class="form-row"><textarea id="d-specs" rows="2" placeholder="规格（可选）：份量:单选:小份0,大份8 | 加料:多选:加蛋2,加肠3"></textarea></div>
+          <div class="form-row"><button class="btn" onclick="addDish()">添加菜品</button></div>
+        </div>
+        ${dishes.map(d => `
+          <div class="card m-row">
+            <img src="${d.image || 'images/mifan.svg'}" alt="${d.name}" />
+            <div style="flex:1;">
+              <div class="dish-name">${d.name} <span class="muted" style="font-size:12px;">${d.category} · ${d.status}</span></div>
+              <div class="price">${fmt(d.price)}</div>
+            </div>
+            <div class="m-actions">
+              <button class="m-edit" onclick="editDish('${d.id}')">改</button>
+              <button class="${d.status==='在售'?'m-soldout':'m-edit'}" onclick="toggleStatus('${d.id}')">${d.status==='在售'?'下架':'上架'}</button>
+              <button class="m-del" onclick="deleteDish('${d.id}')">删</button>
+            </div>
+          </div>`).join('')}`;
+    }
+  } else if (merchantTab === 'report') {
+    if (!isBoss) {
+      content = '<div class="card muted">营收报表仅老板可见</div>';
+    } else {
+      content = renderReport();
+    }
+  } else if (merchantTab === 'qr') {
+    if (!isBoss) {
+      content = '<div class="card muted">包厢二维码仅老板可查看</div>';
+    } else {
+      content = `
+        <div class="card muted">每个包厢一张二维码，打印贴在门口，顾客扫码即进入对应包厢点餐。二维码已编码包厢编号（工作人员用），页面只向顾客显示包厢名称。部署上线后请重新生成（将地址换成你的域名）。</div>
+        <div class="qr-grid">
+          ${ROOMS.map(r => `
+            <div class="qr-card">
+              <img src="images/qrcodes/room${r.no}.svg" alt="${r.name}二维码" />
+              <div class="qn">${r.name}</div>
+              <div class="qt">${r.no}号 · 工作人员</div>
+            </div>`).join('')}
+        </div>`;
+    }
+  }
+  body.innerHTML = roleHeader + content;
+}
+/* ---------- 报表（按日 / 时段筛选） ---------- */
+function toDateStr(d) {
+  const p = n => (n < 10 ? '0' : '') + n;
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+function hourBucket(h) {
+  if (h >= 6 && h <= 9) return '早餐';
+  if (h >= 10 && h <= 13) return '午市';
+  if (h >= 14 && h <= 16) return '下午茶';
+  if (h >= 17 && h <= 20) return '晚市';
+  return '夜宵';
+}
+function setRange(r) {
+  reportRange = r;
+  if (r === 'date' && !reportDate) reportDate = toDateStr(new Date());
+  renderMerchant();
+}
+function onPickDate(v) {
+  reportDate = v; reportRange = 'date'; renderMerchant();
+}
+function renderReport() {
+  const orders = getOrders();
+  const now = new Date();
+  const todayStr = toDateStr(now);
+  let list;
+  if (reportRange === 'today') list = orders.filter(o => toDateStr(new Date(o.createdAt)) === todayStr);
+  else if (reportRange === '7d') {
+    const from = new Date(now); from.setDate(from.getDate() - 6); from.setHours(0, 0, 0, 0);
+    list = orders.filter(o => new Date(o.createdAt) >= from);
+  } else if (reportRange === 'date') {
+    list = orders.filter(o => toDateStr(new Date(o.createdAt)) === (reportDate || todayStr));
+  } else list = orders.slice();
+
+  const total = list.reduce((s, o) => s + o.totalAmount, 0);
+  const count = list.length;
+  const people = list.reduce((s, o) => s + (o.people || 0), 0);
+  const avg = count ? total / count : 0;
+
+  const byCat = {};
+  list.forEach(o => o.items.forEach(i => byCat[i.category] = (byCat[i.category] || 0) + i.unitPrice * i.qty));
+  const maxCat = Math.max(1, ...Object.values(byCat));
+
+  const byDay = {};
+  list.forEach(o => { const d = toDateStr(new Date(o.createdAt)); byDay[d] = (byDay[d] || 0) + o.totalAmount; });
+  const dayKeys = Object.keys(byDay).sort();
+  const maxDay = Math.max(1, ...Object.values(byDay));
+
+  const buckets = [['早餐', 6, 9], ['午市', 10, 13], ['下午茶', 14, 16], ['晚市', 17, 20], ['夜宵', 21, 5]];
+  const byBucket = {};
+  buckets.forEach(b => byBucket[b[0]] = { amount: 0, orders: 0 });
+  list.forEach(o => {
+    const h = new Date(o.createdAt).getHours();
+    const b = hourBucket(h);
+    byBucket[b].amount += o.totalAmount; byBucket[b].orders += 1;
+  });
+  const maxBucket = Math.max(1, ...buckets.map(b => byBucket[b[0]].amount));
+
+  const byDish = {};
+  list.forEach(o => o.items.forEach(i => byDish[i.name] = (byDish[i.name] || 0) + i.qty));
+  const top = Object.keys(byDish).map(n => ({ name: n, qty: byDish[n] })).sort((a, b) => b.qty - a.qty).slice(0, 5);
+  const maxTop = Math.max(1, ...top.map(t => t.qty));
+
+  const seg = `
+    <div class="seg">
+      <button class="${reportRange === 'today' ? 'on' : ''}" onclick="setRange('today')">今日</button>
+      <button class="${reportRange === '7d' ? 'on' : ''}" onclick="setRange('7d')">近7日</button>
+      <button class="${reportRange === 'all' ? 'on' : ''}" onclick="setRange('all')">全部</button>
+      <button class="${reportRange === 'date' ? 'on' : ''}" onclick="setRange('date')">选日期</button>
+      ${reportRange === 'date' ? `<input type="date" value="${reportDate || todayStr}" onchange="onPickDate(this.value)" />` : ''}
+    </div>`;
+
+  const kpi = `
+    <div class="kpi-grid">
+      <div class="kpi"><div class="muted">总营收</div><div class="kpi-v">${fmt(total)}</div></div>
+      <div class="kpi"><div class="muted">订单数</div><div class="kpi-v">${count}</div></div>
+      <div class="kpi"><div class="muted">客单价</div><div class="kpi-v">${fmt(avg)}</div></div>
+      <div class="kpi"><div class="muted">用餐人次</div><div class="kpi-v">${people}</div></div>
+    </div>`;
+
+  const trend = `
+    <div class="card">
+      <div class="section-title">每日营收</div>
+      ${dayKeys.length ? dayKeys.map(d => `
+        <div style="margin:8px 0;">
+          <div class="o-row"><span class="muted">${d.slice(5)}</span><span class="price">${fmt(byDay[d])}</span></div>
+          <div class="bar"><span style="width:${(byDay[d] / maxDay * 100).toFixed(0)}%"></span></div>
+        </div>`).join('') : '<div class="muted">暂无数据</div>'}
+    </div>`;
+
+  const timeBucket = `
+    <div class="card">
+      <div class="section-title">时段分布</div>
+      ${buckets.map(b => `
+        <div style="margin:8px 0;">
+          <div class="o-row"><span>${b[0]}</span><span class="muted">${byBucket[b[0]].orders}单 · ${fmt(byBucket[b[0]].amount)}</span></div>
+          <div class="bar"><span style="width:${(byBucket[b[0]].amount / maxBucket * 100).toFixed(0)}%"></span></div>
+        </div>`).join('')}
+    </div>`;
+
+  const topDishes = `
+    <div class="card">
+      <div class="section-title">热销菜品 TOP</div>
+      ${top.length ? top.map(t => `
+        <div style="margin:8px 0;">
+          <div class="o-row"><span>${t.name}</span><span class="muted">${t.qty}份</span></div>
+          <div class="bar"><span style="width:${(t.qty / maxTop * 100).toFixed(0)}%"></span></div>
+        </div>`).join('') : '<div class="muted">暂无数据</div>'}
+    </div>`;
+
+  const byCatCard = `
+    <div class="card">
+      <div class="section-title">按分类占比</div>
+      ${Object.keys(byCat).length ? Object.keys(byCat).map(c => `
+        <div style="margin:8px 0;">
+          <div class="o-row"><span>${c}</span><span class="price">${fmt(byCat[c])}</span></div>
+          <div class="bar"><span style="width:${(byCat[c] / maxCat * 100).toFixed(0)}%"></span></div>
+        </div>`).join('') : '<div class="muted">暂无数据</div>'}
+    </div>`;
+
+  const gen = `
+    <div class="card" style="text-align:center;">
+      <button class="btn-ghost btn" style="background:#e6f1fb;" onclick="genDemoHistory()">生成近7天演示数据</button>
+      <div class="muted" style="margin-top:6px;">仅演示用，方便查看筛选与趋势</div>
+    </div>`;
+
+  return seg + kpi + trend + timeBucket + topDishes + byCatCard + gen;
+}
+function genDemoHistory() {
+  const dishes = getDishes();
+  if (!dishes.length) { alert('请先有菜品'); return; }
+  const now = new Date();
+  const newOrders = [], newLedger = [];
+  for (let d = 6; d >= 0; d--) {
+    const day = new Date(now); day.setDate(day.getDate() - d); day.setHours(0, 0, 0, 0);
+    const n = 2 + Math.floor(Math.random() * 4);
+    for (let k = 0; k < n; k++) {
+      const hr = 10 + Math.floor(Math.random() * 12);
+      const created = new Date(day); created.setHours(hr, Math.floor(Math.random() * 60), 0, 0);
+      const items = [];
+      const m = 1 + Math.floor(Math.random() * 3);
+      for (let j = 0; j < m; j++) {
+        const dd = dishes[Math.floor(Math.random() * dishes.length)];
+        const qty = 1 + Math.floor(Math.random() * 2);
+        items.push({ name: dd.name, specsText: '', unitPrice: dd.price, qty, category: dd.category, price: dd.price });
+      }
+      const total = items.reduce((s, i) => s + i.price * i.qty, 0);
+      const room = ROOMS[Math.floor(Math.random() * ROOMS.length)];
+      const people = 1 + Math.floor(Math.random() * 6);
+      const oid = uid();
+      newOrders.push({ id: oid, tableNo: room.no, roomName: room.name, people, items, totalAmount: total, status: Math.random() > 0.3 ? '已结账' : '已下单', createdAt: created.toISOString() });
+      newLedger.push({ id: uid(), orderId: oid, type: '收入', category: '餐饮', amount: total, date: created.toISOString(), tableNo: room.no, roomName: room.name, 账本类型: '门店账本', remark: '包厢' + room.name + '(' + room.no + '号)' });
+    }
+  }
+  try {
+    save(STORE.orders, newOrders.concat(getOrders()));
+    save(STORE.ledger, newLedger.concat(getLedger()));
+    reportRange = '7d';
+    renderMerchant();
+  } catch (e) { alert('存储不可用'); }
+}
+
+function settle(id) {
+  const orders = getOrders();
+  const o = orders.find(x => x.id === id);
+  if (o) o.status = '已结账';
+  save(STORE.orders, orders);
+  renderMerchant();
+}
+function addDish() {
+  const name = document.getElementById('d-name').value.trim();
+  const price = parseFloat(document.getElementById('d-price').value);
+  const category = document.getElementById('d-cat').value;
+  const image = document.getElementById('d-image').value.trim();
+  const specsStr = document.getElementById('d-specs').value;
+  if (!name || isNaN(price)) { alert('请填名称和价格'); return; }
+  const dishes = getDishes();
+  dishes.push({ id: uid(), name, category, price, image: image || 'images/mifan.svg', status: '在售', specs: parseSpecs(specsStr) });
+  save(STORE.dishes, dishes);
+  renderMerchant();
+}
+
+/* ---------- 商家改菜品 / 价格 ---------- */
+function editDish(id) {
+  const d = getDishes().find(x => x.id === id);
+  if (!d) return;
+  document.getElementById('editModal').innerHTML = `
+    <h2>修改菜品</h2>
+    <div class="form-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
+      <img src="${d.image || 'images/mifan.svg'}" style="width:72px;height:72px;border-radius:10px;object-fit:cover;background:#eef1f5;" />
+    </div>
+    <div class="form-row"><input id="e-name" value="${d.name}" placeholder="菜品名称" /></div>
+    <div class="form-row">
+      <select id="e-cat">${CATS.map(c=>`<option ${c===d.category?'selected':''}>${c}</option>`).join('')}</select>
+      <input id="e-price" type="number" value="${d.price}" placeholder="价格" />
+    </div>
+    <div class="form-row"><input id="e-image" value="${d.image||''}" placeholder="图片地址（可选）" /></div>
+    <div class="form-row"><textarea id="e-specs" rows="2" placeholder="规格（可选）：份量:单选:小份0,大份8 | 加料:多选:加蛋2,加肠3">${specsToText(d.specs)}</textarea></div>
+    <div class="form-row" style="margin-top:10px;">
+      <button class="btn-ghost btn" style="background:#e6f1fb;" onclick="closeEdit()">取消</button>
+      <button class="btn" onclick="saveDish('${id}')">保存</button>
+    </div>`;
+  document.getElementById('editMask').style.display = 'flex';
+}
+function saveDish(id) {
+  const name = document.getElementById('e-name').value.trim();
+  const price = parseFloat(document.getElementById('e-price').value);
+  const category = document.getElementById('e-cat').value;
+  const image = document.getElementById('e-image').value.trim();
+  const specsStr = document.getElementById('e-specs').value;
+  if (!name || isNaN(price)) { alert('请填名称和价格'); return; }
+  const dishes = getDishes();
+  const d = dishes.find(x => x.id === id);
+  if (d) { d.name = name; d.price = price; d.category = category; if (image) d.image = image; d.specs = parseSpecs(specsStr); }
+  save(STORE.dishes, dishes);
+  closeEdit();
+  renderMerchant();
+  renderMenu();
+}
+function toggleStatus(id) {
+  const dishes = getDishes();
+  const d = dishes.find(x => x.id === id);
+  if (d) d.status = d.status === '在售' ? '售罄' : '在售';
+  save(STORE.dishes, dishes);
+  renderMerchant();
+}
+function deleteDish(id) {
+  if (!confirm('确定删除该菜品？')) return;
+  save(STORE.dishes, getDishes().filter(x => x.id !== id));
+  renderMerchant();
+}
+function closeEdit() { document.getElementById('editMask').style.display = 'none'; }
+
+/* ---------- 商家登录 / 权限 ---------- */
+function showLogin() {
+  document.getElementById('loginModal').innerHTML = `
+    <h2>商家登录</h2>
+    <div class="muted" style="margin-bottom:10px;">演示账号：老板 8888 ／ 店员 1234</div>
+    <div class="form-row">
+      <select id="l-role">${Object.keys(ACCOUNTS).map(r=>`<option>${r}</option>`).join('')}</select>
+    </div>
+    <div class="form-row"><input id="l-pwd" type="password" placeholder="密码" /></div>
+    <div class="form-row" style="margin-top:8px;">
+      <button class="btn-ghost btn" style="background:#e6f1fb;" onclick="closeLogin()">取消</button>
+      <button class="btn" onclick="doLogin()">登录</button>
+    </div>`;
+  document.getElementById('loginMask').style.display = 'flex';
+}
+function doLogin() {
+  const role = document.getElementById('l-role').value;
+  const pwd = document.getElementById('l-pwd').value;
+  if (ACCOUNTS[role] !== pwd) { alert('密码错误'); return; }
+  session = { role };
+  save(STORE.session, session);
+  closeLogin();
+  renderMerchant();
+}
+function closeLogin() { document.getElementById('loginMask').style.display = 'none'; }
+function logout() {
+  session = null;
+  localStorage.removeItem(STORE.session);
+  switchTab('customer');
+}
+
+/* ---------- 切换 ---------- */
+function switchTab(t) {
+  document.getElementById('tab-customer').classList.toggle('active', t==='customer');
+  document.getElementById('tab-merchant').classList.toggle('active', t==='merchant');
+  document.getElementById('view-customer').style.display = t==='customer' ? 'block' : 'none';
+  document.getElementById('view-merchant').style.display = t==='merchant' ? 'block' : 'none';
+  const cartbar = document.getElementById('cartbar');
+  const btabs = document.querySelector('.bottom-tabs');
+  if (cartbar) cartbar.style.display = (t==='customer' && custTab==='menu') ? 'flex' : 'none';
+  if (btabs) btabs.style.display = t==='customer' ? 'flex' : 'none';
+  if (t==='merchant') { if (!session) showLogin(); renderMerchant(); }
+  else { renderCart(); }
+}
+function switchMerchant(t) {
+  merchantTab = t;
+  ['orders','dishes','report','qr'].forEach(x => {
+    const btn = document.getElementById('m-' + x);
+    if (btn) btn.classList.toggle('active', x === t);
+  });
+  renderMerchant();
+}
+function resetData() {
+  if (!confirm('确定清空所有演示数据？')) return;
+  [STORE.dishes, STORE.orders, STORE.ledger, STORE.session].forEach(k => localStorage.removeItem(k));
+  session = null;
+  cart = []; curCat = '全部'; merchantTab = 'orders'; roomNo = ''; roomName = ''; people = 1;
+  boot();
+}
+
+/* ---------- 启动 ---------- */
+function boot() {
+  ensureSeed();
+  parseRoomFromUrl();
+  renderCats();
+  renderMenu();
+  renderRoomCard();
+  renderMerchant();
+}
+boot();
+</script>
+</body>
+</html>

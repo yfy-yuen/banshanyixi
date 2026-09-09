@@ -2,7 +2,7 @@
   position: relative;
   z-index: 1;
   min-height: 100vh;
-  padding: 28rpx 32rpx calc(56px + env(safe-area-inset-bottom));
+  padding: 28rpx 32rpx calc(112rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
 
@@ -97,7 +97,7 @@
   font-size: 28rpx;
   background: #fff;
   border-color: #c9c4ba;
-  box-shadow: inset 0 1px 2px rgba(45, 40, 30, 0.06);
+  box-shadow: inset 0 2rpx 4rpx rgba(45, 40, 30, 0.06);
 }
 .modal .picker {
   height: 84rpx;

@@ -1,0 +1,7 @@
+{
+  "name": "getDishes",
+  "version": "1.0.0",
+  "description": "查询菜单菜品",
+  "main": "index.js",
+  "dependencies": {}
+}

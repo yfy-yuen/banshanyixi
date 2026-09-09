@@ -1,4 +1,4 @@
-<view class="ctab">
+<view class="ctab {{isTablet ? 'is-tablet' : ''}}">
   <view
     wx:for="{{tabs}}"
     wx:key="key"

@@ -1,0 +1,38 @@
+<view class="container {{isTablet ? 'is-tablet' : ''}}">
+  <view class="card">
+    <view class="muted">桌号</view>
+    <input class="table-input" placeholder="请输入桌号，如 A1" value="{{tableNo}}" bindinput="onTableInput" />
+  </view>
+
+  <block wx:for="{{categories}}" wx:key="name" wx:for-item="cat">
+    <view class="cat-title">{{cat.name}}</view>
+    <view class="card dish" wx:for="{{cat.dishes}}" wx:key="_id" wx:for-item="d">
+      <image wx:if="{{d.image}}" class="dish-img" src="{{d.image}}" mode="aspectFill" bindtap="previewImage" data-img="{{d.image}}" hover-class="dish-img-hover" hover-stay-time="120" />
+      <view class="dish-info">
+        <view class="dish-name">{{d.name}}</view>
+        <view class="price">¥{{d.price}}</view>
+      </view>
+      <view class="stepper">
+        <view class="step-btn" data-id="{{d._id}}" bindtap="minus">-</view>
+        <view class="step-num">{{cart[d._id] || 0}}</view>
+        <view class="step-btn" data-id="{{d._id}}" bindtap="add">+</view>
+      </view>
+    </view>
+  </block>
+
+  <view style="height:160rpx;"></view>
+
+  <view class="cart-bar">
+    <view class="cart-sum">
+      <text class="muted">共 {{cartCount}} 份</text>
+      <text class="price">¥{{cartTotal}}</text>
+    </view>
+    <button class="btn cart-submit" loading="{{submitting}}" bindtap="submit">提交订单</button>
+  </view>
+
+  <!-- 图片放大预览：点菜品图弹出全屏大图，<image> 原生支持 cloud://，点空白处关闭 -->
+  <view wx:if="{{previewSrc}}" class="img-preview" bindtap="closePreview">
+    <image class="img-preview-pic" src="{{previewSrc}}" mode="aspectFit" catchtap="noop" />
+    <view class="img-preview-tip">点击空白处关闭</view>
+  </view>
+</view>

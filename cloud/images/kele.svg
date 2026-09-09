@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#f4f6f8"/>
+  <ellipse cx="200" cy="320" rx="120" ry="28" fill="#e6e9ed"/>
+  <g>
+    <path d="M150 120 L250 120 L235 305 L165 305 Z" fill="#ffffff" stroke="#d8dde3" stroke-width="3"/>
+    <path d="M156 150 L244 150 L233 300 L167 300 Z" fill="#4a2a18"/>
+    <path d="M156 150 L244 150 L240 185 L160 185 Z" fill="#5e3621" opacity="0.7"/>
+    <g fill="#cfe8f5" opacity="0.85">
+      <rect x="180" y="195" width="34" height="34" rx="6" transform="rotate(12 197 212)"/>
+      <rect x="200" y="235" width="30" height="30" rx="6" transform="rotate(-10 215 250)"/>
+    </g>
+    <g fill="#f4f9fc" opacity="0.7">
+      <circle cx="185" cy="230" r="3"/>
+      <circle cx="210" cy="210" r="2.5"/>
+      <circle cx="225" cy="255" r="3"/>
+      <circle cx="195" cy="275" r="2.5"/>
+    </g>
+    <rect x="262" y="110" width="9" height="150" rx="4" fill="#e23b3b" transform="rotate(8 266 185)"/>
+  </g>
+  <path d="M150 120 L250 120 L246 135 L154 135 Z" fill="#eef2f6"/>
+  <text x="200" y="365" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="20" fill="#9aa0a6">可乐</text>
+</svg>

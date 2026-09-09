@@ -1,5 +1,6 @@
 const { getOrdersByRoom } = require('../../utils/api');
 const { fmt } = require('../../utils/config');
+const { detectTablet } = require('../../utils/tablet');
 const app = getApp();
 
 function decorate(o) {
@@ -16,7 +17,7 @@ function decorate(o) {
 }
 
 Page({
-  data: { roomNo: '', roomName: '', list: [], needRoom: false },
+  data: { isTablet: false, roomNo: '', roomName: '', list: [], needRoom: false },
   onShow() {
     const roomNo = app.globalData.roomNo;
     const roomName = app.globalData.roomName;
@@ -27,7 +28,11 @@ Page({
     this.setData({ needRoom: false, roomNo, roomName });
     this.load();
   },
-  async load() {
+  
+  onLoad() {
+    this.setData({ isTablet: detectTablet() });
+  },
+async load() {
     wx.showLoading({ title: '加载中' });
     try {
       const raw = await getOrdersByRoom(this.data.roomNo);

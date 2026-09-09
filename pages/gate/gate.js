@@ -13,8 +13,36 @@ Page({
     videoPoster: '',
     videoVisible: false, // ⚠️ 初始不渲染 video：避免空 src 触发 binderror 误判为视频失败。解析出有效 src 后才置 true。
     fallbackMode: false, // 视频不可用 → 退回 CSS 静态兜底，防黑屏卡死
+    tablet: false, // 平板（大屏）锁定封面字体为固定 px，避免 rpx 等比放大
+    gateFont: null, // 平板下各封面文字的固定 px（按当前屏宽换算，视觉与现在一致）
+    gateBtn: null, // 平板下「推门入席」按钮容器（宽/高/左/圆角）固定 px，避免 rpx 放大（2026-08-27）
   },
   onLoad() {
+    // 平板（大屏）锁定封面字体：按当前屏宽把 rpx 换算为固定 px，视觉与现在一致，之后不随手机端 rpx 变化（2026-08-27 用户要求）
+    let winW = 375;
+    try {
+      if (wx.getWindowInfo) winW = wx.getWindowInfo().windowWidth || winW;
+      else winW = wx.getSystemInfoSync().windowWidth || winW;
+    } catch (e) {}
+    const tablet = winW >= 600;
+    const scale = winW / 750; // 1rpx 在当前屏宽的等效 px = 当前渲染比例
+    const gateFont = tablet ? {
+      plaque: (74 * scale).toFixed(1),
+      poem: (46 * scale).toFixed(1),
+      btn: (46 * scale).toFixed(1),
+      sub: (30 * scale).toFixed(1),
+      boss: (29 * scale).toFixed(1),
+      fb: (53 * scale).toFixed(1),
+    } : null;
+    // 平板「推门入席」按钮容器钉死为原尺寸（缩放后固定 px），手机端改 wxss 不影响它
+    const gateBtn = tablet ? {
+      w: (200 * scale).toFixed(1),
+      h: (62 * scale).toFixed(1),
+      left: (275 * scale).toFixed(1),
+      radius: (31 * scale).toFixed(1),
+    } : null;
+    this.setData({ tablet, gateFont, gateBtn });
+
     // 距上次开过门不足刷新间隔 → 直达包厢列表（不播视频）；否则展示开门页
     const last = wx.getStorageSync('gateShownAt') || 0;
     const now = Date.now();

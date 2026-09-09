@@ -1,6 +1,7 @@
 const { CATS } = require('../../utils/config');
 const { loadDishes } = require('../../utils/api');
 const { classifyError } = require('../../utils/cloudbase');
+const { detectTablet } = require('../../utils/tablet');
 
 // 只读菜单浏览页：底部 tabBar 入口，所有人可见，仅查看不能点单。
 // 布局与 pages/menu/menu 保持一致（左栏分类 + 右侧分区），但无购物车/搜索/加减。
@@ -19,6 +20,7 @@ function badgesOf(d) {
 
 Page({
   data: {
+    isTablet: false,
     cats: [],
     activeCat: '',
     sections: [],
@@ -27,8 +29,11 @@ Page({
     showSearch: false,
     searchKeyword: '',
     searchResults: [],
+    previewSrc: '', // 菜品图放大预览地址（cloud:// 或 https，<image> 原生支持）
+    emptyPreview: null, // 占位图放大：{ name, ph }
   },
   onLoad() {
+    this.setData({ isTablet: detectTablet() });
     this.loadMenu();
   },
   onShow() {
@@ -96,6 +101,28 @@ Page({
     this.setData({ searchResults: res });
   },
   noop() {},
+
+  // 点菜品小图即放大：页面内遮罩 <image> 直接渲染（原生支持 cloud://，比 wx.previewImage 稳）
+  previewImage(e) {
+    const file = e.currentTarget.dataset.img;
+    console.log('[dishes] previewImage file=', file);
+    if (!file) { wx.showToast({ title: '该菜品暂无图片', icon: 'none' }); return; }
+    // 临时诊断提示：用来区分「点击没触发」还是「遮罩被盖住」。确认可放大后即可移除。
+    wx.showToast({ title: '放大中', icon: 'none', duration: 700 });
+    this.setData({ previewSrc: file });
+  },
+  closePreview() {
+    this.setData({ previewSrc: '' });
+  },
+  // 占位图（【纯】红块）点击：弹全屏放大版大红块，与真图放大一致体验
+  previewEmpty(e) {
+    const { name, ph } = e.currentTarget.dataset;
+    console.log('[dishes] previewEmpty ph=', ph, 'name=', name);
+    this.setData({ emptyPreview: { name: name || '', ph: ph || '' } });
+  },
+  closeEmptyPreview() {
+    this.setData({ emptyPreview: null });
+  },
 
   // 跳转门店信息页
   goAbout() { wx.navigateTo({ url: '/pages/about/about' }); },

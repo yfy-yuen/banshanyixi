@@ -19,14 +19,21 @@ Component({
     role: 'guest',
     tabs: [{ key: 'rooms', ...META.rooms }],
     selectedKey: 'rooms',
+    isTablet: false,
   },
   lifetimes: {
-    attached() { this.sync(); },
+    attached() { this.sync(); this.detectTablet(); },
   },
   pageLifetimes: {
     show() { this.sync(); },
   },
   methods: {
+    detectTablet() {
+      try {
+        const info = wx.getSystemInfoSync();
+        this.setData({ isTablet: (info.windowWidth || info.screenWidth || 0) >= 600 });
+      } catch (e) { this.setData({ isTablet: false }); }
+    },
     sync() {
       const app = getApp();
       if (!app) return;

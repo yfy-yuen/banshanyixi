@@ -1,6 +1,13 @@
 const { ROOMS } = require('../../utils/config');
 const { myReservations, cancelReservation, markArrived, genInvite, resetInvite, removeCompanion } = require('../../utils/api');
 
+function detectTablet() {
+  try {
+    const info = wx.getSystemInfoSync();
+    return (info.windowWidth || info.screenWidth || 0) >= 600;
+  } catch (e) { return false; }
+}
+
 function mealLabel(m) { return m === 'dinner' ? '晚市' : '午市'; }
 function statusText(s) {
   return ({ pending: '审核中', confirmed: '已确认', rejected: '已婉拒', cancelled: '已取消' })[s] || s;
@@ -17,6 +24,12 @@ Page({
     loading: false,
     showNameModal: false, nameInput: '',
     showShare: false, shareItem: null, shareCode: '', shareQrcode: '', shareBusy: false,
+    isTablet: false,
+  },
+  onLoad() {
+    const isTablet = detectTablet();
+    this.setData({ isTablet });
+    console.log('[mine] isTablet =', isTablet);
   },
   onShow() {
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {

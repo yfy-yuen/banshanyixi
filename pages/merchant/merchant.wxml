@@ -1,4 +1,4 @@
-<view class="page">
+<view class="page {{isTablet ? 'is-tablet' : ''}}">
   <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
   <!-- 无权限：顾客 -->
   <view wx:if="{{noPerm}}" class="login-wrap">
@@ -100,7 +100,7 @@
           <view class="m-actions">
             <view class="m-toggle {{item.soldOut?'on':''}}" data-id="{{item.id}}" bindtap="toggleSoldOut">售罄</view>
             <view class="m-toggle {{item.limited?'on':''}}" data-id="{{item.id}}" bindtap="toggleLimited">限定</view>
-            <view class="m-edit" bindtap="openEdit" data-id="{{item.id}}">改价</view>
+            <view class="m-edit" bindtap="openEdit" data-id="{{item.id}}">编辑</view>
             <view class="m-del" bindtap="deleteDish" data-id="{{item.id}}">删除</view>
           </view>
         </view>
@@ -208,7 +208,14 @@
       <view class="ipt picker">{{edit.category}}</view>
     </picker>
     <input class="ipt" placeholder="价格" placeholder-class="ph-light" type="digit" value="{{edit.price}}" data-field="price" bindinput="onEditInput" />
-    <input class="ipt" placeholder="图片 URL" placeholder-class="ph-light" value="{{edit.image}}" data-field="image" bindinput="onEditInput" />
+    <view class="edit-pic">
+      <text class="edit-label">菜品图片（点图或"＋选图"从相册上传，自动生成地址，无需手动填 URL）</text>
+      <view class="pic-row">
+        <image wx:if="{{edit.image}}" class="pic-prev" src="{{edit.image}}" mode="aspectFill" bindtap="pickDishImage" />
+        <view wx:else class="pic-pick" bindtap="pickDishImage">＋ 选图</view>
+        <view wx:if="{{edit.image}}" class="pic-del" catchtap="clearDishImage">移除图片</view>
+      </view>
+    </view>
     <input class="ipt" placeholder="描述" placeholder-class="ph-light" value="{{edit.description}}" data-field="description" bindinput="onEditInput" />
     <view class="edit-tags">
       <text class="edit-label">标签</text>

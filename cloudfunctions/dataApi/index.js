@@ -626,6 +626,16 @@ exports.main = async (event) => {
         const upd = { dishes };
         if (typeof p.orderNote === 'string') upd.orderNote = p.orderNote;
         await db.collection('reservations').doc(p.id).update({ data: upd });
+        // 同步 booking 预点快照（若存在），保证后厨配菜单一致。
+        // 后厨读的是 bookings.dishes；此处若不回写，店员代客改菜后后厨仍按旧菜单备菜。
+        // 逻辑与 updateReservationDishes 的同步块保持一致。
+        try {
+          const bk = (await db.collection('bookings').where({ reservationRef: r._id }).limit(1).get()).data || [];
+          if (bk.length) {
+            const snap = dishes.map((d) => ({ dish_id: d.dish_id, name: d.name, image: d.image || '', qty: d.qty || 1, note: d.note || '', sel: d.sel || '' }));
+            await db.collection('bookings').doc(bk[0]._id).update({ data: { dishes: snap } });
+          }
+        } catch (e) { console.warn('[staffSavePreorder] sync booking', e.message); }
         return { data: { ok: true } };
       }
       // 顾客：读取单条预订（含预点菜），供预点菜页回显
@@ -1027,6 +1037,56 @@ exports.main = async (event) => {
           createdText: String(rc.created_at || '').slice(0, 16),
         }));
         break;
+      }
+
+      /* ===== 后厨配菜单：手工添加项 + 数量覆盖（按「日期 + 餐段」存一条） ===== */
+      case 'getKitchenManual': {
+        if (!(await isStaffOf())) return { error: '无权限' };
+        await ensureCol('kitchenManual');
+        const kmDate = p.date || '';
+        const kmSlot = p.slot || 'all';
+        const list = (await db.collection('kitchenManual').where({ date: kmDate, slot: kmSlot }).limit(1).get()).data || [];
+        const doc = list[0] || {};
+        return {
+          data: {
+            id: doc._id || '',
+            date: kmDate,
+            slot: kmSlot,
+            extras: Array.isArray(doc.extras) ? doc.extras : [],
+            qtyOverride: (doc.qtyOverride && typeof doc.qtyOverride === 'object' && !Array.isArray(doc.qtyOverride)) ? doc.qtyOverride : {},
+          },
+        };
+      }
+      case 'saveKitchenManual': {
+        if (!(await isStaffOf())) return { error: '无权限' };
+        await ensureCol('kitchenManual');
+        const kmDate = p.date || '';
+        const kmSlot = p.slot || 'all';
+        if (!kmDate) return { error: '缺少日期' };
+        // 手工项：清洗成 {name, qty, unit, note}，过滤空名；unit 可选（旧数据无 unit 视为'份'，前端渲染时回退）
+        const extras = (Array.isArray(p.extras) ? p.extras : [])
+          .map((x) => ({
+            name: String((x && x.name) || '').trim(),
+            qty: Math.round(Number(x && x.qty) * 100) / 100, // 支持小数（0.5 把葱花），保留 2 位
+            unit: String((x && x.unit) || '').trim().slice(0, 8),
+            note: String((x && x.note) || '').trim(),
+          }))
+          .filter((x) => x.name);
+        // 数量覆盖：只保留合法非负数（覆盖的是「配菜单显示份数」，不动客人订单，避免影响账单）
+        const ov = (p.qtyOverride && typeof p.qtyOverride === 'object' && !Array.isArray(p.qtyOverride)) ? p.qtyOverride : {};
+        const qtyOverride = {};
+        Object.keys(ov).forEach((k) => {
+          const n = Number(ov[k]);
+          if (k && !isNaN(n) && n >= 0) qtyOverride[k] = n;
+        });
+        const data = { date: kmDate, slot: kmSlot, extras, qtyOverride, updated_at: db.serverDate(), updated_by: openid };
+        const list = (await db.collection('kitchenManual').where({ date: kmDate, slot: kmSlot }).limit(1).get()).data || [];
+        if (list.length) {
+          await db.collection('kitchenManual').doc(list[0]._id).update({ data });
+          return { data: { ok: true, id: list[0]._id } };
+        }
+        const _id = (await db.collection('kitchenManual').add({ data: { ...data, created_at: db.serverDate() } }))._id;
+        return { data: { ok: true, id: _id } };
       }
 
       default:

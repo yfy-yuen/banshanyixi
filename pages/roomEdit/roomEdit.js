@@ -1,5 +1,6 @@
 const { ROOMS } = require('../../utils/config');
 const { getRoom, saveRoom } = require('../../utils/api');
+const { detectTablet } = require('../../utils/tablet');
 
 // 抽取 HTML 中所有 cloud:// 图片 src（富文本插图以 cloud:// 永久存储，显示时再转临时链）
 function parseCloudImgs(html) {
@@ -12,11 +13,13 @@ function parseCloudImgs(html) {
 
 Page({
   data: {
+    isTablet: false,
     roomNo: '', roomName: '',
     envPhotos: [],   // 环境照：cloud:// fileID 数组（<image> 可直接渲染）
     saving: false,
   },
   onLoad(options) {
+    this.setData({ isTablet: detectTablet() });
     const no = options.room || '';
     const name = ROOMS[no] || ('厢' + no);
     this._map = {};  // cloud:// -> https 临时链（编辑器预览用）

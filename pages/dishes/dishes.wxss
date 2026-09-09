@@ -12,74 +12,74 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: 20rpx 28rpx;
   background: var(--card);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2rpx solid var(--border);
 }
-.tb-name { font-size: 16px; color: var(--ink); letter-spacing: 2px; font-weight: 500; }
-.tb-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.tb-name { font-size: 32rpx; color: var(--ink); letter-spacing: 4rpx; font-weight: 500; }
+.tb-sub { font-size: 24rpx; color: var(--muted); margin-top: 4rpx; }
 .tb-tag {
-  color: var(--gold); font-size: 12px;
-  padding: 4px 10px; border-radius: 6px;
-  border: 1px solid var(--gold); letter-spacing: 1px;
+  color: var(--gold); font-size: 24rpx;
+  padding: 8rpx 20rpx; border-radius: 12rpx;
+  border: 2rpx solid var(--gold); letter-spacing: 2rpx;
 }
 
 /* 左栏 + 右分区 */
 .body { flex: 1; display: flex; min-height: 0; }
 .rail {
-  width: 64px;
+  width: 128rpx;
   background: var(--paper);
-  border-right: 1px solid var(--border);
-  padding: 8px 0;
+  border-right: 2rpx solid var(--border);
+  padding: 16rpx 0;
 }
 .rail-item {
   text-align: center;
-  font-size: 13px;
+  font-size: 26rpx;
   color: var(--ink-light);
-  padding: 13px 2px;
-  letter-spacing: 1px;
+  padding: 26rpx 4rpx;
+  letter-spacing: 2rpx;
 }
 .rail-item.on {
   color: var(--cinnabar);
   font-weight: 500;
   background: var(--card);
-  border-left: 3px solid var(--cinnabar);
+  border-left: 6rpx solid var(--cinnabar);
 }
-.panel { flex: 1; padding: 10px 12px 30px; }
+.panel { flex: 1; padding: 20rpx 24rpx 60rpx; }
 
 /* 分区标题（墨笔分隔） */
-.sec { margin-bottom: 6px; }
-.sec-title { display: flex; align-items: center; gap: 10px; padding: 6px 2px 10px; }
-.sec-title text { font-size: 15px; color: var(--ink); letter-spacing: 2px; font-weight: 500; }
-.sec-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
-.sec-foot { height: 20px; }
+.sec { margin-bottom: 12rpx; }
+.sec-title { display: flex; align-items: center; gap: 20rpx; padding: 12rpx 4rpx 20rpx; }
+.sec-title text { font-size: 30rpx; color: var(--ink); letter-spacing: 4rpx; font-weight: 500; }
+.sec-line { flex: 1; height: 2rpx; background: linear-gradient(90deg, var(--border), transparent); }
+.sec-foot { height: 40rpx; }
 
 /* 菜品卡 */
 .card {
   position: relative;
   overflow: hidden;
   display: flex;
-  gap: 12px;
+  gap: 24rpx;
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 12px;
-  margin-bottom: 10px;
-  box-shadow: 0 3px 12px var(--shadow);
+  border: 2rpx solid var(--border);
+  border-radius: 28rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 6rpx 24rpx var(--shadow);
 }
 /* 售罄 / 限定角标（第18条 菜品售罄标记） */
 .corner {
   position: absolute; top: 0; right: 0;
-  font-size: 11px; color: #fff; padding: 3px 9px;
-  border-bottom-left-radius: 10px; letter-spacing: 1px;
+  font-size: 22rpx; color: #fff; padding: 6rpx 18rpx;
+  border-bottom-left-radius: 20rpx; letter-spacing: 2rpx;
 }
 .corner.limited { background: var(--gold); }
 .corner.soldout { background: #8c8c8c; }
 .card.sold-out { opacity: 0.6; }
 .pic {
-  width: 64px;
-  height: 64px;
-  border-radius: 10px;
+  width: 128rpx;
+  height: 128rpx;
+  border-radius: 20rpx;
   background: var(--paper);
   flex-shrink: 0;
 }
@@ -89,27 +89,27 @@
   justify-content: center;
   background: var(--cinnabar);
   color: #f4f0e8;
-  font-size: 26px;
+  font-size: 52rpx;
   font-weight: 500;
 }
 .info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.ttl { font-size: 15px; font-weight: 500; color: var(--ink); letter-spacing: 1px; }
-.badges { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
-.badge { font-size: 11px; padding: 1px 8px; border-radius: 999px; border: 1px solid; }
+.ttl { font-size: 30rpx; font-weight: 500; color: var(--ink); letter-spacing: 2rpx; }
+.badges { display: flex; gap: 12rpx; margin-top: 10rpx; flex-wrap: wrap; }
+.badge { font-size: 22rpx; padding: 2rpx 16rpx; border-radius: 1998rpx; border: 2rpx solid; }
 .b-sign { color: var(--cinnabar); border-color: var(--cinnabar); }
 .b-spicy { color: #b5562f; border-color: #b5562f; }
 .b-veg { color: #4a6b4a; border-color: #4a6b4a; }
 .b-season { color: var(--gold); border-color: var(--gold); }
-.desc { font-size: 12px; color: var(--muted); margin-top: 5px; }
-.bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.desc { font-size: 24rpx; color: var(--muted); margin-top: 10rpx; }
+.bottom { display: flex; justify-content: space-between; align-items: center; margin-top: 20rpx; }
 
 /* 提示 */
 .tip {
   text-align: center;
-  font-size: 12px;
+  font-size: 24rpx;
   color: var(--muted);
-  letter-spacing: 1px;
-  padding: 8px 0 20px;
+  letter-spacing: 2rpx;
+  padding: 16rpx 0 40rpx;
 }
 
 /* 门店信息入口 */
@@ -118,23 +118,23 @@
   align-items: center;
   justify-content: space-between;
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 18px;
-  margin: 4px 0 24px;
+  border: 2rpx solid var(--border);
+  border-radius: 24rpx;
+  padding: 32rpx 36rpx;
+  margin: 8rpx 0 48rpx;
 }
 .ae-text { flex: 1; }
-.ae-main { font-size: 14px; color: var(--ink); letter-spacing: 1px; }
-.ae-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
-.ae-arrow { color: var(--gold); font-size: 18px; margin-left: 12px; }
+.ae-main { font-size: 28rpx; color: var(--ink); letter-spacing: 2rpx; }
+.ae-sub { font-size: 24rpx; color: var(--muted); margin-top: 8rpx; }
+.ae-arrow { color: var(--gold); font-size: 36rpx; margin-left: 24rpx; }
 
 /* 顶栏搜索入口 */
 .tb-search {
-  display: flex; align-items: center; gap: 6px;
-  background: var(--paper); border: 1px solid var(--border);
-  border-radius: 999px; padding: 7px 14px; color: var(--muted); font-size: 13px;
+  display: flex; align-items: center; gap: 12rpx;
+  background: var(--paper); border: 2rpx solid var(--border);
+  border-radius: 1998rpx; padding: 14rpx 28rpx; color: var(--muted); font-size: 26rpx;
 }
-.tb-search-ic { font-size: 16px; }
+.tb-search-ic { font-size: 32rpx; }
 
 /* 搜索浮层（只读） */
 .mask {
@@ -151,16 +151,82 @@
   flex-direction: column;
 }
 .search-bar {
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 14px; background: var(--card); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 16rpx;
+  padding: 20rpx 28rpx; background: var(--card); border-bottom: 2rpx solid var(--border);
 }
-.sb-ic { font-size: 16px; color: var(--muted); }
+.sb-ic { font-size: 32rpx; color: var(--muted); }
 .sb-input {
-  flex: 1; background: var(--paper); border: 1px solid var(--border);
-  border-radius: 999px; height: 36px; line-height: 36px;
-  padding: 0 14px; font-size: 14px; color: var(--ink);
+  flex: 1; background: var(--paper); border: 2rpx solid var(--border);
+  border-radius: 1998rpx; height: 72rpx; line-height: 72rpx;
+  padding: 0 28rpx; font-size: 28rpx; color: var(--ink);
   box-sizing: border-box;
 }
-.sb-close { font-size: 13px; color: var(--muted); padding: 4px 6px; }
-.search-res { flex: 1; padding: 12px 14px 30px; }
-.s-empty { text-align: center; color: var(--muted); padding: 40px; font-size: 14px; }
+.sb-close { font-size: 26rpx; color: var(--muted); padding: 8rpx 12rpx; }
+.search-res { flex: 1; padding: 24rpx 28rpx 60rpx; }
+.s-empty { text-align: center; color: var(--muted); padding: 80rpx; font-size: 28rpx; }
+
+/* 点击图片高亮反馈 */
+.pic-hover { opacity: 0.82; }
+
+/* ===== 菜品图放大预览遮罩（自定义全屏，<image> 原生支持 cloud://，无需系统 previewImage） ===== */
+.img-preview {
+  position: fixed;
+  left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.92);
+  /* 用 9999 而非 2147483647：极值为 32 位整数上限，部分基础库解析异常会退化成 auto，
+     被页面根 .page 的 z-index:1 整个盖住 → 表现就是"点了没反应"。9999 已远高于 tabBar(100) */
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.img-preview-pic {
+  width: 92%;
+  height: 78%;
+  flex-shrink: 0;
+}
+/* 右上角关闭按钮 */
+.img-preview-close {
+  position: absolute;
+  right: 32rpx;
+  top: 88rpx;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 46rpx;
+  line-height: 68rpx;
+  text-align: center;
+}
+.img-preview-tip {
+  position: absolute;
+  left: 0; right: 0; bottom: 48rpx;
+  text-align: center;
+  color: #fff;
+  font-size: 26rpx;
+  opacity: 0.7;
+}
+/* 「纯」占位红块放大：放大版大红块（大字），与真图放大一致体验 */
+.img-preview-placeholder {
+  width: 360rpx;
+  height: 360rpx;
+  border-radius: 36rpx;
+  background: var(--cinnabar);
+  color: #f4f0e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 150rpx;
+  font-weight: 500;
+  box-shadow: 0 12rpx 48rpx rgba(0, 0, 0, 0.4);
+}
+.img-preview-name {
+  margin-top: 28rpx;
+  text-align: center;
+  color: #fff;
+  font-size: 40rpx;
+  letter-spacing: 2rpx;
+  padding: 0 40rpx;
+}

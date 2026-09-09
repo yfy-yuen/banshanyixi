@@ -3,3 +3,4 @@ miniprogram_npm/
 _gate_backup_before_video/
 *.log
 .DS_Store
+*.bak*

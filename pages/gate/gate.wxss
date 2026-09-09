@@ -32,7 +32,7 @@ page {
 }
 .fb-plaque {
   padding: 16rpx 44rpx;
-  font-size: 40rpx;
+  font-size: 53rpx;
   letter-spacing: 10rpx;
   color: #f3d79a;
   background: #1a0e06;
@@ -53,14 +53,14 @@ page {
   width: 120rpx;
   height: 120rpx;
 }
-/* 品牌大字（冻结定稿：行楷 56rpx 无框 原金 #f3d79a，位置 top:40vh） */
+/* 品牌大字（行楷 无框 原金 #f3d79a，位置 top:40vh；开门字体历经 56→62→74→89→110→165→289rpx，订一席/logo 除外，2026-08-27 多次放大：两次+20%、+50%、+75%） */
 .plaque {
   position: absolute;
   top: 40vh;
   left: 0;
   width: 100%;
   text-align: center;
-  font-size: 56rpx;
+  font-size: 289rpx;
   letter-spacing: 14rpx;
   color: #f3d79a;
   font-family: 'STXingkai','行楷-简',KaiTi,serif;
@@ -72,26 +72,26 @@ page {
   left: 0;
   width: 100%;
   text-align: center;
-  font-size: 34rpx;
+  font-size: 123rpx;
   letter-spacing: 10rpx;
   color: rgba(236,217,168,0.95);
   font-family: 'STXingkai','行楷-简',KaiTi,serif;
 }
-/* 推门入席：紧凑金框围字 + 边框与文字一起呼吸 */
+/* 推门入席：紧凑金框围字 + 边框与文字一起呼吸（手机端放大30%：240/84→312/109；本次再+75%：312/109→546/191；平板走 gateBtn 固定 px） */
 .gate-btn {
   position: absolute;
-  left: 275rpx;
-  width: 200rpx;
+  left: 102rpx;
+  width: 546rpx;
   top: 76vh;
-  height: 62rpx;
-  line-height: 62rpx;
+  height: 191rpx;
+  line-height: 191rpx;
   text-align: center;
-  font-size: 34rpx;
+  font-size: 159rpx;
   letter-spacing: 10rpx;
   color: #e9c7a0;
   font-family: 'STXingkai','行楷-简',KaiTi,serif;
   border: 2rpx solid #cea256;
-  border-radius: 31rpx;
+  border-radius: 96rpx;
   animation: gateBreathe 2.2s ease-in-out infinite;
 }
 @keyframes gateBreathe {
@@ -106,7 +106,7 @@ page {
   left: 0;
   width: 100%;
   text-align: center;
-  font-size: 24rpx;
+  font-size: 29rpx;
   color: rgba(205,187,142,0.85);
   letter-spacing: 8rpx;
 }
@@ -145,7 +145,7 @@ page {
   text-align: center;
 }
 .boss-seal-t {
-  font-size: 22rpx;
+  font-size: 29rpx;
   line-height: 38rpx;
   color: #e9c7a0;
   letter-spacing: 1rpx;

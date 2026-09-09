@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>包厢点餐二维码</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background:#f5f6f8; color:#1a1a1a; margin:0; padding:24px; }
+  h1 { text-align:center; font-weight:600; margin-bottom:4px; }
+  .sub { text-align:center; color:#888; font-size:13px; margin-bottom:24px; }
+  .grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; max-width:760px; margin:0 auto; }
+  .card { background:#fff; border-radius:14px; padding:18px; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .card img { width:200px; height:200px; }
+  .rn { font-size:20px; font-weight:600; margin-top:10px; }
+  .rt { color:#888; font-size:13px; margin-top:2px; }
+  .ru { color:#185FA5; font-size:11px; margin-top:8px; word-break:break-all; }
+  .tip { color:#d85a30; font-size:12px; margin-top:6px; }
+  @media print { body { background:#fff; } .card { box-shadow:none; border:1px solid #eee; } }
+</style>
+</head>
+<body>
+  <h1>包厢点餐二维码</h1>
+  <div class="sub">示例餐厅 · 扫码即点</div>
+  <div class="grid">
+      <div class="card">
+        <img src="qr/room_1.svg" alt="谷山玥" />
+        <div class="rn">谷山玥</div>
+        <div class="rt">1 号包厢</div>
+        <div class="ru">https://yuen-cloud-d9g0mo1bv654d2ff6-1394617281.tcloudbaseapp.com/?tableNo=1</div>
+        <div class="tip">顾客扫码即可点餐</div>
+      </div>
+      <div class="card">
+        <img src="qr/room_2.svg" alt="满仓" />
+        <div class="rn">满仓</div>
+        <div class="rt">2 号包厢</div>
+        <div class="ru">https://yuen-cloud-d9g0mo1bv654d2ff6-1394617281.tcloudbaseapp.com/?tableNo=2</div>
+        <div class="tip">顾客扫码即可点餐</div>
+      </div>
+      <div class="card">
+        <img src="qr/room_3.svg" alt="枕山" />
+        <div class="rn">枕山</div>
+        <div class="rt">3 号包厢</div>
+        <div class="ru">https://yuen-cloud-d9g0mo1bv654d2ff6-1394617281.tcloudbaseapp.com/?tableNo=3</div>
+        <div class="tip">顾客扫码即可点餐</div>
+      </div>
+      <div class="card">
+        <img src="qr/room_5.svg" alt="云起" />
+        <div class="rn">云起</div>
+        <div class="rt">5 号包厢</div>
+        <div class="ru">https://yuen-cloud-d9g0mo1bv654d2ff6-1394617281.tcloudbaseapp.com/?tableNo=5</div>
+        <div class="tip">顾客扫码即可点餐</div>
+      </div>
+  </div>
+</body>
+</html>

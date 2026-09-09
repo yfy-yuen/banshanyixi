@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#f4f6f8"/>
+  <ellipse cx="200" cy="220" rx="155" ry="125" fill="#ffffff" stroke="#e3e6ea" stroke-width="2"/>
+  <ellipse cx="200" cy="220" rx="120" ry="95" fill="#fbfbfc"/>
+  <g fill="#4fae57">
+    <path d="M200 250 C150 250 120 200 140 165 C175 185 195 215 200 250 Z"/>
+    <path d="M210 255 C260 250 295 205 275 168 C238 190 218 220 210 255 Z"/>
+    <path d="M200 255 C185 210 205 170 235 150 C220 195 215 230 200 255 Z"/>
+    <path d="M198 255 C212 215 195 175 165 158 C182 198 188 228 198 255 Z"/>
+  </g>
+  <g fill="#69c46f">
+    <path d="M205 250 C170 245 150 210 165 185 C190 205 205 228 205 250 Z" opacity="0.8"/>
+    <path d="M196 252 C235 248 258 212 242 188 C218 208 202 230 196 252 Z" opacity="0.8"/>
+  </g>
+  <g stroke="#2f7a36" stroke-width="4" fill="none" stroke-linecap="round">
+    <path d="M200 255 C200 240 200 225 200 210"/>
+    <path d="M205 250 C215 235 225 222 235 212"/>
+    <path d="M195 252 C185 237 175 224 165 214"/>
+  </g>
+  <text x="200" y="360" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="20" fill="#9aa0a6">清炒时蔬</text>
+</svg>

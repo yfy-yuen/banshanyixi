@@ -1,0 +1,32 @@
+<view class="container {{isTablet ? 'is-tablet' : ''}}">
+  <view class="card">
+    <view class="muted">新增菜品</view>
+    <input class="f" placeholder="菜品名称" value="{{form.name}}" data-field="name" bindinput="onField" />
+    <picker mode="selector" range="{{cats}}" value="{{cats.indexOf(form.category)}}" bindchange="onCat">
+      <view class="f picker">分类：{{form.category}}</view>
+    </picker>
+    <input class="f" type="digit" placeholder="价格" value="{{form.price}}" data-field="price" bindinput="onField" />
+
+    <view class="muted">菜品图片（选填）</view>
+    <view class="img-row">
+      <image wx:if="{{form.image}}" class="img-preview" src="{{form.image}}" mode="aspectFill" bindtap="chooseImage" />
+      <view wx:else class="img-add" bindtap="chooseImage">+ 选择图片</view>
+      <view wx:if="{{form.image}}" class="img-del" bindtap="removeImage">移除</view>
+    </view>
+
+    <button class="btn" bindtap="add">添加菜品</button>
+  </view>
+
+  <view class="card" wx:for="{{dishes}}" wx:key="_id" wx:for-item="d">
+    <view class="d-row">
+      <image wx:if="{{d.image}}" class="d-thumb" src="{{d.image}}" mode="aspectFill" />
+      <view class="d-meta">
+        <text class="d-name">{{d.name}}</text>
+        <text class="muted">{{d.category}}</text>
+      </view>
+      <text class="price">¥{{d.price}}</text>
+    </view>
+  </view>
+
+  <view wx:if="{{dishes.length === 0}}" class="card muted">暂无菜品，先添加吧</view>
+</view>

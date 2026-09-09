@@ -3,22 +3,26 @@
   left: 0; right: 0; bottom: 0;
   display: flex;
   background: #6a655d;
-  border-top: 1px solid rgba(0, 0, 0, 0.3);
+  border-top: 2rpx solid rgba(0, 0, 0, 0.3);
   padding-bottom: env(safe-area-inset-bottom);
   z-index: 100;
 }
 .ctab-item {
   flex: 1;
   text-align: center;
-  padding: 9px 0 8px;
+  padding: 18rpx 0 16rpx;
   color: #c4b595;
-  font-size: 13px;
-  letter-spacing: 2px;
+  font-size: 26rpx;
+  letter-spacing: 4rpx;
 }
 .ctab-item.on { color: #f4f0e8; }
 .ctab-text {
   display: inline-block;
-  padding-bottom: 2px;
-  border-bottom: 2px solid transparent;
+  padding-bottom: 4rpx;
+  border-bottom: 4rpx solid transparent;
 }
 .ctab-item.on .ctab-text { border-bottom-color: #a04538; }
+
+/* ===== 平板专用：底部 tabBar 字号/间距/选中下划线再大一档，手机无感知 ===== */
+.is-tablet .ctab-item { font-size: 77.3rpx; padding: 51.5rpx 0 40.5rpx; letter-spacing: 11rpx; }
+.is-tablet .ctab-text { padding-bottom: 11rpx; border-bottom-width: 11rpx; }
