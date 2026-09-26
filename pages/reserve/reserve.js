@@ -35,7 +35,7 @@ Page({
     isTablet: false,
     mine: [], loading: false,
     showApply: false,
-    form: { date: '', expectedArrival: '18:00', partySize: '', contactPhone: '', note: '', roomNo: '', roomName: '由店家安排', needMahjong: false },
+    form: { date: '', expectedArrival: '18:00', partySize: '', contactPhone: '', guestName: '', note: '', roomNo: '', roomName: '由店家安排', needMahjong: false },
     roomOptions: buildRoomOptions(false),
     roomIndex: 0,
     submitting: false,
@@ -70,7 +70,7 @@ onShow() {
 
   /* 申请订位弹窗（不再依赖场次，顾客自选日期/餐段直接提交） */
   openApply() {
-    this.setData({ showApply: true, form: { date: todayStr(), expectedArrival: '18:00', partySize: '', contactPhone: '', note: '', roomNo: '', roomName: '由店家安排', needMahjong: false }, roomOptions: buildRoomOptions(false), roomIndex: 0 });
+    this.setData({ showApply: true, form: { date: todayStr(), expectedArrival: '18:00', partySize: '', contactPhone: '', guestName: '', note: '', roomNo: '', roomName: '由店家安排', needMahjong: false }, roomOptions: buildRoomOptions(false), roomIndex: 0 });
   },
   closeApply() { this.setData({ showApply: false }); },
   noop() {},
@@ -81,6 +81,7 @@ onShow() {
     this.setData({ 'form.partySize': v === '' ? '' : Math.max(1, parseInt(v) || 1) });
   },
   onPhone(e) { this.setData({ 'form.contactPhone': e.detail.value }); },
+  onGuestName(e) { this.setData({ 'form.guestName': e.detail.value }); },
   onNote(e) { this.setData({ 'form.note': e.detail.value }); },
   onMahjong(e) {
     const needMahjong = !!e.detail.value;
@@ -119,7 +120,9 @@ onShow() {
     // 把表单草稿交给 menu 预点页（menu 创建预订时一并写入预点菜）
     getApp().globalData.preorderDraft = {
       date: form.date, expectedArrival: form.expectedArrival,
-      partySize: form.partySize, contactPhone: form.contactPhone, note: form.note,
+      partySize: form.partySize, contactPhone: form.contactPhone,
+      guestName: (form.guestName || '').trim(),
+      note: form.note,
       roomNo: form.roomNo || '',
       needMahjong: form.needMahjong || false,
     };

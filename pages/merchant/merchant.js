@@ -146,7 +146,7 @@ Page({
           roomName: ROOMS[x.room_id] || x.room_id,
           label: bookingLabel(x),
           dishList: (x.dishes || []).map((d) => d.name + ' ×' + (d.qty || 1)).join('、') || '—',
-          guestText: x.guest_name ? (x.guest_name + (x.guest_phone ? ' ' + x.guest_phone : '')) : '—',
+          guestText: x.guest_name ? ('尊客' + x.guest_name + (x.guest_phone ? ' ' + x.guest_phone : '')) : '—',
         })),
       });
     } catch (e) { wx.showToast({ title: '加载失败', icon: 'none' }); }

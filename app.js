@@ -38,6 +38,8 @@ App({
     ensureCloud();
     // 微信身份 + 角色（顾客 / 店员 / 店长）——基于 OPENID 静默判定，无需登录框
     this.initRole();
+    // 预热 dataApi（与 initRole 并发 cold-start）：让首个业务调用命中热实例，避免首屏连排冷启动卡顿
+    callApi('ping').catch(() => {});
     // 后台连通性探测（前端已全面走云函数，preflight 为空操作）
     preflight().catch(() => {});
   },

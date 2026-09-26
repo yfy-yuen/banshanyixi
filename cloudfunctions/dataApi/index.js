@@ -215,6 +215,11 @@ exports.main = async (event) => {
         const role = await roleOf();
         return { data: { openid, role } };
       }
+      // 预热探针（2026-09-26 优化首屏冷启动卡顿）：app.onLaunch 调一次把云函数从 cold 拉成 warm，
+      // 让进入主屏后的业务调用（whoami/myReservations 等）直接命中热实例，省 2~8s 冷启动延迟。
+      case 'ping': {
+        return { data: { ok: true, ts: Date.now() } };
+      }
       case 'bindBoss': {
         if (!openid) return { error: '身份未就绪' };
         if (p.code !== BOSS_CODE) return { error: '解锁码错误' };
@@ -552,6 +557,7 @@ exports.main = async (event) => {
           data: {
             _openid: openid, date: p.date, mealTime, slot, expectedArrival: arrival, roomNo: suggestRoom,
             partySize: ps, contactPhone: p.contactPhone, note: p.note || '',
+            guestName: (p.guestName || '').toString().trim().slice(0, 20),
             needMahjong,
             orderNote: p.orderNote || '',
             dishes: Array.isArray(p.dishes) ? p.dishes : [],
@@ -573,6 +579,7 @@ exports.main = async (event) => {
         rows = list.map((r) => ({
           id: r._id, date: r.date, mealTime: r.mealTime, slot: r.slot || '', expectedArrival: r.expectedArrival || '', roomNo: r.roomNo || '',
           partySize: r.partySize, contactPhone: maskPhone(r.contactPhone), note: r.note || '',
+          guestName: r.guestName || '',
           status: r.status, source: r.source, createdAt: r.createdAt,
           rejectReason: r.rejectReason || '', arrivedAt: r.arrivedAt || '',
           roomId: bkMap[r._id] || null,
@@ -644,7 +651,7 @@ exports.main = async (event) => {
         await ensureCol('reservations');
         const r = (await db.collection('reservations').doc(p.id).get()).data;
         if (!r || r._openid !== openid) return { error: '无权限' };
-        return { data: { id: r._id, date: r.date, mealTime: r.mealTime, slot: r.slot || '', expectedArrival: r.expectedArrival || '', partySize: r.partySize, contactPhone: maskPhone(r.contactPhone), note: r.note || '', orderNote: r.orderNote || '', status: r.status, rejectReason: r.rejectReason || '', dishes: r.dishes || [], inviteCode: r.inviteCode || '', companionCount: (r.companions || []).length } };
+        return { data: { id: r._id, date: r.date, mealTime: r.mealTime, slot: r.slot || '', expectedArrival: r.expectedArrival || '', partySize: r.partySize, contactPhone: maskPhone(r.contactPhone), note: r.note || '', guestName: r.guestName || '', orderNote: r.orderNote || '', status: r.status, rejectReason: r.rejectReason || '', dishes: r.dishes || [], inviteCode: r.inviteCode || '', companionCount: (r.companions || []).length } };
       }
 
       /* ===== 同桌邀请 / 包厢门禁（结论 #209） ===== */
@@ -774,6 +781,7 @@ exports.main = async (event) => {
         rows = list.map((r) => ({
           id: r._id, date: r.date, mealTime: r.mealTime, slot: r.slot || '', expectedArrival: r.expectedArrival || '', roomNo: r.roomNo || '',
           partySize: r.partySize, contactPhone: maskPhone(r.contactPhone), phonePlain: isMgr ? (r.contactPhone || '') : '',
+          guestName: r.guestName || '',
           note: r.note || '', status: r.status, source: r.source, createdAt: r.createdAt,
           needMahjong: !!r.needMahjong,
           rejectReason: r.rejectReason || '', dishes: r.dishes || [],
@@ -823,7 +831,7 @@ exports.main = async (event) => {
           bookingId = (await db.collection('bookings').add({
             data: {
               room_id: roomId, date: r.date, slot, type: r.needMahjong ? 'game' : 'meal', arrival: r.expectedArrival || '',
-              dishes: dishSnapshot, guest_name: '', guest_phone: r.contactPhone || '', note: r.note || '',
+              dishes: dishSnapshot, guest_name: (r.guestName || '').trim(), guest_phone: r.contactPhone || '', note: r.note || '',
               partySize: Number(r.partySize) || 0,
               reservationRef: r._id, source: 'reservation', created_at: db.serverDate(),
             },
@@ -871,7 +879,7 @@ exports.main = async (event) => {
           await db.collection('bookings').add({
             data: {
               room_id: swapped, date: r.date, slot, type: 'meal', arrival: r.expectedArrival || '',
-              dishes: dishSnapshot, guest_name: '', guest_phone: r.contactPhone || '', note: r.note || '',
+              dishes: dishSnapshot, guest_name: (r.guestName || '').trim(), guest_phone: r.contactPhone || '', note: r.note || '',
               reservationRef: r._id, source: 'reservation', created_at: db.serverDate(),
             },
           });

@@ -427,6 +427,7 @@ Page({
           await submitReservation({
             date: d.date, expectedArrival: d.expectedArrival,
             partySize: d.partySize, contactPhone: d.contactPhone, note: d.note || '', dishes,
+            guestName: (d.guestName || '').trim(),
             roomNo: d.roomNo || '', orderNote: this.data.note,
             needMahjong: d.needMahjong || false,
           });

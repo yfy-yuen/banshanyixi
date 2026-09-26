@@ -1,5 +1,6 @@
 const { ROOMS } = require('../../utils/config');
 const { myReservations, cancelReservation, markArrived, genInvite, resetInvite, removeCompanion } = require('../../utils/api');
+const { guestTitle } = require('../../utils/name');
 
 function detectTablet() {
   try {
@@ -19,7 +20,7 @@ function maskPhone(p) {
 
 Page({
   data: {
-    name: '', phoneMask: '',
+    name: '', displayName: '', phoneMask: '',
     active: [], history: [], preorders: [],
     loading: false,
     showNameModal: false, nameInput: '',
@@ -37,7 +38,7 @@ Page({
     }
     // 结论 #1：「我的」页无包厢上下文，不自动标到店（避免误标）；到店标记改由进入具体包厢内页触发
     // markArrived() 传空 → 后端跳过。保留调用以便将来若加"当前预订入口"可传入 roomNo。
-    markArrived('').catch(() => {});
+    // 2026-09-26：onShow 里这个调用被去掉，省一次首屏冷启动；删了将来需要时可恢复。
     this.load();
   },
   async load() {
@@ -59,8 +60,12 @@ Page({
         .map((r) => ({ id: r.id, date: r.date, roomText: r.roomText, dishes: r.dishes, locked: true }));
       const stored = wx.getStorageSync('profile') || {};
       const phone = (list[0] && list[0].contactPhone) || stored.phone || '';
+      // 显示称呼（2026-09-26 规则）：「尊客」+ 自定义称呼 > 预订称呼 > 手机尾号4位 > 预订日期MMDD
+      const latest = list[0] || {};
+      this._titleBase = { guestName: latest.guestName || '', phone: phone, date: latest.date || '' };
       this.setData({
         name: stored.name || '',
+        displayName: guestTitle(Object.assign({ custom: stored.name }, this._titleBase)),
         phoneMask: maskPhone(phone),
         active, history, preorders,
       });
@@ -136,7 +141,12 @@ Page({
     const stored = wx.getStorageSync('profile') || {};
     stored.name = name;
     wx.setStorageSync('profile', stored);
-    this.setData({ name, showNameModal: false });
+    // 自定义称呼立即生效（本地 storage 持久，重进小程序不回退默认）
+    this.setData({
+      name,
+      showNameModal: false,
+      displayName: guestTitle(Object.assign({ custom: name }, this._titleBase || {})),
+    });
   },
   editPreorder(e) {
     const id = e.currentTarget.dataset.id;

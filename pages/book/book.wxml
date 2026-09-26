@@ -173,7 +173,7 @@
       <view class="detail-section">
         <view class="detail-row">
           <text class="detail-label">客人</text>
-          <text class="detail-value">{{detail.guest_name || '未填写'}}</text>
+          <text class="detail-value">{{detail.guest_name ? '尊客' + detail.guest_name : '未填写'}}</text>
         </view>
         <view class="detail-row">
           <text class="detail-label">人数</text>

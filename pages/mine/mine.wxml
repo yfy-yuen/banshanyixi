@@ -10,7 +10,7 @@
   <!-- 个人信息 -->
   <view class="head">
     <image class="h-logo" src="/assets/images/seal.png" mode="aspectFit"></image>
-    <view class="h-name" bindtap="editName">{{name || '尊客'}}<text class="h-edit">改称呼</text></view>
+    <view class="h-name" bindtap="editName">{{displayName || '尊客'}}<text class="h-edit">改称呼</text></view>
     <view class="h-phone">{{phoneMask || '未留手机号'}}</view>
   </view>
 
