@@ -39,6 +39,14 @@ Page({
     staffList: [], requests: [],
     mView: 'dishes',   // 菜品 tab 内的子视图：dishes 菜品 | rooms 包厢
     mRooms: [],
+    // 菜品管理筛选（2026-09-26 借鉴菜单页的分类/搜索 UX）
+    filterCat: '',         // ''=全部；否则等于菜品 category
+    filterStatus: 'all',   // 'all'|'on'|'soldOut'|'limited'
+    filterKw: '',          // 关键字（菜名/标签/描述）
+    showDishSearch: false,
+    dishCats: [],          // 当前已有菜品覆盖到的 CATS 分类列表
+    dishSections: [],      // 按 category 分组的菜品（渲染主列表用）
+    dishSearchResults: [], // 关键字搜索结果（搜索面板里用）
   },
   onLoad() {
     this.setData({ isTablet: detectTablet() });
@@ -187,7 +195,53 @@ Page({
       this.setData({
         mDishes: (raw || []).map((d) => ({ ...d, priceText: fmt(d.price), ph: (d.name || '?').charAt(0), portions: d.portions || {} })),
       });
+      this.runDishFilter();
     } catch (e) { wx.showToast({ title: '加载失败', icon: 'none' }); }
+  },
+  // 按当前筛选条件（分类/状态/关键字）重算 dishSections 与 dishSearchResults
+  runDishFilter() {
+    const all = this.data.mDishes || [];
+    // 已用到的分类（chips）
+    const dishCats = CATS.filter((c) => all.some((d) => d.category === c));
+    let list = all.slice();
+    if (this.data.filterCat) list = list.filter((d) => d.category === this.data.filterCat);
+    if (this.data.filterStatus === 'on') list = list.filter((d) => !d.soldOut);
+    else if (this.data.filterStatus === 'soldOut') list = list.filter((d) => !!d.soldOut);
+    else if (this.data.filterStatus === 'limited') list = list.filter((d) => !!d.limited);
+    const kw = (this.data.filterKw || '').trim().toLowerCase();
+    if (kw) {
+      list = list.filter((d) =>
+        (d.name || '').toLowerCase().includes(kw) ||
+        (d.tags || []).join(',').toLowerCase().includes(kw) ||
+        (d.description || '').toLowerCase().includes(kw)
+      );
+    }
+    // 有关键字 → 单组展示「搜索结果」；否则按分类分组（与菜单页一致）
+    let dishSections;
+    if (kw) {
+      dishSections = [{ cat: '搜索结果', items: list }];
+    } else {
+      const present = CATS.filter((c) => list.some((d) => d.category === c));
+      dishSections = present.map((cat) => ({ cat, items: list.filter((d) => d.category === cat) }));
+    }
+    this.setData({ dishCats, dishSections, dishSearchResults: list });
+  },
+  setDishCat(e) {
+    this.setData({ filterCat: e.currentTarget.dataset.cat || '' });
+    this.runDishFilter();
+  },
+  setDishStatus(e) {
+    this.setData({ filterStatus: e.currentTarget.dataset.st || 'all' });
+    this.runDishFilter();
+  },
+  openDishSearch() { this.setData({ showDishSearch: true }); },
+  closeDishSearch() {
+    this.setData({ showDishSearch: false, filterKw: '' });
+    this.runDishFilter();
+  },
+  onDishKwInput(e) {
+    this.setData({ filterKw: e.detail.value || '' });
+    this.runDishFilter();
   },
   openEdit(e) {
     const id = e.currentTarget.dataset.id;

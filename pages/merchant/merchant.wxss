@@ -169,3 +169,77 @@
 .por-amt { width: 184rpx; margin-top: 0; }
 .por-del { padding: 16rpx 20rpx; color: var(--cinnabar); font-size: 26rpx; background: #f2e6e2; border-radius: 16rpx; flex-shrink: 0; }
 .por-add { margin-top: 4rpx; background: var(--paper); color: var(--ink-light); border: 2rpx solid var(--border); }
+
+/* 菜品管理 · 筛选条 + 分组（2026-09-26 借鉴菜单页 UX） */
+.chip-rail {
+  white-space: nowrap;
+  margin-bottom: 16rpx;
+  padding: 4rpx 0;
+}
+.chip-rail.static { white-space: normal; }
+.chip {
+  display: inline-block;
+  padding: 12rpx 28rpx;
+  margin: 0 12rpx 12rpx 0;
+  border-radius: 36rpx;
+  font-size: 26rpx;
+  letter-spacing: 1rpx;
+  background: var(--card);
+  color: var(--ink-light);
+  border: 2rpx solid var(--border);
+}
+.chip.on {
+  background: var(--cinnabar);
+  color: #fff;
+  border-color: var(--cinnabar);
+}
+.chip.search {
+  background: var(--paper);
+  color: var(--muted);
+  border-style: dashed;
+}
+.dish-section { margin-top: 12rpx; }
+.sec-title {
+  display: flex; align-items: center;
+  margin: 24rpx 0 12rpx;
+}
+.sec-title text {
+  font-size: 30rpx;
+  color: var(--ink);
+  letter-spacing: 4rpx;
+  font-weight: 500;
+  margin-right: 16rpx;
+}
+.sec-line {
+  flex: 1; height: 0; border-top: 2rpx dashed var(--border);
+}
+.search-mask {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 90;
+  display: flex; flex-direction: column;
+}
+.search-bar {
+  display: flex; align-items: center; gap: 12rpx;
+  padding: 18rpx 24rpx;
+  background: var(--card);
+  border-bottom: 2rpx solid var(--border);
+}
+.sb-ic { color: var(--muted); font-size: 32rpx; }
+.sb-input {
+  flex: 1; min-width: 0;
+  background: var(--paper);
+  border-radius: 28rpx;
+  padding: 16rpx 24rpx;
+  font-size: 28rpx;
+  color: var(--ink);
+}
+.sb-close { color: var(--ink-light); font-size: 26rpx; padding: 0 8rpx; }
+.search-res { flex: 1; padding: 24rpx; background: var(--paper); }
+.s-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 26rpx;
+  padding: 60rpx 0;
+  letter-spacing: 2rpx;
+}
