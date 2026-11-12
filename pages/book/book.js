@@ -63,9 +63,9 @@ Page({
     this.loadConfirmed();
     this.loadSessions();
   },
-  // 「商家」入口合并到店务页：merchant 仍是 tabBar 注册页，故用 switchTab
+  // 「商家」入口：后台已移入 staff 分包，分包页不是 tab 页，用 navigateTo
   goMerchant() {
-    wx.switchTab({ url: '/pages/merchant/merchant' });
+    wx.navigateTo({ url: '/staff/pages/merchant/orders/orders' });
   },
   buildMonth(y, m) {
     const first = new Date(y, m - 1, 1);

@@ -1,8 +1,8 @@
-const { CATS, fmt, ROOMS } = require('../../utils/config');
-const { detectTablet } = require('../../utils/tablet');
+const { CATS, fmt, ROOMS } = require('/utils/config');
+const { detectTablet } = require('/utils/tablet');
 const {
   getMerchantOrders, settleOrder, clearOrder, listReceipts, pushReminders, resetDailyFlags, getDishesAdmin, saveDish, deleteDish, getPaymentQrcodes, saveQr, callApi, sweepPending,
-} = require('../../utils/api');
+} = require('/utils/api');
 
 function decorateOrder(o) {
   const items = (o.items || []).map((i) => ({
@@ -23,7 +23,9 @@ function bookingLabel(b) {
   return b.slot === 'lunch' ? '午餐订餐' : '晚餐订餐';
 }
 
-Page({
+// 商家后台共享核心：5 个 tab 拆成 5 个独立分包页面，全部 Page 复用本对象
+// 各页面只需覆盖 data.tab，即可复用下面全部方法与数据
+module.exports = {
   data: {
     isTablet: false,
     role: '', isManager: false, isStaff: false, noPerm: false,
@@ -50,13 +52,11 @@ Page({
   },
   onLoad() {
     this.setData({ isTablet: detectTablet() });
-    this.setData({ repDate: new Date().toISOString().slice(0, 10) });
+    // 按北京时间取默认报表日期，避免 UTC 口径在北京 0–8 点错一天
+    this.setData({ repDate: new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10) });
   },
   onShow() {
-    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      // 底部「商家」按钮已合并进「店务」，此处高亮店务，避免出现全不高亮
-      this.getTabBar().setData({ selectedKey: 'book' });
-    }
+    // 分包页不显示自定义 tabBar，页内提供「返回店务」按钮
     const app = getApp();
     const role = app.globalData.role;
     if (role === '') { app.refreshRole().then(() => this.onShow()); return; }
@@ -72,6 +72,10 @@ Page({
     if (isManager) this.loadStaff();
   },
   noop() {},
+  // 从分包后台回到主包「店务」tab（switchTab 会清掉分包页栈）
+  goBackBook() {
+    wx.switchTab({ url: '/pages/book/book' });
+  },
   tabs() {
     // 店员：仅「订单」（看不到菜品改价/报表/收款码/员工）
     // 老板：全部
@@ -82,7 +86,11 @@ Page({
   },
   renderMerchant() {
     const tabs = this.tabs();
-    if (!tabs.find((t) => t[0] === this.data.tab)) this.setData({ tab: 'orders' });
+    // 店员仅可访问订单页；直接输路径进其它页时踢回订单页，避免数据与视图错位
+    if (!tabs.find((t) => t[0] === this.data.tab)) {
+      wx.redirectTo({ url: '/staff/pages/merchant/orders/orders' });
+      return;
+    }
     if (this.data.tab === 'orders') this.renderMOrders();
     else if (this.data.tab === 'dishes') this.renderMView();
     else if (this.data.tab === 'report') this.renderReport();
@@ -118,18 +126,20 @@ Page({
   },
   openRoomEdit(e) {
     const no = e.currentTarget.dataset.no;
-    wx.navigateTo({ url: '/pages/roomEdit/roomEdit?room=' + no });
+    wx.navigateTo({ url: '/staff/pages/roomEdit/roomEdit?room=' + no });
   },
+  // 5 个 tab 已拆成 5 个独立分包页面：同层 redirectTo 切换，不堆页面栈
   switchMerchant(e) {
-    this.setData({ tab: e.currentTarget.dataset.tab });
-    this.renderMerchant();
+    const tab = e.currentTarget.dataset.tab;
+    if (!tab || tab === this.data.tab) return;
+    wx.redirectTo({ url: '/staff/pages/merchant/' + tab + '/' + tab });
   },
   switchOrderSub(e) {
     this.setData({ orderSub: e.currentTarget.dataset.sub });
     this.renderMOrders();
   },
   gotoKitchen() {
-    wx.navigateTo({ url: '/pages/kitchen/kitchen' });
+    wx.navigateTo({ url: '/staff/pages/kitchen/kitchen' });
   },
 
   /* 订单：订餐菜品 / 现场下单菜品 */
@@ -549,4 +559,4 @@ Page({
       },
     });
   },
-});
+};

@@ -134,7 +134,7 @@ Page({
   bindBossEntry() {
     const app = getApp();
     if (wx.getStorageSync('bossUnlocked') === '1') {
-      wx.switchTab({ url: '/pages/merchant/merchant' });
+      wx.redirectTo({ url: '/staff/pages/merchant/orders/orders' });
       return;
     }
     wx.showModal({
@@ -151,7 +151,7 @@ Page({
             app.globalData.uid = r.openid || app.globalData.uid;
             app.unlockBoss(); // 本机标记 + 通知 tabBar 重新渲染
             wx.showToast({ title: '已注册为老板', icon: 'success' });
-            setTimeout(() => wx.switchTab({ url: '/pages/merchant/merchant' }), 600);
+            setTimeout(() => wx.redirectTo({ url: '/staff/pages/merchant/orders/orders' }), 600);
           } else {
             wx.showToast({ title: '解锁码错误', icon: 'none' });
           }

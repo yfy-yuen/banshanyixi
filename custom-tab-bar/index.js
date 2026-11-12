@@ -1,9 +1,9 @@
 // 半山·一席 自定义 TabBar：按微信身份(RBAC)渲染可见标签
-// 顾客(guest) 见「包厢/菜单」；店员/店长(clerk/manager) 见「包厢/菜单/预定/商家」
+// 顾客(guest) 见「包厢/菜单/我的」；店员/店长(clerk/manager) 多一个「店务」
+// 商家后台 / 后厨 / 包厢编辑已移入 staff 分包，由店务页进入，不在底部渲染
 // 菜单为只读浏览页，所有人可见；真正的点单在包厢内跳转的 pages/menu/menu
 const ROLE_TABS = {
   guest: ['rooms', 'menu', 'mine'],
-  // 「商家」已合并进「店务」：底部只留一个店务入口，商家页由店务页顶部按钮进入
   clerk: ['rooms', 'menu', 'mine', 'book'],
   manager: ['rooms', 'menu', 'mine', 'book'],
 };
@@ -12,7 +12,6 @@ const META = {
   menu: { pagePath: '/pages/dishes/dishes', text: '菜单' },
   mine: { pagePath: '/pages/mine/mine', text: '我的' },
   book: { pagePath: '/pages/book/book', text: '店务' },
-  merchant: { pagePath: '/pages/merchant/merchant', text: '商家' },
 };
 
 Component({
@@ -45,10 +44,7 @@ Component({
         const pages = getCurrentPages();
         const route = (pages[pages.length - 1] && pages[pages.length - 1].route) || '';
         const found = Object.keys(META).find((k) => META[k].pagePath.replace(/^\//, '') === route);
-        // 底部不再有「商家」按钮：停留在商家页时高亮「店务」，避免出现全不高亮
-        const raw = found || this.data.selectedKey || 'rooms';
-        const sel = raw === 'merchant' ? 'book' : raw;
-        this.setData({ selectedKey: sel });
+        this.setData({ selectedKey: found || this.data.selectedKey || 'rooms' });
       };
       if (role === '') {
         // 角色尚未初始化：等拉取完成后再渲染
@@ -59,12 +55,7 @@ Component({
     },
     applyTabs(role) {
       const keys = ROLE_TABS[role] || ROLE_TABS.guest;
-      const tabs = keys.map((k) => {
-        const t = { key: k, ...META[k] };
-        // 店员点进「商家」页只看到订单子 tab，故 tab 文案显示「订单」更准确；老板显示「商家」
-        if (k === 'merchant') t.text = role === 'manager' ? '商家' : '订单';
-        return t;
-      });
+      const tabs = keys.map((k) => ({ key: k, ...META[k] }));
       this.setData({ role, tabs });
     },
     switchTab(e) {

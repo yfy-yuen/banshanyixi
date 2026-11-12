@@ -1,0 +1,68 @@
+<!-- 菜品编辑弹窗 -->
+<view class="mask" wx:if="{{showEdit}}" bindtap="closeEdit">
+  <view class="modal" catchtap="noop">
+    <view class="modal-title">编辑菜品</view>
+    <input class="ipt" placeholder="菜名" placeholder-class="ph-light" value="{{edit.name}}" data-field="name" bindinput="onEditInput" />
+    <picker mode="selector" range="{{cats}}" value="{{catsIndex}}" bindchange="onCatPick">
+      <view class="ipt picker">{{edit.category}}</view>
+    </picker>
+    <input class="ipt" placeholder="价格" placeholder-class="ph-light" type="digit" value="{{edit.price}}" data-field="price" bindinput="onEditInput" />
+    <view class="edit-pic">
+      <text class="edit-label">菜品图片（点图或"＋选图"从相册上传，自动生成地址，无需手动填 URL）</text>
+      <view class="pic-row">
+        <image wx:if="{{edit.image}}" class="pic-prev" src="{{edit.image}}" mode="aspectFill" bindtap="pickDishImage" />
+        <view wx:else class="pic-pick" bindtap="pickDishImage">＋ 选图</view>
+        <view wx:if="{{edit.image}}" class="pic-del" catchtap="clearDishImage">移除图片</view>
+      </view>
+    </view>
+    <input class="ipt" placeholder="描述" placeholder-class="ph-light" value="{{edit.description}}" data-field="description" bindinput="onEditInput" />
+    <view class="edit-tags">
+      <text class="edit-label">标签</text>
+      <view class="tag-row">
+        <view wx:for="{{tagOptions}}" wx:key="*this" class="tag-chip {{edit.tags.indexOf(item) >= 0 ? 'on' : ''}}" data-tag="{{item}}" bindtap="onTagToggle">{{item}}</view>
+      </view>
+    </view>
+    <view class="edit-toggles">
+      <view class="et-row" bindtap="onSoldOutToggle">
+        <text>今日售罄</text>
+        <view class="switch {{edit.soldOut?'on':''}}"><view class="switch-dot"></view></view>
+      </view>
+      <view class="et-row" bindtap="onLimitedToggle">
+        <text>今日限定</text>
+        <view class="switch {{edit.limited?'on':''}}"><view class="switch-dot"></view></view>
+      </view>
+    </view>
+    <view class="edit-portions">
+      <text class="edit-label">每份用料（食材采购清单用）</text>
+      <view class="por-row" wx:for="{{edit.portions}}" wx:key="index" wx:for-index="pi">
+        <input class="ipt por-mat" placeholder="材料（可带单位，如 里脊肉(g)）" placeholder-class="ph-light" value="{{item.mat}}" data-pi="{{pi}}" data-f="mat" bindinput="onPortion" />
+        <input class="ipt por-amt" type="digit" placeholder="每份用量" placeholder-class="ph-light" value="{{item.amt}}" data-pi="{{pi}}" data-f="amt" bindinput="onPortion" />
+        <view class="por-del" data-pi="{{pi}}" bindtap="removePortion">删</view>
+      </view>
+      <view class="btn btn-ghost por-add" bindtap="addPortion">+ 添加用料</view>
+    </view>
+    <view class="btn" style="width:100%;" bindtap="saveDish">保存</view>
+  </view>
+</view>
+
+<!-- 电子收据详情（结论 #E） -->
+<view class="mask" wx:if="{{receiptDetail}}" bindtap="closeReceipt">
+  <view class="modal" catchtap="noop">
+    <view class="modal-title">{{receiptDetail.no}} · 电子收据</view>
+    <view class="r-meta">
+      <text>包厢：{{receiptDetail.room_name}}（{{receiptDetail.room_no}}号）</text>
+      <text>时间：{{receiptDetail.date}} {{receiptDetail.time}}</text>
+      <text>支付：{{receiptDetail.pmText}}（{{receiptDetail.paidText}}）</text>
+      <text>开票：{{receiptDetail.invText}}{{receiptDetail.phoneLast4 ? ' · 手机尾号' + receiptDetail.phoneLast4 : ''}}</text>
+    </view>
+    <view class="r-lines">
+      <view class="r-line" wx:for="{{receiptDetail.lines}}" wx:key="name">
+        <text class="r-name">{{item.name}}{{item.sel ? '（' + item.sel + '）' : ''}}</text>
+        <text class="r-qty">×{{item.qty}}</text>
+        <text class="r-sub">{{item.subText}}</text>
+      </view>
+    </view>
+    <view class="o-row r-total"><text>合计</text><text class="price-red">{{receiptDetail.totalText}}</text></view>
+    <view class="btn" style="width:100%;" bindtap="closeReceipt">关闭</view>
+  </view>
+</view>

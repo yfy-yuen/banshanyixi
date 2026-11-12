@@ -1,0 +1,11 @@
+  <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
+  <!-- 无权限：顾客 -->
+  <view wx:if="{{noPerm}}" class="login-wrap">
+    <view class="login-card">
+      <view class="login-seal">掌柜</view>
+      <view class="login-title">员工专区</view>
+      <view class="login-sub">仅本店员工可进入</view>
+      <view class="perm-tip">向店长申请开通员工权限，审批通过后即可进入员工专区。</view>
+      <view class="btn" bindtap="applyStaff">申请成为员工</view>
+    </view>
+  </view>

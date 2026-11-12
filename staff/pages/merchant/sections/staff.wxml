@@ -1,0 +1,18 @@
+    <view>
+      <view class="msec-title">待审批申请</view>
+      <view wx:if="{{requests.length===0}}" class="card muted">暂无申请</view>
+      <view class="card" wx:for="{{requests}}" wx:key="openid">
+        <view class="o-row">
+          <text>{{item.name}}</text>
+        </view>
+        <view class="btn" style="padding:6px 14px;margin-top:8px;" data-openid="{{item.openid}}" data-name="{{item.name}}" bindtap="approveRequest">审批</view>
+      </view>
+
+      <view class="msec-title">在职员工</view>
+      <view class="card" wx:for="{{staffList}}" wx:key="openid">
+        <view class="o-row">
+          <text>{{item.name}} <text class="muted">{{item.role==='manager'?'店长':'店员'}}</text></text>
+          <view class="m-del" data-openid="{{item.openid}}" bindtap="removeStaff">移除</view>
+        </view>
+      </view>
+    </view>

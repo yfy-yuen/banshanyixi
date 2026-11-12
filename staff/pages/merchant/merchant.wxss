@@ -30,6 +30,8 @@
 /* 头部 */
 .mhead { display: flex; justify-content: space-between; align-items: center; padding: 8rpx 4rpx 28rpx; }
 .mrole { font-size: 32rpx; font-weight: 500; color: var(--cinnabar); letter-spacing: 4rpx; }
+/* 分包页不显示自定义 tabBar，用此按钮回主包「店务」 */
+.mback { font-size: 24rpx; color: var(--ink-light); background: var(--card-soft); border: 2rpx solid var(--border); border-radius: 1998rpx; padding: 8rpx 22rpx; }
 .logout { font-size: 26rpx; color: var(--muted); }
 .mtabs { display: flex; gap: 16rpx; margin-bottom: 32rpx; }
 .mtab {

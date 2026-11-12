@@ -1,0 +1,9 @@
+    <view>
+      <view class="qr-card" wx:for="{{['alipay','wechat']}}" wx:for-item="ch" wx:key="*this">
+        <view class="qn">{{ch==='alipay'?'支付宝收款码':'微信收款码'}}</view>
+        <image wx:if="{{qrMap[ch]}}" class="qr-img" src="{{qrMap[ch]}}" mode="aspectFit" />
+        <view wx:else class="qt">未配置</view>
+        <input class="ipt" placeholder="粘贴图片 URL" placeholder-class="ph-light" value="{{qrMap[ch]}}" data-ch="{{ch}}" bindinput="onQrInput" />
+        <view class="btn" style="width:100%;" bindtap="saveQr" data-ch="{{ch}}">保存</view>
+      </view>
+    </view>

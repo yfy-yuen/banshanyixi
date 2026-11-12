@@ -8,14 +8,29 @@
     "pages/reserve/reserve",
     "pages/mine/mine",
     "pages/book/book",
-    "pages/merchant/merchant",
     "pages/orders/orders",
-    "pages/roomEdit/roomEdit",
     "pages/today/today",
     "pages/about/about",
-    "pages/privacy/privacy",
-    "pages/kitchen/kitchen"
+    "pages/privacy/privacy"
   ],
+  "subPackages": [
+    {
+      "root": "staff",
+      "name": "staff",
+      "pages": [
+        "pages/merchant/orders/orders",
+        "pages/merchant/dishes/dishes",
+        "pages/merchant/report/report",
+        "pages/merchant/qr/qr",
+        "pages/merchant/staff/staff",
+        "pages/kitchen/kitchen",
+        "pages/roomEdit/roomEdit"
+      ]
+    }
+  ],
+  "preloadRule": {
+    "pages/book/book": { "network": "all", "packages": ["staff"] }
+  },
   "window": {
     "navigationBarTitleText": "半山·一席",
     "navigationBarBackgroundColor": "#6a655d",
@@ -33,8 +48,7 @@
       { "pagePath": "pages/rooms/rooms", "text": "包厢" },
       { "pagePath": "pages/dishes/dishes", "text": "菜单" },
       { "pagePath": "pages/mine/mine", "text": "我的" },
-      { "pagePath": "pages/book/book", "text": "店务" },
-      { "pagePath": "pages/merchant/merchant", "text": "商家" }
+      { "pagePath": "pages/book/book", "text": "店务" }
     ]
   },
   "style": "v2",

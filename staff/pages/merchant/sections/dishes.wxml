@@ -1,0 +1,86 @@
+    <view>
+      <view class="subseg">
+        <view class="subseg-btn {{mView==='dishes'?'on':''}}" data-view="dishes" bindtap="switchMView">菜品</view>
+        <view class="subseg-btn {{mView==='rooms'?'on':''}}" data-view="rooms" bindtap="switchMView">包厢</view>
+      </view>
+
+      <!-- 菜品（2026-09-26 改造：分类 chips + 状态 chips + 关键字搜索 + 按分类分组，菜单页 UX 复用；编辑/售罄/限定/删除 4 按钮保留原状） -->
+      <block wx:if="{{mView==='dishes'}}">
+        <view class="btn" style="margin-bottom:16rpx;" bindtap="openEdit" data-id="__new__">+ 新增菜品</view>
+
+        <!-- 分类 chips（横向滚动） -->
+        <scroll-view class="chip-rail" scroll-x enable-flex>
+          <view class="chip {{filterCat===''?'on':''}}" bindtap="setDishCat" data-cat="">全部</view>
+          <view wx:for="{{dishCats}}" wx:key="*this" class="chip {{filterCat===item?'on':''}}" bindtap="setDishCat" data-cat="{{item}}">{{item}}</view>
+        </scroll-view>
+
+        <!-- 状态 chips + 搜索入口 -->
+        <view class="chip-rail static">
+          <view class="chip {{filterStatus==='all'?'on':''}}" bindtap="setDishStatus" data-st="all">全部</view>
+          <view class="chip {{filterStatus==='on'?'on':''}}" bindtap="setDishStatus" data-st="on">在售</view>
+          <view class="chip {{filterStatus==='soldOut'?'on':''}}" bindtap="setDishStatus" data-st="soldOut">售罄</view>
+          <view class="chip {{filterStatus==='limited'?'on':''}}" bindtap="setDishStatus" data-st="limited">限定</view>
+          <view class="chip search" bindtap="openDishSearch">{{filterKw ? '⌕ '+filterKw : '⌕ 搜索'}}</view>
+        </view>
+
+        <!-- 分组 sections：默认按 category 分组（与菜单页一致）；有搜索关键字时单组「搜索结果」 -->
+        <view wx:if="{{dishSections.length===0}}" class="card muted" style="text-align:center;">暂无符合条件的菜品</view>
+        <view wx:for="{{dishSections}}" wx:key="cat" wx:for-item="sec" class="dish-section">
+          <view class="sec-title"><text>{{sec.cat}}</text><view class="sec-line"></view></view>
+          <view wx:for="{{sec.items}}" wx:for-item="item" wx:key="id" class="card m-row">
+            <image wx:if="{{item.image}}" class="m-pic" src="{{item.image}}" mode="aspectFill" />
+            <view wx:else class="m-pic ph">{{item.ph}}</view>
+            <view class="m-info">
+              <view class="m-name">{{item.name}} <text class="muted" style="font-size:12px;">{{item.category}}</text></view>
+              <view class="price">{{item.priceText}}</view>
+            </view>
+            <view class="m-actions">
+              <view class="m-toggle {{item.soldOut?'on':''}}" data-id="{{item.id}}" bindtap="toggleSoldOut">售罄</view>
+              <view class="m-toggle {{item.limited?'on':''}}" data-id="{{item.id}}" bindtap="toggleLimited">限定</view>
+              <view class="m-edit" bindtap="openEdit" data-id="{{item.id}}">编辑</view>
+              <view class="m-del" bindtap="deleteDish" data-id="{{item.id}}">删除</view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 搜索浮层（复用菜单页 UX） -->
+        <view wx:if="{{showDishSearch}}" class="search-mask" bindtap="closeDishSearch">
+          <view class="search-bar" catchtap="noop">
+            <text class="sb-ic">⌕</text>
+            <input class="sb-input" placeholder="按菜名/标签/描述搜索" value="{{filterKw}}" bindinput="onDishKwInput" focus="{{showDishSearch}}" confirm-type="search" />
+            <text class="sb-close" bindtap="closeDishSearch">取消</text>
+          </view>
+          <scroll-view class="search-res" scroll-y catchtap="noop">
+            <view wx:if="{{!filterKw}}" class="s-empty">输入关键字试试，如「东坡」「招牌」</view>
+            <view wx:elif="{{dishSearchResults.length===0}}" class="s-empty">没有找到「{{filterKw}}」</view>
+            <view wx:for="{{dishSearchResults}}" wx:for-item="item" wx:key="id" class="card m-row">
+              <image wx:if="{{item.image}}" class="m-pic" src="{{item.image}}" mode="aspectFill" />
+              <view wx:else class="m-pic ph">{{item.ph}}</view>
+              <view class="m-info">
+                <view class="m-name">{{item.name}} <text class="muted" style="font-size:12px;">{{item.category}}</text></view>
+                <view class="price">{{item.priceText}}</view>
+              </view>
+              <view class="m-actions">
+                <view class="m-toggle {{item.soldOut?'on':''}}" data-id="{{item.id}}" bindtap="toggleSoldOut">售罄</view>
+                <view class="m-toggle {{item.limited?'on':''}}" data-id="{{item.id}}" bindtap="toggleLimited">限定</view>
+                <view class="m-edit" bindtap="openEdit" data-id="{{item.id}}">编辑</view>
+                <view class="m-del" bindtap="deleteDish" data-id="{{item.id}}">删除</view>
+              </view>
+            </view>
+          </scroll-view>
+        </view>
+      </block>
+
+      <!-- 包厢 -->
+      <block wx:else>
+        <view class="card m-row" wx:for="{{mRooms}}" wx:key="no" bindtap="openRoomEdit" data-no="{{item.no}}">
+          <image wx:if="{{item.cover}}" class="m-pic" src="{{item.cover}}" mode="aspectFill" />
+          <view wx:else class="m-pic ph">{{item.name}}</view>
+          <view class="m-info">
+            <view class="m-name">{{item.name}} <text class="muted" style="font-size:12px;">{{item.no}} 号</text></view>
+            <view class="muted" style="font-size:12px;margin-top:4px;">{{item.intro || '尚未填写介绍'}}</view>
+          </view>
+          <view class="m-edit">编辑</view>
+        </view>
+      </block>
+    </view>
