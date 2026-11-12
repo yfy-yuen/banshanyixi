@@ -186,13 +186,19 @@ async function runDailyCron() {
 }
 
 exports.main = async (event) => {
-  // 定时触发器入口（无 action，以 TriggerName 识别）
-  if (event && event.TriggerName) {
-    return await runDailyCron();
-  }
   const { action, ...p } = event || {};
   const wxContext = cloud.getWXContext();
   const openid = wxContext.OPENID || '';
+  // 定时触发器入口（2026-11-12 安全修复）：腾讯云定时触发的 event 为
+  // { Type:'Timer', TriggerName:'...', Time:'...' }，且无微信调用上下文（OPENID 为空）。
+  // 小程序端 wx.cloud.callFunction 必带 OPENID，仅伪造 TriggerName 已无法触发管理员 cron。
+  if (event && event.Type === 'Timer' && event.TriggerName && !openid) {
+    return await runDailyCron();
+  }
+  // 诊断：若真定时任务被上面的条件挡掉，云函数日志可见，便于部署后核验（不打印身份值）
+  if (event && event.Type === 'Timer') {
+    console.warn('[cron] 定时触发入口被拒: TriggerName=', event.TriggerName, '| openidEmpty=', !openid);
+  }
 
   // 当前用户角色：基于微信 OPENID 静默判定（OPENID 在云函数上下文自动可用，无需登录）
   const roleOf = async () => {
@@ -205,6 +211,22 @@ exports.main = async (event) => {
   const isStaffOf = async () => {
     const r = await roleOf();
     return r === 'clerk' || r === 'manager';
+  };
+
+  // 订单可见性裁剪（2026-11-12 安全修复）：店员/老板看全部；
+  // 顾客只返回「自己下的单」或「同桌邀请所属预订关联的单」，且排除已清台单。
+  // 必须在云端裁剪，禁止前端过滤，避免任意 roomNo 枚举拉走他人订单/OPENID。
+  const filterOrdersForGuest = async (raw) => {
+    if (await isStaffOf()) return raw || [];
+    let myResIds = [];
+    try {
+      const own = (await db.collection('reservations').where({ _openid: openid }).limit(100).get()).data || [];
+      const joined = (await db.collection('reservations').where({ companions: openid }).limit(100).get()).data || [];
+      myResIds = [...own, ...joined].map((r) => String(r._id));
+    } catch (e) { console.warn('[orders guest reservations]', e.message); }
+    return (raw || []).filter((o) => o.closed !== true && (
+      o.openid === openid || (o.reservation_id && myResIds.includes(String(o.reservation_id)))
+    ));
   };
 
   try {
@@ -246,16 +268,19 @@ exports.main = async (event) => {
         break;
 
       /* ===== 读（店员/老板） ===== */
+      // 订单接口顾客端在用（pages/orders），不能直接拒绝，改为云端按身份裁剪
       case 'ordersByRoom':
-        rows = normalize((await db.collection('orders').where({ room_no: p.roomNo }).orderBy('created_at', 'desc').limit(1000).get()).data);
+        rows = normalize(await filterOrdersForGuest((await db.collection('orders').where({ room_no: p.roomNo }).orderBy('created_at', 'desc').limit(1000).get()).data));
         break;
       case 'ordersByRoomName':
-        rows = normalize((await db.collection('orders').where({ room_name: p.roomName }).orderBy('created_at', 'desc').limit(1000).get()).data);
+        rows = normalize(await filterOrdersForGuest((await db.collection('orders').where({ room_name: p.roomName }).orderBy('created_at', 'desc').limit(1000).get()).data));
         break;
       case 'rooms':
         rows = normalize((await db.collection('rooms').limit(1000).get()).data);
         break;
       case 'bookings':
+        // 仅店务日历 / 后厨配菜 / 商家端调用，文档含 guest_phone 明文，顾客一律拒绝
+        if (!(await isStaffOf())) return { error: '无权限' };
         if (p.date) rows = normalize((await db.collection('bookings').where({ date: p.date }).limit(1000).get()).data);
         else if (p.month) {
           // 按月份查询整月 booking（供店务日历聚合每日已订包厢数）
@@ -968,15 +993,23 @@ exports.main = async (event) => {
       // 关键修复：必须传 roomNo 且校验包厢与时间，避免「看任意厢/凌晨看厢」误标真实预订为到店。
       case 'markArrived': {
         if (!openid) return { error: '身份未就绪' };
-        const roomNo = p.roomNo;
+        const roomNo = String(p.roomNo || '');
         if (!roomNo) return { data: { ok: false, count: 0, skipped: true } }; // 无包厢上下文（如我的/今日页）不误标
         await ensureCol('reservations');
-        const today = new Date().toISOString().slice(0, 10);
-        const list = (await db.collection('reservations').where({ _openid: openid, room_id: String(roomNo), date: today, status: 'confirmed' }).limit(10).get()).data || [];
+        // 云函数容器为 UTC，+8h 取北京日期；原先直接 toISOString() 会让 00:00-08:00 错一天
+        const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+        // 修复 2026-11-12：reservations 存的字段是 roomNo，旧查 room_id 恒为空 → 功能从未生效。
+        // 改为只按 身份+日期+状态 查库，再在内存里兼容新旧两种房号字段过滤。
+        const list = (await db.collection('reservations').where({ _openid: openid, date: today, status: 'confirmed' }).limit(50).get()).data || [];
         const now = Date.now();
         let n = 0;
         for (const r of list) {
-          const serve = serveAtOf(r.date, r.mealTime, r.expectedArrival).getTime();
+          if (String(r.roomNo || r.room_id || '') !== roomNo) continue;
+          // 局部按北京时间（UTC+8）解析开席时间；全局 serveAtOf 仍无时区后缀，本轮不动，
+          // 以免影响取消预订 4h 门槛 / 定时提醒 / 分厢冲突，留待时间口径统一时一并处理。
+          const hm = (r.expectedArrival && String(r.expectedArrival).indexOf(':') > 0) ? String(r.expectedArrival) : (r.mealTime === 'dinner' ? '17:30' : '11:30');
+          const serve = new Date(r.date + 'T' + hm + ':00+08:00').getTime();
+          if (!Number.isFinite(serve)) continue;
           // 时间门槛：预计开席前 30 分钟 ~ 后 4 小时之间才算到店，避免凌晨/提前太久误标
           if (now < serve - 30 * 60 * 1000 || now > serve + 4 * 3600 * 1000) continue;
           await db.collection('reservations').doc(r._id).update({ data: { status: 'arrived', arrivedAt: db.serverDate() } });
