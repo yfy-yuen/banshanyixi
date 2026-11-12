@@ -4,8 +4,7 @@
     <view class="perm">
       <view class="perm-title">员工店务专区</view>
       <view class="perm-sub">仅本店员工可进入</view>
-      <view class="perm-uid">我的身份ID：{{uid}}</view>
-      <view class="perm-tip">将此 ID 交给店长，由店长在「商家 → 员工管理」中加入白名单即可。</view>
+      <view class="perm-tip">向店长申请开通员工权限，审批通过后即可进入员工专区。</view>
       <view class="btn" bindtap="applyStaff">申请成为员工</view>
     </view>
   </block>
