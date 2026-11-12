@@ -111,10 +111,19 @@ onShow() {
     if (!form.partySize || form.partySize < 1) { wx.showToast({ title: '请填写人数', icon: 'none' }); return; }
     if (!/^1[3-9]\d{9}$/.test(form.contactPhone)) { wx.showToast({ title: '请填写正确手机号', icon: 'none' }); return; }
 
-    // 订阅消息授权（顾客端）：必须在用户点击的同步链路内请求，店务确认时云端才能推送
-    if (RESERVE_TPL_ID) {
-      try { await new Promise((res) => wx.requestSubscribeMessage({ tmplIds: [RESERVE_TPL_ID], success: res, fail: res })); }
-      catch (e) { /* 授权失败不影响订位提交 */ }
+    // 订阅消息授权（顾客端）：必须在用户点击的同步链路内请求，店务确认时云端才能推送。
+    // 2026-11-12 修复：必须判断 accept。用户点「拒绝 / 取消」时原先照常提交、云端白发且静默失败；
+    // 现在把授权结果随预订落库，确认通知只在已授权时发送，便于日志里区分「没授权」和「发送失败」。
+    let subscribeOk = false;
+    if (RESERVE_TPL_ID && wx.requestSubscribeMessage) {
+      try {
+        const sr = await new Promise((resolve) => wx.requestSubscribeMessage({
+          tmplIds: [RESERVE_TPL_ID],
+          success: (r) => resolve(r || {}),
+          fail: () => resolve({}),
+        }));
+        subscribeOk = sr[RESERVE_TPL_ID] === 'accept';
+      } catch (e) { subscribeOk = false; }
     }
 
     // 把表单草稿交给 menu 预点页（menu 创建预订时一并写入预点菜）
@@ -122,6 +131,7 @@ onShow() {
       date: form.date, expectedArrival: form.expectedArrival,
       partySize: form.partySize, contactPhone: form.contactPhone,
       guestName: (form.guestName || '').trim(),
+      subscribeOk,
       note: form.note,
       roomNo: form.roomNo || '',
       needMahjong: form.needMahjong || false,

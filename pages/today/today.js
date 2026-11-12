@@ -57,6 +57,7 @@ onShow() {
     }
   },
   goReserve() {
-    wx.switchTab({ url: '/pages/reserve/reserve' });
+    // 2026-11-12 修复：reserve 不在 tabBar 里，switchTab 会静默失败（点了没反应），须用 navigateTo
+    wx.navigateTo({ url: '/pages/reserve/reserve' });
   },
 });

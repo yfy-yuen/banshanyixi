@@ -53,6 +53,16 @@ const STORE_LAT = 28.260397;         // GCJ-02 纬度（腾讯地图坐标，悦
 const STORE_LNG = 112.883721;        // GCJ-02 经度（腾讯地图坐标，悦禧国际山庄参考点）
 const STORE_NAME = '半山一席';   // 工商注册名（导航/拨号显示用，无间隔点）；品牌视觉仍用「半山·一席」
 
+/* 上架合规：资质公示（2026-11-12 新增，上线前必须由店主填真实信息）。
+ * ⚠️ 待填项：creditCode（统一社会信用代码）、foodLicenseNo（食品经营许可证编号）、
+ *    licenseImages（证照图片）。留空时 about 页会显示「待补充」，不会编造证照信息。
+ * 图片建议用微信云开发云存储的 cloud:// 文件 ID（<image> 原生支持，无需转临时链）。 */
+const LICENSE_INFO = {
+  creditCode: '',
+  foodLicenseNo: '',
+  licenseImages: [],
+};
+
 // 预点菜自助修改截止线：用餐日 00:00 往前数 N 个整天。
 // 规则：距用餐日 < N 整天（即用餐当天 / 前 1 天 / 不足 N 天）则锁定，只能联系店员代加。
 // 例：用餐周六 → 周三(前3天)仍可改，周四00:00起锁定（PREORDER_LOCK_DAYS=2 表示「至少提前 2 整天」）。
@@ -75,4 +85,4 @@ function canSelfEditPreorder(date) {
 const fmt = (n) => '¥' + Number(n || 0).toFixed(2);
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-module.exports = { ENV, REGION, ROOMS, ROOM_CAP, ROOM_CAP_RANGE, ROOM_MAJIANG, BOSS_CODE, CATS, fmt, genId, GATE_VIDEO_SRC, GATE_VIDEO_POSTER, RESERVE_TPL_ID, STORE_ADDR, STORE_PHONE, STORE_LAT, STORE_LNG, STORE_NAME, PREORDER_LOCK_DAYS, canSelfEditPreorder };
+module.exports = { ENV, REGION, ROOMS, ROOM_CAP, ROOM_CAP_RANGE, ROOM_MAJIANG, BOSS_CODE, CATS, fmt, genId, GATE_VIDEO_SRC, GATE_VIDEO_POSTER, RESERVE_TPL_ID, STORE_ADDR, STORE_PHONE, STORE_LAT, STORE_LNG, STORE_NAME, LICENSE_INFO, PREORDER_LOCK_DAYS, canSelfEditPreorder };

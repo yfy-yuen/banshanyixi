@@ -1,0 +1,62 @@
+<view class="page {{isTablet ? 'is-tablet' : ''}}">
+  <image class="app-bg" src="/assets/images/bg-landscape.jpg" mode="aspectFill"></image>
+
+  <view class="hero">
+    <view class="h-title">隐私政策</view>
+    <view class="h-sub">{{storeName}} · 更新日期 {{updated}}</view>
+  </view>
+
+  <view class="card">
+    <view class="c-title">一、我们收集哪些信息</view>
+    <view class="c-body">为完成预订制用餐服务，我们会收集并处理以下信息：
+
+1. 微信身份标识（OPENID）：由微信在云函数上下文中自动提供，用于识别您的预订、同桌关系与店员身份，不会显示给其他顾客。
+2. 您主动填写的预订信息：称呼、联系电话、用餐日期与预计到达时间、用餐人数、备注、包厢与棋牌偏好。
+3. 交易与服务记录：预点菜品、现场加单、订单金额、结账与清台状态、同桌邀请码关联关系。
+4. 图片：仅当您使用店务功能上传菜品图、包厢环境照或证照时，会读取您从相册选择的图片并存入云端存储。
+
+我们不会收集通讯录、精确位置、人脸或生物识别信息；本小程序未申请定位权限。</view>
+  </view>
+
+  <view class="card">
+    <view class="c-title">二、这些信息用于什么</view>
+    <view class="c-body">· 受理与确认预订、安排包厢与餐段、生成后厨配菜单；
+· 提供点单、加单、结账与电子收据；
+· 在您授权后发送「预订成功」等订阅消息；
+· 让同桌受邀的亲友看到本桌的菜单与订单；
+· 处理取消、改期、售后与客诉。
+
+我们不会把您的信息用于与上述服务无关的目的，也不会出售给第三方。</view>
+  </view>
+
+  <view class="card">
+    <view class="c-title">三、存储与保护</view>
+    <view class="c-body">数据存放在微信云开发（腾讯云）的云端数据库与云存储中，按业务需要保留；前端不直接连接数据库，全部读写经云函数并做身份校验。顾客端只能获取后端已授权的本桌数据，手机号对非店员一律脱敏显示。</view>
+  </view>
+
+  <view class="card">
+    <view class="c-title">四、第三方能力与权限</view>
+    <view class="c-body">· 微信云开发 / 云存储：承载数据存储；
+· 微信订阅消息：仅在您主动点击「允许」后用于发送预订通知，您可在微信「设置 → 订阅消息」中随时关闭；
+· 相册：仅在您主动选择图片上传时调用，不上传会跳过。
+
+除上述微信平台能力外，我们未接入其他第三方数据分析或广告 SDK。</view>
+  </view>
+
+  <view class="card">
+    <view class="c-title">五、您的权利</view>
+    <view class="c-body">您可在本小程序「我的」页查看自己的预订，修改称呼，或联系门店更正、删除个人信息。取消授权或删除后，可能影响预订与点单功能的正常使用。</view>
+  </view>
+
+  <view class="card">
+    <view class="c-title">六、未成年人</view>
+    <view class="c-body">本服务面向到店用餐的成年人预订；若未成年人由监护人陪同使用，监护人可代为行使上述权利。</view>
+  </view>
+
+  <view class="card">
+    <view class="c-title">七、政策更新与联系</view>
+    <view class="c-body">本政策如有变更，会在本页公布更新日期。门店名称、地址、电话与资质信息见「关于我们」页，您可通过该页的拨打与导航入口联系我们。</view>
+  </view>
+
+  <view class="foot" bindtap="goBack">返回 ›</view>
+</view>

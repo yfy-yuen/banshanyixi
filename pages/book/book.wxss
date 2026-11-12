@@ -72,7 +72,7 @@
 .appr-note { font-size: 24rpx; color: var(--muted); margin-top: 8rpx; }
 .appr-acts { display: flex; gap: 16rpx; justify-content: flex-end; margin-top: 20rpx; }
 .appr-podishes { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 16rpx; }
-.appr-pod { font-size: 24rpx; color: var(--ink-light); background: var(--bg-soft); border: 2rpx solid var(--border); border-radius: 28rpx; padding: 4rpx 20rpx; }
+.appr-pod { font-size: 24rpx; color: var(--ink-light); background: var(--card-soft); border: 2rpx solid var(--border); border-radius: 28rpx; padding: 4rpx 20rpx; }
 .po-tip { font-size: 24rpx; color: var(--muted); margin-bottom: 20rpx; }
 .po-row { display: flex; align-items: center; justify-content: space-between; padding: 16rpx 0; border-bottom: 2rpx solid var(--border); }
 .po-name { font-size: 28rpx; color: var(--ink); }

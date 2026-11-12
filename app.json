@@ -13,6 +13,7 @@
     "pages/roomEdit/roomEdit",
     "pages/today/today",
     "pages/about/about",
+    "pages/privacy/privacy",
     "pages/kitchen/kitchen"
   ],
   "window": {

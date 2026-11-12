@@ -40,5 +40,44 @@
     </view>
   </view>
 
+  <!-- 资质公示（上架合规）：真实证照信息在 utils/config.js 的 LICENSE_INFO 中填写 -->
+  <view class="card">
+    <view class="c-title">资质公示</view>
+    <view class="row">
+      <view class="r-left">
+        <view class="r-label">经营主体</view>
+        <view class="r-val">{{storeName}}</view>
+      </view>
+    </view>
+    <view class="divider"></view>
+    <view class="row">
+      <view class="r-left">
+        <view class="r-label">统一社会信用代码</view>
+        <view class="r-val">{{creditCode}}</view>
+      </view>
+    </view>
+    <view class="divider"></view>
+    <view class="row">
+      <view class="r-left">
+        <view class="r-label">食品经营许可证</view>
+        <view class="r-val">{{foodLicenseNo}}</view>
+      </view>
+    </view>
+    <block wx:if="{{licenseImages.length}}">
+      <view class="divider"></view>
+      <view class="lic-imgs">
+        <image wx:for="{{licenseImages}}" wx:key="*this" class="lic-img" src="{{item}}" mode="aspectFit" />
+      </view>
+    </block>
+  </view>
+
+  <!-- 隐私政策入口 -->
+  <view class="card" bindtap="goPrivacy">
+    <view class="row">
+      <view class="r-left"><view class="r-label">隐私政策</view></view>
+      <view class="r-go">查看 ›</view>
+    </view>
+  </view>
+
   <view class="foot">本店仅接受预订，不接待散客</view>
 </view>

@@ -1,15 +1,27 @@
 // 数据层：所有云端读写统一经云函数 dataApi（代理 cloud1 文档库），前端不直接连数据库
 // 角色判定走云函数 whoami（基于微信 OPENID 静默返回 role），无需登录框。
 
+// 2026-11-12 幂等修复：写操作绝不自动重试。
+// 云函数「超时」不等于「没执行」——写库可能已经成功，客户端重试会造成重复下单、
+// 重复生成邀请码、重复开收据、重复扣标记。只有读操作与 ping 预热才在冷启动偶发超时时重试。
+// 新增写 action 时，务必同步加进这个清单。
+const NO_RETRY_ACTIONS = [
+  'bindBoss', 'ownerBoot', 'settleOrder', 'clearOrder', 'saveDish', 'deleteDish', 'saveQr',
+  'saveRoom', 'saveBooking', 'deleteBooking', 'appendBookingDishes', 'approveStaff', 'removeStaff',
+  'requestStaff', 'submitReservation', 'cancelReservation', 'savePreorder', 'staffSavePreorder',
+  'genInvite', 'resetInvite', 'removeCompanion', 'joinByInvite', 'publishSession',
+  'confirmReservation', 'rejectReservation', 'updateReservationDishes', 'closeSession',
+  'sweepPending', 'markArrived', 'pushReminders', 'resetDailyFlags', 'saveKitchenManual',
+];
+
 // 统一调用 dataApi 云函数；result.error 视为业务失败并抛错
-// 自动重试：云函数冷启动（久未调用首次拉容器 2~8s）偶发超时，重试可自愈
 async function callApi(action, payload, attempt = 0) {
   try {
     const { result } = await wx.cloud.callFunction({ name: 'dataApi', data: { action, ...(payload || {}) } });
     if (!result || result.error) throw new Error((result && result.error) || '请求失败');
     return result.data;
   } catch (e) {
-    if (attempt < 2) {
+    if (attempt < 2 && NO_RETRY_ACTIONS.indexOf(action) === -1) {
       await new Promise((r) => setTimeout(r, 600));
       return callApi(action, payload, attempt + 1);
     }

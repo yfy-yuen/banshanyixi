@@ -1,5 +1,5 @@
 require('./utils/runtime.js'); // 提供 async/await 运行时（关闭增强编译后必需）
-const { ensureCloud, preflight } = require('./utils/cloudbase');
+const { preflight } = require('./utils/cloudbase');
 const { callApi, ownerBoot } = require('./utils/api');
 const { ENV } = require('./utils/config'); // ENV 用于初始化微信云能力
 
@@ -34,14 +34,33 @@ App({
       this.globalData.roomNo = roomNo;
       this.globalData.roomName = roomName;
     }
-    // 预初始化云端
-    ensureCloud();
+    // 原生 wx.cloud 已于上面 init；小程序端不再初始化 CloudBase SDK（2026-11-12 主包瘦身）
     // 微信身份 + 角色（顾客 / 店员 / 店长）——基于 OPENID 静默判定，无需登录框
     this.initRole();
     // 预热 dataApi（与 initRole 并发 cold-start）：让首个业务调用命中热实例，避免首屏连排冷启动卡顿
     callApi('ping').catch(() => {});
     // 后台连通性探测（前端已全面走云函数，preflight 为空操作）
     preflight().catch(() => {});
+    // 上架合规（2026-11-12）：隐私授权守卫。
+    // MP 后台配置《小程序隐私保护指引》后，调用相册选图等隐私接口前微信会触发此回调，
+    // 需由小程序弹确认框并 resolve('agree') 才放行；旧基础库 / 未配置指引时自动跳过，不阻断业务。
+    try {
+      if (typeof wx.onNeedPrivacyAuthorization === 'function') {
+        wx.onNeedPrivacyAuthorization((resolve) => {
+          wx.showModal({
+            title: '隐私保护提示',
+            content: '使用相册选图等功能前，请先阅读并同意《隐私政策》（可在「关于我们 → 隐私政策」查看）。',
+            confirmText: '同意并继续',
+            cancelText: '暂不同意',
+            success: (r) => {
+              if (r.confirm) resolve({ buttonId: 'agree-btn', event: 'agree' });
+              else resolve({ event: 'disagree' });
+            },
+            fail: () => resolve({ event: 'disagree' }),
+          });
+        });
+      }
+    } catch (e) { /* 兼容旧基础库，忽略 */ }
   },
 
   // 基于微信 OPENID 静默判定角色：调 whoami，云函数用上下文 OPENID 查 staff 返回 role。

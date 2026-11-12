@@ -8,8 +8,10 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const _ = db.command;
 
-// 老板一次性注册解锁码（与 utils/config.js 的 BOSS_CODE 保持一致；此处内联避免跨端耦合）
-const BOSS_CODE = 'Boss8888';
+// 老板一次性注册解锁码。
+// 2026-11-12 安全加固：优先读云函数控制台环境变量 BOSS_CODE（前端包里读不到），
+// 未配置时才退回内置值，保证存量部署仍可解锁；上线后建议在控制台设置环境变量并改掉内置值。
+const BOSS_CODE = process.env.BOSS_CODE || 'Boss8888';
 
 // 订阅消息模板 ID：云端 confirmReservation 发送侧读取。
 // 优先用控制台云函数环境变量 RESERVE_TPL_ID（可在不改动代码的情况下覆盖），
@@ -58,10 +60,20 @@ function maskPhone(s) {
   return String(s).replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
 }
 // 开席时间：优先用顾客填写的「预计到达时间」；否则回退午市 11:30 / 晚市 17:30。
+// 2026-11-12 统一时间口径：云函数容器为 UTC，库里的 date / arrival 全是北京时间语义，
+// 必须显式写 +08:00；原先无时区后缀会被按 UTC 解析，导致取消 4h 门槛 / 定时提醒 / 分厢冲突整体偏 8 小时。
 function serveAtOf(date, mealTime, arrival) {
   const hm = (arrival && /^\d{1,2}:\d{2}$/.test(arrival)) ? arrival : (mealTime === 'dinner' ? '17:30' : '11:30');
-  return new Date(date + 'T' + hm + ':00');
+  return new Date(date + 'T' + hm + ':00+08:00');
 }
+// 北京时间工具：兼容 Date / {$date} / 字符串。
+// 修复 String(Date).slice(0,10) 得到 "Wed Nov 12..." 乱码、以及 UTC 日期在北京 00:00-08:00 错一天。
+function bjDate(v) {
+  const t = tsOf(v || Date.now());
+  return new Date((Number.isFinite(t) ? t : Date.now()) + 8 * 3600 * 1000);
+}
+function bjYMD(v) { return bjDate(v).toISOString().slice(0, 10); }
+function bjHMS(v) { return bjDate(v).toISOString().slice(11, 19); }
 // 用餐时段（用于包厢日历分组）：预计到达 < 14:00 算午市，否则晚市
 function slotOf(arrival) {
   if (arrival && /^\d{1,2}:\d{2}$/.test(arrival)) {
@@ -244,9 +256,13 @@ exports.main = async (event) => {
       }
       case 'bindBoss': {
         if (!openid) return { error: '身份未就绪' };
-        if (p.code !== BOSS_CODE) return { error: '解锁码错误' };
+        if (!BOSS_CODE || p.code !== BOSS_CODE) return { error: '解锁码错误' };
         const role = await roleOf();
         if (role === 'manager') return { data: { openid, role: 'manager', already: true } };
+        // 2026-11-12 安全加固：店长只能注册一次。系统里已有 manager 时，任何解锁码都不能再提权，
+        // 避免解锁码泄露后被第二个人自助绑定。老板换设备时 whoami 会按 OPENID 自动识别为店长，无需重新解锁。
+        const existingMgr = (await db.collection('staff').where({ role: 'manager' }).limit(1).get()).data || [];
+        if (existingMgr.length) return { error: '系统已绑定店长，请联系现有店长在店务中添加员工' };
         await db.collection('staff').add({ data: { openid, name: '店长', role: 'manager', created_at: db.serverDate() } });
         return { data: { openid, role: 'manager' } };
       }
@@ -362,7 +378,7 @@ exports.main = async (event) => {
         // 客人手机后 4 位（best-effort：按包厢+当日关联 booking 的 guest_phone）
         let phoneLast4 = '';
         try {
-          const odate = String(order.created_at || '').slice(0, 10);
+          const odate = bjYMD(order.created_at);
           const bks = (await db.collection('bookings').where({ room_id: String(order.room_no), date: odate }).limit(5).get()).data || [];
           const ph = (bks[0] && bks[0].guest_phone) || '';
           if (/^\d{11}$/.test(ph)) phoneLast4 = ph.slice(7);
@@ -372,8 +388,8 @@ exports.main = async (event) => {
           no: 'R' + now.getTime(),
           order_id: order._id,
           room_no: order.room_no, room_name: order.room_name || '',
-          date: String(order.created_at || '').slice(0, 10),
-          time: now.toISOString().slice(11, 19),
+          date: bjYMD(order.created_at),
+          time: bjHMS(now),
           phoneLast4,
           items: lines, total,
           paymentMethod: pm,
@@ -388,8 +404,7 @@ exports.main = async (event) => {
         });
         // 结账清台：连锁把「该餐段」的排席(booking)标记 closed（留底不删），使清台后该餐段预点菜在顾客端收起（结论：清台即关）
         try {
-          const cd = new Date(order.created_at);
-          const bj = new Date(cd.getTime() + 8 * 3600 * 1000); // 转北京时间，与 booking 的 date/slot 口径一致
+          const bj = bjDate(order.created_at); // 转北京时间，与 booking 的 date/slot 口径一致
           const odate = bj.toISOString().slice(0, 10);
           const slot = bj.getUTCHours() < 14 ? 'lunch' : 'dinner';
           await db.collection('bookings').where({ room_id: String(order.room_no), date: odate, slot }).update({
@@ -584,6 +599,7 @@ exports.main = async (event) => {
             partySize: ps, contactPhone: p.contactPhone, note: p.note || '',
             guestName: (p.guestName || '').toString().trim().slice(0, 20),
             needMahjong,
+            subscribeOk: !!p.subscribeOk, // 顾客是否点「允许」订阅消息；确认通知只在允许时发送
             orderNote: p.orderNote || '',
             dishes: Array.isArray(p.dishes) ? p.dishes : [],
             companions: [], inviteCode: genInviteCode(),
@@ -742,7 +758,7 @@ exports.main = async (event) => {
         await ensureCol('bookings'); await ensureCol('reservations'); await ensureCol('orders');
         const roomNo = String(p.roomNo || '');
         const roomName = p.roomName || '';
-        const date = p.date || new Date().toISOString().slice(0, 10);
+        const date = p.date || bjYMD(Date.now());
         if (!roomNo) return { data: { unlocked: false } };
         // 店员/老板：直接放行（店家需看全部包厢菜单/现场单）
         if (await isStaffOf()) {
@@ -750,7 +766,7 @@ exports.main = async (event) => {
           let liveAll = [];
           try {
             const orders = (await db.collection('orders').where({ room_name: roomName, closed: _.neq(true) }).limit(1000).get()).data || [];
-            liveAll = orders.filter((o) => String(o.created_at || '').slice(0, 10) === date);
+            liveAll = orders.filter((o) => bjYMD(o.created_at) === date);
           } catch (e) { console.warn('[roomAccess staff live]', e.message); }
           return { data: { unlocked: true, staff: true, bookDishes: bksAll.map((b) => ({ slot: b.slot || '', type: b.type || 'meal', date: b.date, dishes: b.dishes || [] })), liveOrders: liveAll } };
         }
@@ -864,8 +880,9 @@ exports.main = async (event) => {
         }
 
         // 订阅消息通知顾客（结论 #3/#21：确认即发「预订成功」推送；到店前提醒由定时任务 pushReminders 补发）
+        // 2026-11-12：只在顾客点了「允许」时发送；老数据无此字段仍按原行为发送，避免存量预订漏通知。
         try {
-          if (tplId) {
+          if (tplId && r.subscribeOk !== false) {
             await cloud.openapi.subscribeMessage.send({
               touser: r._openid,
               templateId: tplId,
@@ -910,7 +927,7 @@ exports.main = async (event) => {
           });
           await db.collection('reservations').doc(p.id).update({ data: { status: 'confirmed', confirmedAt: db.serverDate(), roomNo: swapped, rejectReason: '' } });
           try {
-            if (tplId) {
+            if (tplId && r.subscribeOk !== false) {
               await cloud.openapi.subscribeMessage.send({
                 touser: r._openid,
                 templateId: tplId,
@@ -996,8 +1013,8 @@ exports.main = async (event) => {
         const roomNo = String(p.roomNo || '');
         if (!roomNo) return { data: { ok: false, count: 0, skipped: true } }; // 无包厢上下文（如我的/今日页）不误标
         await ensureCol('reservations');
-        // 云函数容器为 UTC，+8h 取北京日期；原先直接 toISOString() 会让 00:00-08:00 错一天
-        const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+        // 云函数容器为 UTC，统一用北京时间日期（bjYMD），00:00-08:00 不再错一天
+        const today = bjYMD(Date.now());
         // 修复 2026-11-12：reservations 存的字段是 roomNo，旧查 room_id 恒为空 → 功能从未生效。
         // 改为只按 身份+日期+状态 查库，再在内存里兼容新旧两种房号字段过滤。
         const list = (await db.collection('reservations').where({ _openid: openid, date: today, status: 'confirmed' }).limit(50).get()).data || [];
@@ -1005,10 +1022,8 @@ exports.main = async (event) => {
         let n = 0;
         for (const r of list) {
           if (String(r.roomNo || r.room_id || '') !== roomNo) continue;
-          // 局部按北京时间（UTC+8）解析开席时间；全局 serveAtOf 仍无时区后缀，本轮不动，
-          // 以免影响取消预订 4h 门槛 / 定时提醒 / 分厢冲突，留待时间口径统一时一并处理。
-          const hm = (r.expectedArrival && String(r.expectedArrival).indexOf(':') > 0) ? String(r.expectedArrival) : (r.mealTime === 'dinner' ? '17:30' : '11:30');
-          const serve = new Date(r.date + 'T' + hm + ':00+08:00').getTime();
+          // 2026-11-12 时间口径已全局统一（serveAtOf 显式 +08:00），此处直接复用，不再局部另算。
+          const serve = serveAtOf(r.date, r.mealTime, r.expectedArrival).getTime();
           if (!Number.isFinite(serve)) continue;
           // 时间门槛：预计开席前 30 分钟 ~ 后 4 小时之间才算到店，避免凌晨/提前太久误标
           if (now < serve - 30 * 60 * 1000 || now > serve + 4 * 3600 * 1000) continue;

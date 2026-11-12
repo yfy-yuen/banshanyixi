@@ -1,7 +1,7 @@
 // 门店信息页（banshan-product-vision 第 17 条）：关于我们 / 营业时间 / 地址导航 / 一键拨打。
 // 纯前端页，不依赖 dataApi 部署与订阅推送。门店地址/电话/经纬度统一从 utils/config 的 STORE_* 读取。
 
-const { STORE_ADDR, STORE_PHONE, STORE_LAT, STORE_LNG, STORE_NAME } = require('../../utils/config');
+const { STORE_ADDR, STORE_PHONE, STORE_LAT, STORE_LNG, STORE_NAME, LICENSE_INFO } = require('../../utils/config');
 const { detectTablet } = require('../../utils/tablet');
 
 Page({
@@ -13,6 +13,10 @@ Page({
     address: STORE_ADDR,
     phone: STORE_PHONE,
     storeName: STORE_NAME,
+    // 资质公示（上架合规）：值来自 utils/config.js 的 LICENSE_INFO，留空显示「待补充」
+    creditCode: (LICENSE_INFO.creditCode || '').trim() || '待补充',
+    foodLicenseNo: (LICENSE_INFO.foodLicenseNo || '').trim() || '待补充',
+    licenseImages: LICENSE_INFO.licenseImages || [],
     // 经纬度（GCJ-02）。填 0 表示未设置，点击导航会提示先补全。
     lat: STORE_LAT,
     lng: STORE_LNG,
@@ -30,6 +34,11 @@ Page({
       return;
     }
     wx.openLocation({ latitude: lat, longitude: lng, name: storeName, address });
+  },
+
+  // 隐私政策页（上架合规三件套之一）
+  goPrivacy() {
+    wx.navigateTo({ url: '/pages/privacy/privacy' });
   },
 
   // 一键拨打（多个号码用 / 分隔时，取第一个）

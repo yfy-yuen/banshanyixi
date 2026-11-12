@@ -27,6 +27,14 @@ Page({
     this._pendingIntro = '';
     this.setData({ roomNo: no, roomName: name });
     this.loadRoom(no);
+    // 2026-11-12：云端 saveRoom 已强制 manager 校验，这里只补一个前端提示，
+    // 避免顾客误进编辑页白填半天。不强制跳走（角色是异步判定，误判会挡住店长）。
+    const app = getApp();
+    if (app && typeof app.refreshRole === 'function') {
+      app.refreshRole().then((role) => {
+        if (role !== 'manager') wx.showToast({ title: '仅店长可保存修改', icon: 'none' });
+      }).catch(() => {});
+    }
   },
 
   async loadRoom(no) {

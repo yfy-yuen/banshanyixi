@@ -33,7 +33,24 @@
   "condition": {},
   "simulatorPluginLibVersion": {},
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      { "type": "folder", "value": "node_modules" },
+      { "type": "folder", "value": "miniprogram_npm" },
+      { "type": "folder", "value": "demo" },
+      { "type": "folder", "value": "db" },
+      { "type": "folder", "value": "cloud" },
+      { "type": "folder", "value": "_gate_backup_before_video" },
+      { "type": "folder", "value": "_rollback_20261112_131600" },
+      { "type": "glob", "value": "**/_rollback_*" },
+      { "type": "glob", "value": "**/*.bak*" },
+      { "type": "glob", "value": "**/*.log" },
+      { "type": "file", "value": "README.md" },
+      { "type": "file", "value": "设计文档.md" },
+      { "type": "file", "value": "操作步骤.md" },
+      { "type": "file", "value": "_gate_preview.html" },
+      { "type": "file", "value": "__probe_copy.txt" },
+      { "type": "file", "value": "package-lock.json" }
+    ],
     "include": []
   },
   "editorSetting": {},

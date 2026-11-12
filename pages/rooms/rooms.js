@@ -13,7 +13,7 @@ Page({
   onLoad() {
     this.setData({ isTablet: detectTablet() });
     // 兜底：即使 ROOMS 因某种原因未取到，也给出默认 4 个包厢，避免空白
-    const src = (ROOMS && typeof ROOMS === 'object') ? ROOMS : { '1': '谷山玥', '2': '满仓', '3': '枕山', '5': '云起' };
+    const src = (ROOMS && typeof ROOMS === 'object') ? ROOMS : { '1': '谷山玥', '2': '满仓', '3': '枕山', '5': '云起', '6': '知来' };
     this.setData({
       rooms: Object.entries(src).map(([no, name]) => ({ no, name })),
     });
