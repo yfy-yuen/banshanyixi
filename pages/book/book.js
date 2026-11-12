@@ -63,6 +63,10 @@ Page({
     this.loadConfirmed();
     this.loadSessions();
   },
+  // 「商家」入口合并到店务页：merchant 仍是 tabBar 注册页，故用 switchTab
+  goMerchant() {
+    wx.switchTab({ url: '/pages/merchant/merchant' });
+  },
   buildMonth(y, m) {
     const first = new Date(y, m - 1, 1);
     const startWeek = first.getDay();

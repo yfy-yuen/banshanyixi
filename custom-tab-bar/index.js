@@ -3,8 +3,9 @@
 // 菜单为只读浏览页，所有人可见；真正的点单在包厢内跳转的 pages/menu/menu
 const ROLE_TABS = {
   guest: ['rooms', 'menu', 'mine'],
-  clerk: ['rooms', 'menu', 'mine', 'book', 'merchant'],
-  manager: ['rooms', 'menu', 'mine', 'book', 'merchant'],
+  // 「商家」已合并进「店务」：底部只留一个店务入口，商家页由店务页顶部按钮进入
+  clerk: ['rooms', 'menu', 'mine', 'book'],
+  manager: ['rooms', 'menu', 'mine', 'book'],
 };
 const META = {
   rooms: { pagePath: '/pages/rooms/rooms', text: '包厢' },
@@ -44,7 +45,9 @@ Component({
         const pages = getCurrentPages();
         const route = (pages[pages.length - 1] && pages[pages.length - 1].route) || '';
         const found = Object.keys(META).find((k) => META[k].pagePath.replace(/^\//, '') === route);
-        const sel = found || this.data.selectedKey || 'rooms';
+        // 底部不再有「商家」按钮：停留在商家页时高亮「店务」，避免出现全不高亮
+        const raw = found || this.data.selectedKey || 'rooms';
+        const sel = raw === 'merchant' ? 'book' : raw;
         this.setData({ selectedKey: sel });
       };
       if (role === '') {

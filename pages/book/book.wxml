@@ -13,7 +13,10 @@
   <block wx:else>
     <view class="shop-bar">
       <view class="shop-title">店务管理</view>
-      <view class="btn-sm" wx:if="{{showPublishFeature}}" bindtap="openPublish">+ 发席</view>
+      <view class="shop-acts">
+        <view class="btn-sm" wx:if="{{showPublishFeature}}" bindtap="openPublish">+ 发席</view>
+        <view class="btn-sm" bindtap="goMerchant">{{isManager ? '商家' : '订单'}}</view>
+      </view>
     </view>
     <view class="cal-head">
       <view class="cal-nav" bindtap="prevMonth">‹</view>

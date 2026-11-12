@@ -54,7 +54,8 @@ Page({
   },
   onShow() {
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ selectedKey: 'merchant' });
+      // 底部「商家」按钮已合并进「店务」，此处高亮店务，避免出现全不高亮
+      this.getTabBar().setData({ selectedKey: 'book' });
     }
     const app = getApp();
     const role = app.globalData.role;
