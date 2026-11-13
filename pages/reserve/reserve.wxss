@@ -64,6 +64,14 @@
   background: var(--gold); border: 1rpx solid var(--gold); border-radius: 999rpx; padding: 6rpx 22rpx; display: inline-block;
 }
 
+/* 我的订位：默认只显示最新 2 条，其余收起，点此展开 / 收起 */
+.mine-toggle {
+  margin: 6rpx 0 24rpx; padding: 16rpx;
+  text-align: center; font-size: 26rpx; color: var(--cinnabar);
+  letter-spacing: 2rpx;
+  background: var(--card); border: 1rpx solid var(--cinnabar); border-radius: 999rpx;
+}
+
 /* 详情弹窗内菜单 */
 .menu-scroll { max-height: 360rpx; margin: 6rpx 0 6rpx; }
 .dish { display: flex; align-items: center; padding: 12rpx 0; border-bottom: 1rpx solid var(--border-light); }

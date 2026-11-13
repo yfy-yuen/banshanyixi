@@ -34,6 +34,7 @@ Page({
   data: {
     isTablet: false,
     mine: [], loading: false,
+    showAllMine: false, hiddenMineCount: 0,
     showApply: false,
     form: { date: '', expectedArrival: '18:00', partySize: '', contactPhone: '', guestName: '', note: '', roomNo: '', roomName: '由店家安排', needMahjong: false },
     roomOptions: buildRoomOptions(false),
@@ -63,7 +64,7 @@ onShow() {
         // 店务确认后会自动排席并生成 booking（reservationRef 回指），这里显示顾客被安排在几号包厢
         roomText: r.roomId ? (ROOMS[r.roomId] || (r.roomId + ' 号包厢')) : '',
       }));
-      this.setData({ mine });
+      this.setData({ mine, hiddenMineCount: Math.max(0, mine.length - 2) });
     } catch (e) { console.warn('[reserve]', e); }
     this.setData({ loading: false });
   },
@@ -73,6 +74,8 @@ onShow() {
     this.setData({ showApply: true, form: { date: todayStr(), expectedArrival: '18:00', partySize: '', contactPhone: '', guestName: '', note: '', roomNo: '', roomName: '由店家安排', needMahjong: false }, roomOptions: buildRoomOptions(false), roomIndex: 0 });
   },
   closeApply() { this.setData({ showApply: false }); },
+  /* 我的订位：默认只显示最新 2 条，其余由「展开 / 收起」控制；数据不删，只控制渲染 */
+  toggleMine() { this.setData({ showAllMine: !this.data.showAllMine }); },
   noop() {},
   onDate(e) { this.setData({ 'form.date': e.detail.value }); },
   onArrival(e) { this.setData({ 'form.expectedArrival': e.detail.value }); },
