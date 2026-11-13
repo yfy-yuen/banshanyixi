@@ -1,6 +1,6 @@
-const { ROOMS } = require('/utils/config');
-const { getRoom, saveRoom } = require('/utils/api');
-const { detectTablet } = require('/utils/tablet');
+const { ROOMS } = require('../../../utils/config');
+const { getRoom, saveRoom } = require('../../../utils/api');
+const { detectTablet } = require('../../../utils/tablet');
 
 // 抽取 HTML 中所有 cloud:// 图片 src（富文本插图以 cloud:// 永久存储，显示时再转临时链）
 function parseCloudImgs(html) {

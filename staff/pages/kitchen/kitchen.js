@@ -2,9 +2,9 @@
 // 纯前端聚合：bookings(type=meal, 含预点菜快照) + merchantOrders(未清台现场单)
 // 支持「日期切换」(日历/今天明天后天) + 「餐段筛选」(全天/午市/晚市)；未来日期仅含预点菜。
 // 按包厢分组出餐单；按菜名汇总配菜总份数。不依赖任何新云函数，不卡部署。
-const { ROOMS } = require('/utils/config');
-const { callApi, getMerchantOrders, getDishesAdmin } = require('/utils/api');
-const { detectTablet } = require('/utils/tablet');
+const { ROOMS } = require('../../../utils/config');
+const { callApi, getMerchantOrders, getDishesAdmin } = require('../../../utils/api');
+const { detectTablet } = require('../../../utils/tablet');
 
 function todayStr() {
   const d = new Date();

@@ -1,8 +1,8 @@
-const { CATS, fmt, ROOMS } = require('/utils/config');
-const { detectTablet } = require('/utils/tablet');
+const { CATS, fmt, ROOMS } = require('../../../utils/config');
+const { detectTablet } = require('../../../utils/tablet');
 const {
   getMerchantOrders, settleOrder, clearOrder, listReceipts, pushReminders, resetDailyFlags, getDishesAdmin, saveDish, deleteDish, getPaymentQrcodes, saveQr, callApi, sweepPending,
-} = require('/utils/api');
+} = require('../../../utils/api');
 
 function decorateOrder(o) {
   const items = (o.items || []).map((i) => ({
