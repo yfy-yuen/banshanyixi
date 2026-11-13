@@ -1,8 +1,8 @@
 <view class="page {{isTablet ? 'is-tablet' : ''}}">
-  <include src="../parts/header.wxml" />
+  <include src="/staff/pages/merchant/parts/header.wxml" />
   <block wx:if="{{!noPerm}}">
-    <include src="../parts/tabs.wxml" />
-    <include src="../sections/orders.wxml" />
+    <include src="/staff/pages/merchant/parts/tabs.wxml" />
+    <include src="/staff/pages/merchant/sections/orders.wxml" />
   </block>
 </view>
-<include src="../sections/overlays.wxml" />
+<include src="/staff/pages/merchant/sections/overlays.wxml" />
