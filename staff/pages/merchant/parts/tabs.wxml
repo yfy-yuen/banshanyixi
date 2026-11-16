@@ -1,8 +1,11 @@
     <view class="mhead">
-      <text class="mrole">{{role}}</text>
-      <view class="mback" bindtap="goBackBook">‹ 返回店务</view>
+      <view class="mhead-l"><text class="mrole">{{role}}</text></view>
+      <view class="mhead-r">
+        <view class="mquick" bindtap="gotoKitchen">后厨 ›</view>
+        <view class="mback" bindtap="goBackBook">‹ 返回店务</view>
+      </view>
     </view>
-    <view class="mtabs">
+    <view class="mtabs {{isManager ? '' : 'single'}}">
       <view class="mtab {{tab==='orders'?'on':''}}" bindtap="switchMerchant" data-tab="orders">订单</view>
       <view class="mtab {{tab==='dishes'?'on':''}}" wx:if="{{isManager}}" bindtap="switchMerchant" data-tab="dishes">菜品</view>
       <view class="mtab {{tab==='report'?'on':''}}" wx:if="{{isManager}}" bindtap="switchMerchant" data-tab="report">报表</view>

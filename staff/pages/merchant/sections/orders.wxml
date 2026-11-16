@@ -1,8 +1,4 @@
     <view>
-      <view class="kitchen-entry" bindtap="gotoKitchen">
-        <text class="ke-title">后厨配菜单 · 一键出单</text>
-        <text class="ke-arrow">进入 ›</text>
-      </view>
       <view class="subseg">
         <view class="subseg-btn {{orderSub==='book'?'on':''}}" data-sub="book" bindtap="switchOrderSub">订餐菜品</view>
         <view class="subseg-btn {{orderSub==='live'?'on':''}}" data-sub="live" bindtap="switchOrderSub">现场下单菜品</view>

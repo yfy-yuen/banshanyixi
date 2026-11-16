@@ -35,10 +35,13 @@
         </view>
       </block>
 
-      <!-- 老板工具（仅店长） -->
-      <view wx:if="{{isManager && repMode==='receipt'}}" class="mtools">
-        <view class="mtool" bindtap="pushReminders">补发到店提醒</view>
-        <view class="mtool" bindtap="resetDailyFlags">清零售罄标记</view>
-        <view class="mtool" bindtap="sweepPending">清理过期申请</view>
-      </view>
+      <!-- 店务工具（仅店长，报表任意视图都可见） -->
+      <block wx:if="{{isManager}}">
+        <view class="msec-title">店务工具</view>
+        <view class="mtools">
+          <view class="mtool" bindtap="pushReminders">补发到店提醒</view>
+          <view class="mtool" bindtap="resetDailyFlags">清零售罄标记</view>
+          <view class="mtool" bindtap="sweepPending">清理过期申请</view>
+        </view>
+      </block>
     </view>
