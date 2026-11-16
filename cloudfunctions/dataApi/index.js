@@ -52,7 +52,8 @@ function mergeDishes(base, additions) {
 }
 
 // 时价菜（2026-11-16）：找出订单里「尚未由店员定价」的项。
-// 判定不信任前端标记：按 dishId 反查菜品库的 pricing，防止伪造下单时抹掉 pricePending 绕过。
+// 判定不信任前端标记：按 dishId 反查菜品库的 pricing / price，防止伪造下单时抹掉 pricePending 绕过。
+// 2026-11-17：0 元菜一律视为时价（现网 10 道海鲜尚未打 pricing 标），云端兜底也能拦住。
 // 老订单 items 不含 dishId，一律视为已定价 —— 旧账一分不动。
 async function pendingPriceItems(items) {
   const list = Array.isArray(items) ? items : [];
@@ -60,8 +61,8 @@ async function pendingPriceItems(items) {
   let marketIds = new Set();
   if (ids.length) {
     try {
-      const found = (await db.collection('dishes').where({ _id: _.in(ids) }).field({ pricing: true }).limit(1000).get()).data || [];
-      marketIds = new Set(found.filter((d) => d.pricing === 'market').map((d) => String(d._id)));
+      const found = (await db.collection('dishes').where({ _id: _.in(ids) }).field({ pricing: true, price: true }).limit(1000).get()).data || [];
+      marketIds = new Set(found.filter((d) => d.pricing === 'market' || !(Number(d.price) > 0)).map((d) => String(d._id)));
     } catch (e) { console.warn('[pendingPrice]', e.message); }
   }
   return list.filter((i) => {
@@ -502,6 +503,28 @@ exports.main = async (event) => {
         if ((await roleOf()) !== 'manager') return { error: '无权限' };
         await db.collection('dishes').doc(p.id).remove();
         return { data: { ok: true } };
+      }
+      /* 今日时价：老板一屏批量改价（2026-11-17）。
+         只写 price + pricing + 时间戳，绝不碰 portions / specs / tags / soldOut / limited / image，
+         避开历史上「保存一次顺手清空每份用料」的坑。
+         顺带把未打标的 0 元海鲜补上 pricing:'market'，让它们稳定留在「今日时价」列表里。 */
+      case 'batchSetPrices': {
+        if ((await roleOf()) !== 'manager') return { error: '无权限' };
+        const list = Array.isArray(p.prices) ? p.prices : [];
+        if (!list.length) return { error: '没有需要更新的价格' };
+        if (list.length > 100) return { error: '一次最多更新 100 道' };
+        let updated = 0;
+        for (const it of list) {
+          const id = String((it && it.id) || '');
+          if (!id) continue;
+          const v = Number(it.price);
+          if (!isFinite(v) || v < 0) continue;
+          await db.collection('dishes').doc(id).update({
+            data: { price: v, pricing: 'market', price_updated_at: db.serverDate() },
+          });
+          updated++;
+        }
+        return { data: { ok: true, updated } };
       }
       case 'saveQr': {
         if ((await roleOf()) !== 'manager') return { error: '无权限' };

@@ -35,7 +35,7 @@
         <text>按实价结算（时价菜）</text>
         <view class="switch {{edit.pricing==='market'?'on':''}}"><view class="switch-dot"></view></view>
       </view>
-      <view class="price-tip">开启后顾客端显示「时价 · 由店员确认」；价格栏可填参考价，仅用于排序，不显示给顾客。</view>
+      <view class="price-tip">开启后：价格栏留空 → 顾客端显示「时价 · 由店员确认」；填了价格 → 直接显示该价并按价结算。日常改价请到「菜品 → 今日时价」一屏批量改。</view>
     </view>
     <view class="edit-portions">
       <text class="edit-label">每份用料（食材采购清单用）</text>

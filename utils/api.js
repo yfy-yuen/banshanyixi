@@ -6,7 +6,7 @@
 // 重复生成邀请码、重复开收据、重复扣标记。只有读操作与 ping 预热才在冷启动偶发超时时重试。
 // 新增写 action 时，务必同步加进这个清单。
 const NO_RETRY_ACTIONS = [
-  'bindBoss', 'ownerBoot', 'settleOrder', 'clearOrder', 'setOrderItemPrice', 'saveDish', 'deleteDish', 'saveQr',
+  'bindBoss', 'ownerBoot', 'settleOrder', 'clearOrder', 'setOrderItemPrice', 'saveDish', 'batchSetPrices', 'deleteDish', 'saveQr',
   'saveRoom', 'saveBooking', 'deleteBooking', 'appendBookingDishes', 'approveStaff', 'removeStaff',
   'requestStaff', 'submitReservation', 'cancelReservation', 'savePreorder', 'staffSavePreorder',
   'genInvite', 'resetInvite', 'removeCompanion', 'joinByInvite', 'publishSession',
@@ -118,6 +118,10 @@ async function saveDish(id, payload) {
 
 async function deleteDish(id) {
   await callApi('deleteDish', { id });
+}
+// 老板：今日时价一屏批量改价（只写 price，云端补 pricing 标；不适用于普通菜改价）
+async function batchSetPrices(prices) {
+  return (await callApi('batchSetPrices', { prices })) || { updated: 0 };
 }
 
 /* ===== 商家端：收款码（老板专属） ===== */
@@ -232,7 +236,7 @@ module.exports = {
   loadDishes, submitOrder, getOrdersByRoom, getOrderCount, getOrdersByRoomName,
   whoami, bindBoss, ownerBoot,
   getMerchantOrders, settleOrder, clearOrder, setOrderItemPrice, listReceipts, pushReminders, resetDailyFlags,
-  getDishesAdmin, saveDish, deleteDish, getPaymentQrcodes, saveQr, callApi,
+  getDishesAdmin, saveDish, batchSetPrices, deleteDish, getPaymentQrcodes, saveQr, callApi,
   getRoom, saveRoom,
   listSessions, sessionDetail, submitReservation, myReservations, getReservation, savePreorder, staffSavePreorder, cancelReservation, markArrived,
   publishSession, listReservations, confirmReservation, rejectReservation, closeSession, sessionsAdmin, updateReservationDishes, sweepPending,

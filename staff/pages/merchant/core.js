@@ -1,7 +1,7 @@
 const { CATS, fmt, ROOMS } = require('../../../utils/config');
 const { detectTablet } = require('../../../utils/tablet');
 const {
-  getMerchantOrders, settleOrder, clearOrder, setOrderItemPrice, listReceipts, pushReminders, resetDailyFlags, getDishesAdmin, saveDish, deleteDish, getPaymentQrcodes, saveQr, callApi, sweepPending,
+  getMerchantOrders, settleOrder, clearOrder, setOrderItemPrice, listReceipts, pushReminders, resetDailyFlags, getDishesAdmin, saveDish, batchSetPrices, deleteDish, getPaymentQrcodes, saveQr, callApi, sweepPending,
 } = require('../../../utils/api');
 
 function decorateOrder(o) {
@@ -46,8 +46,9 @@ module.exports = {
     priceForm: { name: '', unitPrice: '', qty: '1' },
     tagOptions: ['招牌', '辣', '素', '时令'],
     staffList: [], requests: [],
-    mView: 'dishes',   // 菜品 tab 内的子视图：dishes 菜品 | rooms 包厢
+    mView: 'dishes',   // 菜品 tab 内的子视图：dishes 菜品 | price 今日时价 | rooms 包厢
     mRooms: [],
+    marketRows: [],    // 今日时价快改行：{ id, name, category, priceInput }
     // 菜品管理筛选（2026-09-26 借鉴菜单页的分类/搜索 UX）
     filterCat: '',         // ''=全部；否则等于菜品 category
     filterStatus: 'all',   // 'all'|'on'|'soldOut'|'limited'
@@ -111,6 +112,7 @@ module.exports = {
   },
   renderMView() {
     if (this.data.mView === 'rooms') this.loadRooms();
+    else if (this.data.mView === 'price') this.loadMarketPrices();
     else this.renderMDishes();
   },
   async loadRooms() {
@@ -271,7 +273,7 @@ module.exports = {
       const raw = await getDishesAdmin();
       this.setData({
         mDishes: (raw || []).map((d) => ({
-          ...d, priceText: fmt(d.price), isMarket: d.pricing === 'market',
+          ...d, priceText: fmt(d.price), isMarket: d.pricing === 'market' || !(Number(d.price) > 0),
           ph: (d.name || '?').charAt(0), portions: d.portions || {},
         })),
       });
@@ -468,6 +470,44 @@ module.exports = {
       this.renderMDishes();
     } catch (err) { wx.showToast({ title: '操作失败', icon: 'none' }); }
     finally { wx.hideLoading(); }
+  },
+
+  /* 今日时价：一屏批量改价（2026-11-17） */
+  async loadMarketPrices() {
+    try {
+      const raw = await getDishesAdmin();
+      const rows = (raw || [])
+        .filter((d) => d.pricing === 'market' || !(Number(d.price) > 0))
+        .map((d) => ({
+          id: d.id, name: d.name, category: d.category || '',
+          priceInput: Number(d.price) > 0 ? String(d.price) : '',
+        }));
+      this.setData({ marketRows: rows });
+    } catch (e) { wx.showToast({ title: '加载失败', icon: 'none' }); }
+  },
+  onMarketPriceInput(e) {
+    const idx = Number(e.currentTarget.dataset.idx);
+    this.setData({ ['marketRows[' + idx + '].priceInput']: e.detail.value });
+  },
+  async saveMarketPrices() {
+    const rows = this.data.marketRows || [];
+    const prices = [];
+    for (const r of rows) {
+      const v = String(r.priceInput == null ? '' : r.priceInput).trim();
+      if (v === '') { prices.push({ id: r.id, price: 0 }); continue; }
+      const n = Number(v);
+      if (!isFinite(n) || n < 0) { wx.showToast({ title: '「' + r.name + '」价格不合法', icon: 'none' }); return; }
+      prices.push({ id: r.id, price: n });
+    }
+    wx.showLoading({ title: '保存中' });
+    let ok = false, updated = 0, msg = '';
+    try {
+      const r = await batchSetPrices(prices);
+      ok = true; updated = r.updated || 0;
+      this.loadMarketPrices();
+    } catch (err) { msg = (err && err.message) || '保存失败'; }
+    wx.hideLoading();
+    wx.showToast({ title: ok ? ('已更新 ' + updated + ' 道') : msg, icon: ok ? 'success' : 'none' });
   },
 
   /* 报表 */

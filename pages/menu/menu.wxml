@@ -47,8 +47,8 @@
             </view>
             <view class="desc">{{d.description || (d.specs && d.specs.length ? '可选规格' : '')}}</view>
             <view class="bottom">
-              <text wx:if="{{d.isMarket}}" class="price-red" style="font-size:13px;">时价 · 由店员确认</text>
-              <text wx:else class="price-red">¥{{d.price}}</text>
+              <text wx:if="{{d.price > 0}}" class="price-red">¥{{d.price}}<text wx:if="{{d.isMarket}}" style="font-size:11px;color:#a04538;margin-left:6px;">时价</text></text>
+              <text wx:else class="price-red" style="font-size:13px;">时价 · 由店员确认</text>
               <view class="step">
                 <view wx:if="{{qtyMap[d.id]}}" class="minus" bindtap="decDish" data-id="{{d.id}}">−</view>
                 <text wx:if="{{qtyMap[d.id]}}" class="n">{{qtyMap[d.id]}}</text>
@@ -204,8 +204,8 @@
           </view>
           <view class="desc">{{item.description || (item.specs && item.specs.length ? '可选规格' : '')}}</view>
           <view class="bottom">
-            <text wx:if="{{item.isMarket}}" class="price-red" style="font-size:13px;">时价 · 由店员确认</text>
-            <text wx:else class="price-red">¥{{item.price}}</text>
+            <text wx:if="{{item.price > 0}}" class="price-red">¥{{item.price}}<text wx:if="{{item.isMarket}}" style="font-size:11px;color:#a04538;margin-left:6px;">时价</text></text>
+            <text wx:else class="price-red" style="font-size:13px;">时价 · 由店员确认</text>
             <view class="step">
               <view wx:if="{{qtyMap[item.id]}}" class="minus" bindtap="decDish" data-id="{{item.id}}">−</view>
               <text wx:if="{{qtyMap[item.id]}}" class="n">{{qtyMap[item.id]}}</text>

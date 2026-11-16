@@ -1,6 +1,7 @@
     <view>
       <view class="subseg">
         <view class="subseg-btn {{mView==='dishes'?'on':''}}" data-view="dishes" bindtap="switchMView">菜品</view>
+        <view class="subseg-btn {{mView==='price'?'on':''}}" data-view="price" bindtap="switchMView">今日时价</view>
         <view class="subseg-btn {{mView==='rooms'?'on':''}}" data-view="rooms" bindtap="switchMView">包厢</view>
       </view>
 
@@ -32,7 +33,7 @@
             <view wx:else class="m-pic ph">{{item.ph}}</view>
             <view class="m-info">
               <view class="m-name">{{item.name}} <text class="muted" style="font-size:12px;">{{item.category}}</text></view>
-              <view class="price {{item.isMarket ? 'market-price' : ''}}">{{item.isMarket ? '时价' : item.priceText}}</view>
+              <view class="price {{item.isMarket ? 'market-price' : ''}}">{{item.price > 0 ? item.priceText : '时价'}}<text wx:if="{{item.isMarket && item.price > 0}}" style="font-size:11px;margin-left:6px;">时价</text></view>
             </view>
             <view class="m-actions">
               <view class="m-toggle {{item.soldOut?'on':''}}" data-id="{{item.id}}" bindtap="toggleSoldOut">售罄</view>
@@ -58,7 +59,7 @@
               <view wx:else class="m-pic ph">{{item.ph}}</view>
               <view class="m-info">
                 <view class="m-name">{{item.name}} <text class="muted" style="font-size:12px;">{{item.category}}</text></view>
-                <view class="price {{item.isMarket ? 'market-price' : ''}}">{{item.isMarket ? '时价' : item.priceText}}</view>
+                <view class="price {{item.isMarket ? 'market-price' : ''}}">{{item.price > 0 ? item.priceText : '时价'}}<text wx:if="{{item.isMarket && item.price > 0}}" style="font-size:11px;margin-left:6px;">时价</text></view>
               </view>
               <view class="m-actions">
                 <view class="m-toggle {{item.soldOut?'on':''}}" data-id="{{item.id}}" bindtap="toggleSoldOut">售罄</view>
@@ -71,8 +72,26 @@
         </view>
       </block>
 
+      <!-- 今日时价：一屏批量改价（2026-11-17） -->
+      <block wx:if="{{mView==='price'}}">
+        <view class="card mp-head">
+          <view class="mp-title">今日时价</view>
+          <view class="mp-sub">填了价格：顾客端直接显示该价，并按此价结算，店员不必再逐单定价；留空：显示「时价」，由店员现场确认。改价只影响之后新下的单，已下的单按下单时价格锁死。</view>
+        </view>
+        <view wx:if="{{marketRows.length===0}}" class="card muted" style="text-align:center;">暂无时价菜</view>
+        <view class="card mp-row" wx:for="{{marketRows}}" wx:key="id" wx:for-index="mi">
+          <view class="mp-info">
+            <view class="mp-name">{{item.name}}</view>
+            <view class="mp-cat">{{item.category}}</view>
+          </view>
+          <input class="mp-input" type="digit" placeholder="留空 = 时价" placeholder-class="ph-light"
+                 value="{{item.priceInput}}" data-idx="{{mi}}" bindinput="onMarketPriceInput" />
+        </view>
+        <view class="btn" style="width:100%;margin-top:20rpx;" bindtap="saveMarketPrices">一键保存今日价</view>
+      </block>
+
       <!-- 包厢 -->
-      <block wx:else>
+      <block wx:if="{{mView==='rooms'}}">
         <view class="card m-row" wx:for="{{mRooms}}" wx:key="no" bindtap="openRoomEdit" data-no="{{item.no}}">
           <image wx:if="{{item.cover}}" class="m-pic" src="{{item.cover}}" mode="aspectFill" />
           <view wx:else class="m-pic ph">{{item.name}}</view>

@@ -128,7 +128,9 @@ Page({
       const dishes = raw.map((d) => {
         const tags = d.tags || [];
         const badges = tags.map((t) => TAG_META[t]).filter(Boolean);
-        return { ...d, isMarket: d.pricing === 'market', ph: (d.name || '?').charAt(0), badges };
+        // 2026-11-17：0 元菜一律当时价（现网 10 道海鲜尚未打 pricing 标），与商家端 / 云端口径一致
+        const isMarket = d.pricing === 'market' || !(Number(d.price) > 0);
+        return { ...d, isMarket, ph: (d.name || '?').charAt(0), badges };
       });
       const present = CATS.filter((c) => dishes.some((d) => d.category === c));
       const sections = present.map((cat) => ({ cat, items: dishes.filter((d) => d.category === cat) }));
@@ -219,8 +221,10 @@ Page({
     if (!d) return;
     if (d.soldOut) { wx.showToast({ title: '该菜已售罄', icon: 'none' }); return; }
     if (d.specs && d.specs.length) { this.openSpec(id); return; }
-    const market = d.pricing === 'market';
-    this.addToCart({ dishId: id, name: d.name, basePrice: d.price, category: d.category, sel: {}, unitPrice: market ? 0 : d.price, qty: 1, pricing: market ? 'market' : 'fixed', pricePending: market });
+    const market = !!d.isMarket;
+    // 商家在「今日时价」填了价 → 直接按该价入单，店员不必再逐单定价
+    const priced = market && Number(d.price) > 0;
+    this.addToCart({ dishId: id, name: d.name, basePrice: d.price, category: d.category, sel: {}, unitPrice: market ? (priced ? Number(d.price) : 0) : d.price, qty: 1, pricing: market ? 'market' : 'fixed', pricePending: market && !priced });
   },
   decDish(e) {
     if (this.data.locked) return;
@@ -323,9 +327,10 @@ Page({
     this.setData({ showSpec: true, spec: this.buildSpec(d, picked, 1) });
   },
   buildSpec(d, picked, qty) {
-    // 时价菜不显示参考价，也不叠加规格加价，交由店员按实际单价确认
-    if (d.pricing === 'market') {
-      return { dish: d, picked, qty, totalText: '时价 · 待店员确认', groups: d.specs || [] };
+    // 时价菜不叠加规格加价；商家填了今日价就按价显示，未填则交由店员确认
+    if (d.isMarket) {
+      const priced = Number(d.price) > 0;
+      return { dish: d, picked, qty, totalText: priced ? fmt(Number(d.price) * qty) : '时价 · 待店员确认', groups: d.specs || [] };
     }
     let total = d.price;
     (d.specs || []).forEach((g) => {
@@ -351,15 +356,16 @@ Page({
     const spec = this.data.spec;
     const d = spec.dish;
     const sel = {};
-    const market = d.pricing === 'market';
-    let unit = market ? 0 : d.price;
+    const market = !!d.isMarket;
+    const priced = market && Number(d.price) > 0;
+    let unit = market ? (priced ? Number(d.price) : 0) : d.price;
     (d.specs || []).forEach((g) => {
       sel[g.group] = spec.picked[g.group];
       const opt = g.options.find((o) => o.label === spec.picked[g.group]);
       if (opt && !market) unit += (opt.delta || 0);
     });
     for (let i = 0; i < spec.qty; i++) {
-      this.addToCart({ dishId: d.id, name: d.name, basePrice: d.price, category: d.category, sel, unitPrice: unit, qty: 1, pricing: market ? 'market' : 'fixed', pricePending: market });
+      this.addToCart({ dishId: d.id, name: d.name, basePrice: d.price, category: d.category, sel, unitPrice: unit, qty: 1, pricing: market ? 'market' : 'fixed', pricePending: market && !priced });
     }
     this.setData({ showSpec: false, spec: null });
   },
@@ -471,6 +477,8 @@ Page({
       // dishId 供云端按菜品库复核时价标记，防止前端抹掉 pricePending 绕过定价
       dishId: c.dishId || '', pricing: c.pricePending ? 'market' : (c.pricing || 'fixed'),
       pricePending: !!c.pricePending,
+      // 已填价的时价菜标记 priced，云端 pendingPriceItems 才不会把它误判成未定价而拦结账
+      priced: !c.pricePending,
       selText: buildSelText(c.sel),
       subtotalText: c.pricePending ? '待确认' : fmt(c.unitPrice * (c.qty || 1)),
     }));

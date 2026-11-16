@@ -335,3 +335,24 @@
 .is-tablet .price-pick { font-size: 48rpx; padding: 28rpx; }
 .is-tablet .price-pick-list { max-height: 640rpx; }
 .is-tablet .price-tip { font-size: 44rpx; }
+
+/* ===== 今日时价快改（2026-11-17）：一屏列出时价菜，逐行填价，一键保存 ===== */
+.mp-head { padding: 28rpx 30rpx; margin-bottom: 20rpx; }
+.mp-title { font-size: 32rpx; color: var(--ink); letter-spacing: 3rpx; font-weight: 600; }
+.mp-sub { margin-top: 12rpx; font-size: 24rpx; color: var(--muted); line-height: 1.7; }
+.mp-row { display: flex; align-items: center; gap: 20rpx; padding: 22rpx 26rpx; }
+.mp-info { flex: 1; min-width: 0; }
+.mp-name { font-size: 28rpx; color: var(--ink); }
+.mp-cat { margin-top: 6rpx; font-size: 22rpx; color: var(--muted); }
+.mp-input {
+  width: 200rpx; flex: none; padding: 14rpx 18rpx;
+  background: var(--paper); border: 2rpx solid var(--border);
+  border-radius: 14rpx; font-size: 28rpx; color: var(--ink); text-align: right;
+}
+.is-tablet .mp-head { padding: 40rpx 44rpx; }
+.is-tablet .mp-title { font-size: 52rpx; }
+.is-tablet .mp-sub { font-size: 40rpx; }
+.is-tablet .mp-row { padding: 32rpx 38rpx; }
+.is-tablet .mp-name { font-size: 46rpx; }
+.is-tablet .mp-cat { font-size: 36rpx; }
+.is-tablet .mp-input { width: 300rpx; font-size: 46rpx; padding: 20rpx 26rpx; }
