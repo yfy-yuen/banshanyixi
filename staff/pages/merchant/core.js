@@ -1,16 +1,20 @@
 const { CATS, fmt, ROOMS } = require('../../../utils/config');
 const { detectTablet } = require('../../../utils/tablet');
 const {
-  getMerchantOrders, settleOrder, clearOrder, listReceipts, pushReminders, resetDailyFlags, getDishesAdmin, saveDish, deleteDish, getPaymentQrcodes, saveQr, callApi, sweepPending,
+  getMerchantOrders, settleOrder, clearOrder, setOrderItemPrice, listReceipts, pushReminders, resetDailyFlags, getDishesAdmin, saveDish, deleteDish, getPaymentQrcodes, saveQr, callApi, sweepPending,
 } = require('../../../utils/api');
 
 function decorateOrder(o) {
   const items = (o.items || []).map((i) => ({
     ...i,
     selText: i.sel && Object.keys(i.sel).length ? '（' + Object.values(i.sel).join('/') + '）' : '',
+    // 时价菜：下单时标记待定价，或菜品库为 market 且尚未由店员定价
+    pricePending: i.pricePending === true || (i.pricing === 'market' && !i.priced),
+    unitText: fmt(i.unitPrice || 0),
   }));
   return {
     ...o, items, totalText: fmt(o.total),
+    pendingCount: items.filter((i) => i.pricePending).length,
     paidText: o.status === 'paid' ? '已支付' : '未支付',
     createdText: (o.created_at || '').replace('T', ' ').slice(0, 16),
     noteText: (o.note || '').trim(),
@@ -37,6 +41,9 @@ module.exports = {
     mReceipts: [], receiptDetail: false,
     qrMap: {},
     showEdit: false, editId: '__new__', edit: null, cats: CATS, catsIndex: 0,
+    // 时价菜定价弹窗：priceMode = price（给已有项定价）| add（追加时价项）
+    showPrice: false, priceMode: 'price', priceOrderId: '', priceOrderItems: [], priceIdx: 0,
+    priceForm: { name: '', unitPrice: '', qty: '1' },
     tagOptions: ['招牌', '辣', '素', '时令'],
     staffList: [], requests: [],
     mView: 'dishes',   // 菜品 tab 内的子视图：dishes 菜品 | rooms 包厢
@@ -181,7 +188,7 @@ module.exports = {
     if (!method) return;
     wx.showLoading({ title: '结账中' });
     try { await clearOrder(id, method); this.renderMOrders(); wx.showToast({ title: '已结清', icon: 'success' }); }
-    catch (err) { wx.showToast({ title: '操作失败', icon: 'none' }); }
+    catch (err) { wx.showToast({ title: (err && err.message) || '操作失败', icon: 'none' }); }
     finally { wx.hideLoading(); }
   },
   // 兼容：对已进入「已支付未清台」状态的订单二次清台确认（正常流程一键结账后用不到，保留防历史脏数据）
@@ -194,17 +201,79 @@ module.exports = {
     if (!ok) return;
     wx.showLoading({ title: '处理中' });
     try { await clearOrder(id); this.renderMOrders(); }
-    catch (err) { wx.showToast({ title: '操作失败', icon: 'none' }); }
+    catch (err) { wx.showToast({ title: (err && err.message) || '操作失败', icon: 'none' }); }
     finally { wx.hideLoading(); }
   },
   toggleClosed() { this.setData({ showClosed: !this.data.showClosed }); },
+
+  /* 时价菜：定价 / 追加时价项（2026-11-16） */
+  openPrice(e) {
+    const id = e.currentTarget.dataset.id;
+    const o = (this.data.mOrders || []).find((x) => x.id === id);
+    if (!o) return;
+    const items = (o.items || []).map((i, idx) => ({ ...i, idx }));
+    const first = items.find((i) => i.pricePending);
+    this.setData({
+      showPrice: true, priceMode: 'price', priceOrderId: id,
+      priceOrderItems: items, priceIdx: first ? first.idx : 0,
+      priceForm: { name: '', unitPrice: '', qty: '1' },
+    });
+  },
+  openPriceAdd(e) {
+    const id = e.currentTarget.dataset.id;
+    const o = (this.data.mOrders || []).find((x) => x.id === id);
+    if (!o) return;
+    this.setData({
+      showPrice: true, priceMode: 'add', priceOrderId: id,
+      priceOrderItems: (o.items || []).map((i, idx) => ({ ...i, idx })), priceIdx: 0,
+      priceForm: { name: '', unitPrice: '', qty: '1' },
+    });
+  },
+  pickPriceItem(e) {
+    const idx = Number(e.currentTarget.dataset.idx);
+    const it = (this.data.priceOrderItems || []).find((x) => x.idx === idx);
+    this.setData({
+      priceIdx: idx,
+      'priceForm.unitPrice': it && !it.pricePending && Number(it.unitPrice) > 0 ? String(it.unitPrice) : '',
+    });
+  },
+  onPriceInput(e) {
+    const f = e.currentTarget.dataset.field;
+    this.setData({ ['priceForm.' + f]: e.detail.value });
+  },
+  closePrice() { this.setData({ showPrice: false }); },
+  async savePrice() {
+    const f = this.data.priceForm || {};
+    const unit = Number(f.unitPrice);
+    if (!f.unitPrice || !isFinite(unit) || unit <= 0) { wx.showToast({ title: '请填写大于 0 的单价', icon: 'none' }); return; }
+    const payload = {
+      id: this.data.priceOrderId,
+      mode: this.data.priceMode,
+      itemIndex: this.data.priceIdx,
+      unitPrice: unit,
+      name: (f.name || '').trim(),
+      qty: Number(f.qty) || 1,
+    };
+    if (this.data.priceMode === 'add' && !payload.name) { wx.showToast({ title: '请填写菜名', icon: 'none' }); return; }
+    wx.showLoading({ title: '保存中' });
+    try {
+      await setOrderItemPrice(payload);
+      this.setData({ showPrice: false });
+      this.renderMOrders();
+      wx.showToast({ title: '已定价，合计已更新', icon: 'success' });
+    } catch (err) { wx.showToast({ title: (err && err.message) || '保存失败', icon: 'none' }); }
+    finally { wx.hideLoading(); }
+  },
 
   /* 菜品 */
   async renderMDishes() {
     try {
       const raw = await getDishesAdmin();
       this.setData({
-        mDishes: (raw || []).map((d) => ({ ...d, priceText: fmt(d.price), ph: (d.name || '?').charAt(0), portions: d.portions || {} })),
+        mDishes: (raw || []).map((d) => ({
+          ...d, priceText: fmt(d.price), isMarket: d.pricing === 'market',
+          ph: (d.name || '?').charAt(0), portions: d.portions || {},
+        })),
       });
       this.runDishFilter();
     } catch (e) { wx.showToast({ title: '加载失败', icon: 'none' }); }
@@ -258,13 +327,13 @@ module.exports = {
     const id = e.currentTarget.dataset.id;
     let edit;
     if (id === '__new__') {
-      edit = { name: '', category: CATS[0], price: '', image: '', description: '', specs: [], tags: [], soldOut: false, limited: false, portions: [] };
+      edit = { name: '', category: CATS[0], price: '', image: '', description: '', specs: [], tags: [], soldOut: false, limited: false, pricing: 'fixed', portions: [] };
     } else {
       const d = this.data.mDishes.find((x) => x.id === id);
       const known = ['招牌', '辣', '素', '时令'];
       const rawPortions = (d.portions && typeof d.portions === 'object' && !Array.isArray(d.portions)) ? d.portions : {};
       const portions = Object.keys(rawPortions).map((k) => ({ mat: k, amt: String(rawPortions[k]) }));
-      edit = { name: d.name, category: d.category, price: String(d.price), image: d.image || '', description: d.description || '', specs: d.specs || [], tags: (d.tags || []).filter((t) => known.indexOf(t) >= 0), soldOut: !!d.soldOut, limited: !!d.limited, portions };
+      edit = { name: d.name, category: d.category, price: String(d.price), image: d.image || '', description: d.description || '', specs: d.specs || [], tags: (d.tags || []).filter((t) => known.indexOf(t) >= 0), soldOut: !!d.soldOut, limited: !!d.limited, pricing: d.pricing === 'market' ? 'market' : 'fixed', portions };
     }
     this.setData({ showEdit: true, editId: id, edit, catsIndex: Math.max(0, CATS.indexOf(edit.category)) });
   },
@@ -283,6 +352,7 @@ module.exports = {
   },
   onSoldOutToggle() { this.setData({ 'edit.soldOut': !this.data.edit.soldOut }); },
   onLimitedToggle() { this.setData({ 'edit.limited': !this.data.edit.limited }); },
+  onPricingToggle() { this.setData({ 'edit.pricing': this.data.edit.pricing === 'market' ? 'fixed' : 'market' }); },
   /* 每份用料编辑（结论 #D：食材采购清单数据源） */
   addPortion() {
     const portions = this.data.edit.portions.concat([{ mat: '', amt: '' }]);
@@ -341,6 +411,7 @@ module.exports = {
       description: ed.description || '', specs: ed.specs || [],
       tags: ed.tags || [], available: true,
       soldOut: !!ed.soldOut, limited: !!ed.limited,
+      pricing: ed.pricing === 'market' ? 'market' : 'fixed',
       portions,
     };
     wx.showLoading({ title: '保存中' });
@@ -371,6 +442,7 @@ module.exports = {
         name: d.name, category: d.category, price: d.price, image: d.image || '',
         description: d.description || '', specs: d.specs || [], tags: d.tags || [],
         soldOut: !d.soldOut, limited: !!d.limited,
+        pricing: d.pricing === 'market' ? 'market' : 'fixed',
         // 必须带上原 portions：云函数里是 portions: d.portions || {}，
         // 不传就会被覆盖成空 {}，导致该菜「每份用料」被清空、食材采购清单算不出来
         portions: d.portions || {},
@@ -389,6 +461,7 @@ module.exports = {
         name: d.name, category: d.category, price: d.price, image: d.image || '',
         description: d.description || '', specs: d.specs || [], tags: d.tags || [],
         soldOut: !!d.soldOut, limited: !d.limited,
+        pricing: d.pricing === 'market' ? 'market' : 'fixed',
         // 同上：必须带上原 portions，否则会被云函数覆盖成空 {} 清空每份用料
         portions: d.portions || {},
       });

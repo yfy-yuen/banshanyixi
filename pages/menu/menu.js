@@ -27,7 +27,7 @@ Page({
     dishes: [],
     cart: [],
     qtyMap: {},
-    cartCount: 0, cartTotalText: '',
+    cartCount: 0, cartTotalText: '', marketCount: 0, marketTip: '',
     showSpec: false, spec: null,
     showBill: false, bill: null,
     showCart: false, showConfirm: false, note: '',
@@ -128,7 +128,7 @@ Page({
       const dishes = raw.map((d) => {
         const tags = d.tags || [];
         const badges = tags.map((t) => TAG_META[t]).filter(Boolean);
-        return { ...d, ph: (d.name || '?').charAt(0), badges };
+        return { ...d, isMarket: d.pricing === 'market', ph: (d.name || '?').charAt(0), badges };
       });
       const present = CATS.filter((c) => dishes.some((d) => d.category === c));
       const sections = present.map((cat) => ({ cat, items: dishes.filter((d) => d.category === cat) }));
@@ -219,7 +219,8 @@ Page({
     if (!d) return;
     if (d.soldOut) { wx.showToast({ title: '该菜已售罄', icon: 'none' }); return; }
     if (d.specs && d.specs.length) { this.openSpec(id); return; }
-    this.addToCart({ dishId: id, name: d.name, basePrice: d.price, category: d.category, sel: {}, unitPrice: d.price, qty: 1 });
+    const market = d.pricing === 'market';
+    this.addToCart({ dishId: id, name: d.name, basePrice: d.price, category: d.category, sel: {}, unitPrice: market ? 0 : d.price, qty: 1, pricing: market ? 'market' : 'fixed', pricePending: market });
   },
   decDish(e) {
     if (this.data.locked) return;
@@ -238,12 +239,13 @@ Page({
   },
   updateCart(cart) {
     const qtyMap = {};
-    let count = 0, total = 0;
+    let count = 0, total = 0, marketCount = 0;
     cart.forEach((c) => {
       const q = c.qty || 1;
       qtyMap[c.dishId] = (qtyMap[c.dishId] || 0) + q;
       count += q;
       total += c.unitPrice * q;
+      if (c.pricePending) marketCount += q;
     });
     // 按 (dishId + 规格) 分组，供购物篮弹窗展示与编辑
     const gMap = {};
@@ -251,16 +253,21 @@ Page({
     cart.forEach((c) => {
       const key = c.dishId + '|' + (buildSelText(c.sel) || '');
       if (!gMap[key]) {
-        gMap[key] = { key, dishId: c.dishId, name: c.name, selText: buildSelText(c.sel), unitPrice: c.unitPrice, qty: 0 };
+        gMap[key] = { key, dishId: c.dishId, name: c.name, selText: buildSelText(c.sel), unitPrice: c.unitPrice, qty: 0, pricePending: !!c.pricePending };
         gOrder.push(key);
       }
       gMap[key].qty += (c.qty || 1);
     });
     const cartGroups = gOrder.map((k) => {
       const g = gMap[k];
-      return { ...g, unitPriceText: fmt(g.unitPrice), lineTotal: fmt(g.unitPrice * g.qty) };
+      return {
+        ...g,
+        unitPriceText: g.pricePending ? '时价 · 待确认' : fmt(g.unitPrice),
+        lineTotal: g.pricePending ? '待确认' : fmt(g.unitPrice * g.qty),
+      };
     });
-    this.setData({ cart, qtyMap, cartCount: count, cartTotalText: fmt(total), cartGroups });
+    const marketTip = marketCount ? ('含 ' + marketCount + ' 道时价菜，最终金额以店员确认为准') : '';
+    this.setData({ cart, qtyMap, cartCount: count, cartTotalText: fmt(total), cartGroups, marketCount, marketTip });
   },
 
   /* ===== 购物篮 / 确认弹窗 ===== */
@@ -316,6 +323,10 @@ Page({
     this.setData({ showSpec: true, spec: this.buildSpec(d, picked, 1) });
   },
   buildSpec(d, picked, qty) {
+    // 时价菜不显示参考价，也不叠加规格加价，交由店员按实际单价确认
+    if (d.pricing === 'market') {
+      return { dish: d, picked, qty, totalText: '时价 · 待店员确认', groups: d.specs || [] };
+    }
     let total = d.price;
     (d.specs || []).forEach((g) => {
       const opt = g.options.find((o) => o.label === picked[g.group]);
@@ -340,14 +351,15 @@ Page({
     const spec = this.data.spec;
     const d = spec.dish;
     const sel = {};
-    let unit = d.price;
+    const market = d.pricing === 'market';
+    let unit = market ? 0 : d.price;
     (d.specs || []).forEach((g) => {
       sel[g.group] = spec.picked[g.group];
       const opt = g.options.find((o) => o.label === spec.picked[g.group]);
-      if (opt) unit += (opt.delta || 0);
+      if (opt && !market) unit += (opt.delta || 0);
     });
     for (let i = 0; i < spec.qty; i++) {
-      this.addToCart({ dishId: d.id, name: d.name, basePrice: d.price, category: d.category, sel, unitPrice: unit, qty: 1 });
+      this.addToCart({ dishId: d.id, name: d.name, basePrice: d.price, category: d.category, sel, unitPrice: unit, qty: 1, pricing: market ? 'market' : 'fixed', pricePending: market });
     }
     this.setData({ showSpec: false, spec: null });
   },
@@ -456,11 +468,15 @@ Page({
     }
     const items = this.data.cart.map((c) => ({
       name: c.name, unitPrice: c.unitPrice, qty: c.qty || 1, sel: c.sel, category: c.category,
+      // dishId 供云端按菜品库复核时价标记，防止前端抹掉 pricePending 绕过定价
+      dishId: c.dishId || '', pricing: c.pricePending ? 'market' : (c.pricing || 'fixed'),
+      pricePending: !!c.pricePending,
       selText: buildSelText(c.sel),
-      subtotalText: fmt(c.unitPrice * (c.qty || 1)),
+      subtotalText: c.pricePending ? '待确认' : fmt(c.unitPrice * (c.qty || 1)),
     }));
     const total = items.reduce((s, i) => s + i.unitPrice * i.qty, 0);
     const note = (this.data.note || '').trim();
+    const marketTip = this.data.marketTip;
     wx.showLoading({ title: '提交中' });
     try {
       await submitOrder({
@@ -471,7 +487,7 @@ Page({
       this.setData({
         showConfirm: false, showCart: false, note: '',
         showBill: true,
-        bill: { items, totalText: fmt(total), roomName: this.data.roomName, roomNo: this.data.roomNo, people: this.data.people, note },
+        bill: { items, totalText: fmt(total), marketTip, roomName: this.data.roomName, roomNo: this.data.roomNo, people: this.data.people, note },
       });
     } catch (e) {
       wx.showToast({ title: '提交失败：' + (e.message || ''), icon: 'none' });

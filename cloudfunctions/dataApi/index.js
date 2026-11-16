@@ -51,6 +51,26 @@ function mergeDishes(base, additions) {
   return Object.values(map);
 }
 
+// 时价菜（2026-11-16）：找出订单里「尚未由店员定价」的项。
+// 判定不信任前端标记：按 dishId 反查菜品库的 pricing，防止伪造下单时抹掉 pricePending 绕过。
+// 老订单 items 不含 dishId，一律视为已定价 —— 旧账一分不动。
+async function pendingPriceItems(items) {
+  const list = Array.isArray(items) ? items : [];
+  const ids = [...new Set(list.map((i) => String((i && i.dishId) || '')).filter(Boolean))];
+  let marketIds = new Set();
+  if (ids.length) {
+    try {
+      const found = (await db.collection('dishes').where({ _id: _.in(ids) }).field({ pricing: true }).limit(1000).get()).data || [];
+      marketIds = new Set(found.filter((d) => d.pricing === 'market').map((d) => String(d._id)));
+    } catch (e) { console.warn('[pendingPrice]', e.message); }
+  }
+  return list.filter((i) => {
+    if (!i) return false;
+    if (i.pricePending === true) return true;
+    return !!(i.dishId && marketIds.has(String(i.dishId)) && (!i.priced || !(Number(i.unitPrice) > 0)));
+  });
+}
+
 // 预订系统辅助：集合自创建 / 手机号脱敏 / 开席时间
 async function ensureCol(name) {
   try { await db.createCollection(name); } catch (e) { /* 已存在则忽略 */ }
@@ -353,6 +373,10 @@ exports.main = async (event) => {
       /* ===== 写（店员/老板：标记支付，记录支付方式 结论 #7） ===== */
       case 'settleOrder': {
         if (!(await isStaffOf())) return { error: '无权限' };
+        const o = (await db.collection('orders').doc(p.id).get()).data;
+        if (!o) return { error: '订单不存在' };
+        const pend = await pendingPriceItems(o.items);
+        if (pend.length) return { error: '还有 ' + pend.length + ' 道时价菜未定价，请先由店员定价再结账' };
         const pm = (p.paymentMethod === 'scan' || p.paymentMethod === 'credit') ? p.paymentMethod : 'cash';
         await db.collection('orders').doc(p.id).update({ data: { status: 'paid', paymentMethod: pm, paid_at: db.serverDate() } });
         return { data: { ok: true, paymentMethod: pm } };
@@ -368,9 +392,14 @@ exports.main = async (event) => {
         const pm = (p.paymentMethod === 'scan' || p.paymentMethod === 'credit') ? p.paymentMethod : (order.paymentMethod || 'cash');
         // 收据明细：以订单实际下单菜品为准（含规格/单价/小计）
         const items = order.items || [];
+        // 时价菜：还有未由店员定价的项就不许结账（防漏收）。
+        // 已定价但被前端伪造过单价的项无法进入这里，pendingPriceItems 会按菜品库复核。
+        const pend = await pendingPriceItems(items);
+        if (pend.length) return { error: '还有 ' + pend.length + ' 道时价菜未定价，请先由店员定价再结账' };
         let total = 0;
         const lines = items.map((it) => {
-          const unit = (it.unitPrice != null) ? Number(it.unitPrice) : 0;
+          // 未定价项云端一律按 0 计，忽略前端传值（坑 2 最小加固）
+          const unit = (it.pricePending === true) ? 0 : ((it.unitPrice != null) ? Number(it.unitPrice) : 0);
           const qty = Number(it.qty) || 1;
           total += unit * qty;
           return { name: it.name, qty, unitPrice: unit, sel: it.selText || '', subtotal: unit * qty };
@@ -414,6 +443,37 @@ exports.main = async (event) => {
         return { data: { ok: true, receiptNo: receipt.no } };
       }
 
+      /* ===== 写（店员/老板：时价菜定价 / 追加时价项，云端重算整单 total） ===== */
+      case 'setOrderItemPrice': {
+        if (!(await isStaffOf())) return { error: '无权限' };
+        const oid = String(p.id || '');
+        if (!oid) return { error: '缺少订单号' };
+        const order = (await db.collection('orders').doc(oid).get()).data;
+        if (!order) return { error: '订单不存在' };
+        if (order.closed === true || order.status === 'paid') return { error: '订单已结清，不能再改价' };
+        const unit = Number(p.unitPrice);
+        if (!isFinite(unit) || unit <= 0) return { error: '请填写大于 0 的单价' };
+        const items = (Array.isArray(order.items) ? order.items : []).slice();
+        const isAdd = p.mode === 'add';
+        if (isAdd) {
+          const name = String(p.name || '').trim().slice(0, 40);
+          if (!name) return { error: '请填写菜名' };
+          const qty = Math.max(1, Math.round(Number(p.qty) || 1));
+          items.push({
+            name, unitPrice: unit, qty, sel: {}, selText: '',
+            pricing: 'market', pricePending: false, priced: true, pricedAt: Date.now(),
+          });
+        } else {
+          const idx = Number(p.itemIndex);
+          if (!Number.isInteger(idx) || idx < 0 || idx >= items.length) return { error: '菜品序号无效' };
+          items[idx] = { ...items[idx], unitPrice: unit, pricePending: false, priced: true, pricedAt: Date.now() };
+        }
+        // 单价 × 份数重算整单，保证顾客端金额 / 报表 / 收据口径一致
+        const total = items.reduce((s, i) => s + (Number(i.unitPrice) || 0) * (Number(i.qty) || 1), 0);
+        await db.collection('orders').doc(oid).update({ data: { items, total, updated_at: db.serverDate() } });
+        return { data: { ok: true, total } };
+      }
+
       /* ===== 写（老板专属：菜品改价/改内容、收款码、员工审批） ===== */
       case 'saveDish': {
         if ((await roleOf()) !== 'manager') return { error: '无权限' };
@@ -424,6 +484,9 @@ exports.main = async (event) => {
           image: d.image || '', description: d.description || '',
           specs: d.specs || [], available: avail,
           soldOut: !!d.soldOut, limited: !!d.limited,
+          // 时价菜标记：老板在「编辑菜品」里开「按实价结算」。
+          // 无条件写入（与 portions 同规则），所以所有调用 saveDish 的前端都必须带上原 pricing
+          pricing: d.pricing === 'market' ? 'market' : 'fixed',
           portions: d.portions || {}, // 每份用量字典 {材料: 数值}，供食材采购清单反算（结论 #D）
         };
         if (p.id === '__new__') {

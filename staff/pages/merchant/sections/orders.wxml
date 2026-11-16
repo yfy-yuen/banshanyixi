@@ -23,8 +23,13 @@
         <view class="card" wx:for="{{mOrders}}" wx:key="id">
           <view class="o-row"><text><text class="price-red">{{item.room_name}}</text>（{{item.room_no}}号）</text>
             <text class="pill {{item.status==='paid'?'paid':'unpaid'}}">{{item.paidText}}</text></view>
-          <view class="o-items"><text wx:for="{{item.items}}" wx:for-item="i" wx:key="k">{{i.name}}{{i.selText}} ×{{i.qty}}　</text></view>
+          <view wx:if="{{item.pendingCount}}" class="price-pending-bar">待定价 {{item.pendingCount}} 项 · 结账前请先定价</view>
+          <view class="o-items"><text wx:for="{{item.items}}" wx:for-item="i" wx:key="k" class="{{i.pricePending ? 'pending-item' : ''}}">{{i.name}}{{i.selText}} ×{{i.qty}}{{i.pricePending ? '（待店员确认）' : ''}}　</text></view>
           <view wx:if="{{item.noteText}}" class="o-note">备注：{{item.noteText}}</view>
+          <view wx:if="{{!item.closed}}" class="o-actions">
+            <view class="o-btn" bindtap="openPrice" data-id="{{item.id}}">定价</view>
+            <view class="o-btn main" bindtap="openPriceAdd" data-id="{{item.id}}">＋ 加时价项</view>
+          </view>
           <view class="o-row">
             <text class="price-red">{{item.totalText}}</text>
             <view wx:if="{{!item.closed}}" class="btn" style="padding:6px 14px;" bindtap="settleOrder" data-id="{{item.id}}">结账</view>

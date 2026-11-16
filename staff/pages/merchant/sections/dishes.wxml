@@ -32,7 +32,7 @@
             <view wx:else class="m-pic ph">{{item.ph}}</view>
             <view class="m-info">
               <view class="m-name">{{item.name}} <text class="muted" style="font-size:12px;">{{item.category}}</text></view>
-              <view class="price">{{item.priceText}}</view>
+              <view class="price {{item.isMarket ? 'market-price' : ''}}">{{item.isMarket ? '时价' : item.priceText}}</view>
             </view>
             <view class="m-actions">
               <view class="m-toggle {{item.soldOut?'on':''}}" data-id="{{item.id}}" bindtap="toggleSoldOut">售罄</view>
@@ -58,7 +58,7 @@
               <view wx:else class="m-pic ph">{{item.ph}}</view>
               <view class="m-info">
                 <view class="m-name">{{item.name}} <text class="muted" style="font-size:12px;">{{item.category}}</text></view>
-                <view class="price">{{item.priceText}}</view>
+                <view class="price {{item.isMarket ? 'market-price' : ''}}">{{item.isMarket ? '时价' : item.priceText}}</view>
               </view>
               <view class="m-actions">
                 <view class="m-toggle {{item.soldOut?'on':''}}" data-id="{{item.id}}" bindtap="toggleSoldOut">售罄</view>

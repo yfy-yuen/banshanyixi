@@ -31,6 +31,11 @@
         <text>今日限定</text>
         <view class="switch {{edit.limited?'on':''}}"><view class="switch-dot"></view></view>
       </view>
+      <view class="et-row" bindtap="onPricingToggle">
+        <text>按实价结算（时价菜）</text>
+        <view class="switch {{edit.pricing==='market'?'on':''}}"><view class="switch-dot"></view></view>
+      </view>
+      <view class="price-tip">开启后顾客端显示「时价 · 由店员确认」；价格栏可填参考价，仅用于排序，不显示给顾客。</view>
     </view>
     <view class="edit-portions">
       <text class="edit-label">每份用料（食材采购清单用）</text>
@@ -64,5 +69,29 @@
     </view>
     <view class="o-row r-total"><text>合计</text><text class="price-red">{{receiptDetail.totalText}}</text></view>
     <view class="btn" style="width:100%;" bindtap="closeReceipt">关闭</view>
+  </view>
+</view>
+
+<!-- 时价菜定价 / 追加时价项（2026-11-16） -->
+<view class="mask" wx:if="{{showPrice}}" bindtap="closePrice">
+  <view class="modal" catchtap="noop">
+    <view class="modal-title">{{priceMode === 'add' ? '＋ 加时价项' : '时价菜定价'}}</view>
+    <scroll-view wx:if="{{priceMode === 'price'}}" class="price-pick-list" scroll-y>
+      <view wx:for="{{priceOrderItems}}" wx:key="idx"
+            class="price-pick {{priceIdx === item.idx ? 'on' : ''}} {{item.pricePending ? 'pending' : ''}}"
+            data-idx="{{item.idx}}" bindtap="pickPriceItem">
+        <text>{{item.name}}{{item.selText}} ×{{item.qty}}</text>
+        <text>{{item.pricePending ? '待定价' : item.unitText}}</text>
+      </view>
+      <view wx:if="{{priceOrderItems.length === 0}}" class="price-tip">这张单还没有菜品，可先点「＋ 加时价项」加一条。</view>
+    </scroll-view>
+    <input wx:if="{{priceMode === 'add'}}" class="ipt" placeholder="菜名（如 今日活鱼）" placeholder-class="ph-light"
+           value="{{priceForm.name}}" data-field="name" bindinput="onPriceInput" />
+    <input class="ipt" placeholder="单价（元 / 份）" placeholder-class="ph-light" type="digit"
+           value="{{priceForm.unitPrice}}" data-field="unitPrice" bindinput="onPriceInput" />
+    <input wx:if="{{priceMode === 'add'}}" class="ipt" placeholder="份数（默认 1）" placeholder-class="ph-light" type="number"
+           value="{{priceForm.qty}}" data-field="qty" bindinput="onPriceInput" />
+    <view class="price-tip">填「单价」，系统自动 × 份数并重算整单合计；按斤称重请填折算后的每份单价。</view>
+    <view class="btn" style="width:100%;margin-top:8rpx;" bindtap="savePrice">保存并重算合计</view>
   </view>
 </view>

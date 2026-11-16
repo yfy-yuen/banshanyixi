@@ -6,7 +6,7 @@
 // 重复生成邀请码、重复开收据、重复扣标记。只有读操作与 ping 预热才在冷启动偶发超时时重试。
 // 新增写 action 时，务必同步加进这个清单。
 const NO_RETRY_ACTIONS = [
-  'bindBoss', 'ownerBoot', 'settleOrder', 'clearOrder', 'saveDish', 'deleteDish', 'saveQr',
+  'bindBoss', 'ownerBoot', 'settleOrder', 'clearOrder', 'setOrderItemPrice', 'saveDish', 'deleteDish', 'saveQr',
   'saveRoom', 'saveBooking', 'deleteBooking', 'appendBookingDishes', 'approveStaff', 'removeStaff',
   'requestStaff', 'submitReservation', 'cancelReservation', 'savePreorder', 'staffSavePreorder',
   'genInvite', 'resetInvite', 'removeCompanion', 'joinByInvite', 'publishSession',
@@ -87,6 +87,12 @@ async function settleOrder(id, paymentMethod) {
 // 结账清台：一步完成支付+开收据+closed；paymentMethod 可选（现金cash/扫码scan/记账credit），不传则用订单已有值
 async function clearOrder(id, paymentMethod) {
   await callApi('clearOrder', { id, paymentMethod: paymentMethod || '' });
+}
+// 店员/老板：给订单里的时价菜定单价，或追加一条已定价的时价项
+// payload: { id, itemIndex, unitPrice } 或 { id, mode:'add', name, unitPrice, qty }
+// 云端校验权限后写库并重算整单 total，前端不自行改金额
+async function setOrderItemPrice(payload) {
+  return await callApi('setOrderItemPrice', payload);
 }
 // 老板：电子收据列表（结论 #E）
 async function listReceipts() {
@@ -225,7 +231,7 @@ async function sessionsAdmin() {
 module.exports = {
   loadDishes, submitOrder, getOrdersByRoom, getOrderCount, getOrdersByRoomName,
   whoami, bindBoss, ownerBoot,
-  getMerchantOrders, settleOrder, clearOrder, listReceipts, pushReminders, resetDailyFlags,
+  getMerchantOrders, settleOrder, clearOrder, setOrderItemPrice, listReceipts, pushReminders, resetDailyFlags,
   getDishesAdmin, saveDish, deleteDish, getPaymentQrcodes, saveQr, callApi,
   getRoom, saveRoom,
   listSessions, sessionDetail, submitReservation, myReservations, getReservation, savePreorder, staffSavePreorder, cancelReservation, markArrived,

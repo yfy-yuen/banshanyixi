@@ -24,7 +24,7 @@
       </view>
       <view class="divider"></view>
       <view class="o-items">
-        <text wx:for="{{item.items}}" wx:for-item="i" wx:key="k">{{i.name}}{{i.selText}} ×{{i.qty}}　</text>
+        <text wx:for="{{item.items}}" wx:for-item="i" wx:key="k">{{i.name}}{{i.selText}} ×{{i.qty}}{{i.pricePending ? ' · 待店员确认' : ''}}　</text>
       </view>
       <view class="divider"></view>
       <view class="o-row">
