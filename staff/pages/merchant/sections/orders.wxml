@@ -4,9 +4,59 @@
     <view class="subseg-btn {{orderSub==='live'?'on':''}}" data-sub="live" bindtap="switchOrderSub">现场下单菜品</view>
   </view>
 
+  <!-- 订餐排期筛选（D）：日期 / 包厢 / 餐段 / 关键字，纯本地过滤 -->
+  <view wx:if="{{orderSub==='book'}}" class="ord-filter">
+    <view class="chip-rail static">
+      <text class="flt-label">日期</text>
+      <view class="chip {{bkDate==='all'?'on':''}}" data-v="all" bindtap="setBkDate">全部</view>
+      <view class="chip {{bkDate==='today'?'on':''}}" data-v="today" bindtap="setBkDate">今天</view>
+      <view class="chip {{bkDate==='tomorrow'?'on':''}}" data-v="tomorrow" bindtap="setBkDate">明天</view>
+      <view class="chip {{bkDate==='week'?'on':''}}" data-v="week" bindtap="setBkDate">近7天</view>
+    </view>
+    <view class="chip-rail static">
+      <text class="flt-label">包厢</text>
+      <view class="chip {{bkRoom===''?'on':''}}" data-v="" bindtap="setBkRoom">全部</view>
+      <view wx:for="{{bkRooms}}" wx:for-item="r" wx:key="no" class="chip {{bkRoom===r.no?'on':''}}" data-v="{{r.no}}" bindtap="setBkRoom">{{r.name}}</view>
+    </view>
+    <view class="chip-rail static">
+      <text class="flt-label">餐段</text>
+      <view class="chip {{bkSlot==='all'?'on':''}}" data-v="all" bindtap="setBkSlot">全部</view>
+      <view class="chip {{bkSlot==='lunch'?'on':''}}" data-v="lunch" bindtap="setBkSlot">午市</view>
+      <view class="chip {{bkSlot==='dinner'?'on':''}}" data-v="dinner" bindtap="setBkSlot">晚市</view>
+    </view>
+    <input class="ord-kw" value="{{bkKw}}" bindinput="onBkKwInput" placeholder="搜尊客 / 菜名 / 包厢 / 日期" />
+    <view class="ord-hit">
+      <text>共 {{bkTotal}} 席 · 筛出 {{bkHit}} 席</text>
+      <text wx:if="{{hasBkFilter}}" class="ord-clear" bindtap="clearBookFilter">清除筛选</text>
+      <text wx:else class="ord-hint">未筛选</text>
+    </view>
+  </view>
+
+  <!-- 现场单筛选（D）：包厢 / 状态 / 关键字，纯本地过滤 -->
+  <view wx:if="{{orderSub==='live'}}" class="ord-filter">
+    <view class="chip-rail static">
+      <text class="flt-label">包厢</text>
+      <view class="chip {{ordRoom===''?'on':''}}" data-v="" bindtap="setOrdRoom">全部</view>
+      <view wx:for="{{ordRooms}}" wx:for-item="r" wx:key="*this" class="chip {{ordRoom===r?'on':''}}" data-v="{{r}}" bindtap="setOrdRoom">{{r}}号</view>
+    </view>
+    <view class="chip-rail static">
+      <text class="flt-label">状态</text>
+      <view class="chip {{ordStatus==='all'?'on':''}}" data-v="all" bindtap="setOrdStatus">全部</view>
+      <view class="chip {{ordStatus==='unpaid'?'on':''}}" data-v="unpaid" bindtap="setOrdStatus">未支付</view>
+      <view class="chip {{ordStatus==='pending'?'on':''}}" data-v="pending" bindtap="setOrdStatus">待定价</view>
+      <view class="chip {{ordStatus==='paid'?'on':''}}" data-v="paid" bindtap="setOrdStatus">已支付</view>
+    </view>
+    <input class="ord-kw" value="{{ordKw}}" bindinput="onOrdKwInput" placeholder="搜菜名 / 包厢 / 备注 / 单号" />
+    <view class="ord-hit">
+      <text>共 {{ordTotal}} 单 · 筛出 {{ordHit}} 单</text>
+      <text wx:if="{{hasOrdFilter}}" class="ord-clear" bindtap="clearOrderFilter">清除筛选</text>
+      <text wx:else class="ord-hint">未筛选</text>
+    </view>
+  </view>
+
   <!-- 订餐菜品（预售排席）：按日期分组，今天 / 明天默认展开 -->
   <view wx:if="{{orderSub==='book'}}">
-    <view wx:if="{{bookingGroups.length===0}}" class="card muted">暂无订餐排席</view>
+    <view wx:if="{{bookingGroups.length===0}}" class="card muted">{{hasBkFilter ? '没有符合条件的排期' : '暂无订餐排席'}}</view>
     <view class="grp-wrap" wx:for="{{bookingGroups}}" wx:for-item="g" wx:for-index="gi" wx:key="key">
       <view class="grp-head" bindtap="toggleBookingGroup" data-gi="{{gi}}">
         <text class="grp-name">{{g.dateText}}</text>
@@ -28,7 +78,7 @@
 
   <!-- 现场下单菜品：按包厢分组，卡片默认只露一行摘要，点开才看明细与操作 -->
   <view wx:if="{{orderSub==='live'}}">
-    <view wx:if="{{orderGroups.length===0}}" class="card muted">暂无现场下单</view>
+    <view wx:if="{{orderGroups.length===0}}" class="card muted">{{hasOrdFilter ? '没有符合条件的单子' : '暂无现场下单'}}</view>
     <view class="grp-wrap" wx:for="{{orderGroups}}" wx:for-item="g" wx:for-index="gi" wx:key="key">
       <view class="grp-head" bindtap="toggleOrderGroup" data-gi="{{gi}}">
         <text class="grp-name">{{g.roomName}}（{{g.roomNo}}号）</text>
@@ -60,9 +110,9 @@
     </view>
 
     <!-- 已清台归档（历史）：总开关收起，展开后按日期分组查看 -->
-    <view wx:if="{{mClosed.length}}" class="closed-wrap">
+    <view wx:if="{{closedHit}}" class="closed-wrap">
       <view class="closed-toggle" bindtap="toggleClosed">
-        <text>已清台（{{mClosed.length}}）</text>
+        <text>已清台（{{closedHit}}）</text>
         <text class="closed-arrow">{{showClosed ? '收起 ▲' : '展开 ▼'}}</text>
       </view>
       <view wx:if="{{showClosed}}">

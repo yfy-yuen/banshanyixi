@@ -119,6 +119,62 @@ function buildClosedGroups(orders) {
   }).map((k) => ({ ...map[k], totalText: fmt(map[k].total) }));
 }
 
+/* ===== 订单筛选（D 2026-11-17）：纯前端本地过滤，作用于已加载数据的副本 =====
+   云端 dataApi 零改动；mOrders / mBookings / mClosed 原数组一律保留，
+   因为 openPrice / openPriceAdd 仍按 id 从 mOrders 取单。 */
+function filterActive(f) {
+  return !!(f && (f.room || (f.status && f.status !== 'all') || String(f.kw || '').trim()));
+}
+function bookFilterActive(f) {
+  return !!(f && ((f.date && f.date !== 'all') || f.room || (f.slot && f.slot !== 'all') || String(f.kw || '').trim()));
+}
+// 现场单 / 已清台共用：包厢、状态、关键字（菜名 / 包厢 / 备注 / 时间 / 单号）
+function filterLiveOrders(list, f) {
+  const kw = String((f && f.kw) || '').trim().toLowerCase();
+  return (list || []).filter((o) => {
+    if (f.room && String(o.room_no || '') !== String(f.room)) return false;
+    if (f.status === 'unpaid' && o.status === 'paid') return false;
+    if (f.status === 'paid' && o.status !== 'paid') return false;
+    if (f.status === 'pending' && !(o.pendingCount > 0)) return false;
+    if (kw) {
+      const hay = [o.room_name, o.room_no, o.timeText, o.note, o.id,
+        (o.items || []).map((i) => (i.name || '') + (i.selText || '')).join(' ')].join(' ').toLowerCase();
+      if (hay.indexOf(kw) < 0) return false;
+    }
+    return true;
+  });
+}
+// 订餐排期：日期（今天 / 明天 / 近 7 天）、包厢、餐段、关键字（尊客 / 菜名 / 包厢 / 日期）
+function filterBookings(list, f) {
+  const kw = String((f && f.kw) || '').trim().toLowerCase();
+  const today = bjDateStr(0), tomorrow = bjDateStr(1), week = [];
+  for (let i = 0; i < 7; i++) week.push(bjDateStr(i));
+  return (list || []).filter((b) => {
+    const date = String(b.date || '');
+    if (f.date === 'today' && date !== today) return false;
+    if (f.date === 'tomorrow' && date !== tomorrow) return false;
+    if (f.date === 'week' && week.indexOf(date) < 0) return false;
+    if (f.room && String(b.room_id || '') !== String(f.room)) return false;
+    if (f.slot && f.slot !== 'all' && b.slot !== f.slot) return false;
+    if (kw) {
+      const hay = [b.date, b.roomName, b.label, b.guestText, b.dishList, b.slot].join(' ').toLowerCase();
+      if (hay.indexOf(kw) < 0) return false;
+    }
+    return true;
+  });
+}
+function roomOptions(list) {
+  const set = {};
+  (list || []).forEach((o) => { const n = String(o.room_no || ''); if (n) set[n] = 1; });
+  return Object.keys(set).sort((a, b) => (Number(a) || 999) - (Number(b) || 999));
+}
+function bookRoomOptions(list, roomMap) {
+  const set = {};
+  (list || []).forEach((b) => { const n = String(b.room_id || ''); if (n) set[n] = (roomMap && roomMap[n]) || n; });
+  return Object.keys(set).sort((a, b) => (Number(a) || 999) - (Number(b) || 999))
+    .map((no) => ({ no, name: set[no] }));
+}
+
 // 商家后台共享核心：5 个 tab 拆成 5 个独立分包页面，全部 Page 复用本对象
 // 各页面只需覆盖 data.tab，即可复用下面全部方法与数据
 module.exports = {
@@ -131,6 +187,11 @@ module.exports = {
     mClosed: [], showClosed: false,
     // 订单分组 / 折叠：只控制渲染，原数组保留供定价弹窗取单
     orderGroups: [], bookingGroups: [], closedGroups: [],
+    // 订单筛选（D 2026-11-17）：纯视图层，筛选后重算分组，原数组不动
+    ordRoom: '', ordStatus: 'all', ordKw: '', ordRooms: [],
+    ordTotal: 0, ordHit: 0, closedHit: 0, hasOrdFilter: false,
+    bkDate: 'all', bkRoom: '', bkSlot: 'all', bkKw: '', bkRooms: [],
+    bkTotal: 0, bkHit: 0, hasBkFilter: false,
     repMode: 'day', repDate: '', repRows: [], repTotalText: '', repCount: 0,
     mReceipts: [], receiptDetail: false,
     qrMap: {},
@@ -256,12 +317,22 @@ module.exports = {
       const all = (raw || []).map(decorateOrder);
       const mOrders = all.filter((o) => !o.closed);
       const mClosed = all.filter((o) => o.closed); // 全量归档，按日期分组后由总开关收起，不再硬截 20 笔
-      this.setData({
-        mOrders, mClosed,
-        orderGroups: buildOrderGroups(mOrders),
-        closedGroups: buildClosedGroups(mClosed),
-      });
+      this.setData({ mOrders, mClosed, ordRooms: roomOptions(mOrders) });
+      this.applyOrderFilter();
     } catch (e) { wx.showToast({ title: '加载失败', icon: 'none' }); }
+  },
+  // 只过滤副本后重算分组：mOrders / mClosed 原数组保持完整，定价弹窗仍按 id 取单
+  applyOrderFilter() {
+    const f = { room: this.data.ordRoom, status: this.data.ordStatus, kw: this.data.ordKw };
+    const live = filterLiveOrders(this.data.mOrders, f);
+    const closed = filterLiveOrders(this.data.mClosed, f);
+    this.setData({
+      orderGroups: buildOrderGroups(live),
+      closedGroups: buildClosedGroups(closed),
+      ordTotal: (this.data.mOrders || []).length,
+      ordHit: live.length, closedHit: closed.length,
+      hasOrdFilter: filterActive(f),
+    });
   },
   async loadBookings() {
     try {
@@ -273,8 +344,36 @@ module.exports = {
         dishList: (x.dishes || []).map((d) => d.name + ' ×' + (d.qty || 1)).join('、') || '—',
         guestText: x.guest_name ? ('尊客' + x.guest_name + (x.guest_phone ? ' ' + x.guest_phone : '')) : '—',
       }));
-      this.setData({ mBookings, bookingGroups: buildBookingGroups(mBookings) });
+      this.setData({ mBookings, bkRooms: bookRoomOptions(mBookings, ROOMS) });
+      this.applyBookingFilter();
     } catch (e) { wx.showToast({ title: '加载失败', icon: 'none' }); }
+  },
+  applyBookingFilter() {
+    const f = { date: this.data.bkDate, room: this.data.bkRoom, slot: this.data.bkSlot, kw: this.data.bkKw };
+    const list = filterBookings(this.data.mBookings, f);
+    const groups = buildBookingGroups(list);
+    // 有筛选时命中的日期组全部展开，否则筛出来了还收着等于没筛
+    if (bookFilterActive(f)) groups.forEach((g) => { g.collapsed = false; });
+    this.setData({
+      bookingGroups: groups,
+      bkTotal: (this.data.mBookings || []).length,
+      bkHit: list.length, hasBkFilter: bookFilterActive(f),
+    });
+  },
+  setOrdRoom(e) { this.setData({ ordRoom: e.currentTarget.dataset.v || '' }); this.applyOrderFilter(); },
+  setOrdStatus(e) { this.setData({ ordStatus: e.currentTarget.dataset.v || 'all' }); this.applyOrderFilter(); },
+  onOrdKwInput(e) { this.setData({ ordKw: e.detail.value || '' }); this.applyOrderFilter(); },
+  clearOrderFilter() {
+    this.setData({ ordRoom: '', ordStatus: 'all', ordKw: '' });
+    this.applyOrderFilter();
+  },
+  setBkDate(e) { this.setData({ bkDate: e.currentTarget.dataset.v || 'all' }); this.applyBookingFilter(); },
+  setBkRoom(e) { this.setData({ bkRoom: e.currentTarget.dataset.v || '' }); this.applyBookingFilter(); },
+  setBkSlot(e) { this.setData({ bkSlot: e.currentTarget.dataset.v || 'all' }); this.applyBookingFilter(); },
+  onBkKwInput(e) { this.setData({ bkKw: e.detail.value || '' }); this.applyBookingFilter(); },
+  clearBookFilter() {
+    this.setData({ bkDate: 'all', bkRoom: '', bkSlot: 'all', bkKw: '' });
+    this.applyBookingFilter();
   },
   // 一键结账：选支付方式后直接清台（支付+开收据+closed 一步到位，消除两步法口径分裂）
   async settleOrder(e) {

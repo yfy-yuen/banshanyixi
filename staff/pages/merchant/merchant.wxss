@@ -393,3 +393,30 @@
 .is-tablet .ord-sum .ord-total { font-size: 48rpx; }
 .is-tablet .ord-badge { font-size: 32rpx; padding: 6rpx 20rpx; }
 .is-tablet .ord-arrow { font-size: 32rpx; width: 34rpx; }
+
+/* ===== 订单筛选条（D 2026-11-17）：复用 .chip，补标签 / 输入框 / 计数行 ===== */
+.ord-filter { margin: -8rpx 0 24rpx; }
+.flt-label { display: inline-block; width: 62rpx; font-size: 23rpx; color: var(--muted); }
+.ord-filter .chip-rail { margin-bottom: 10rpx; }
+.ord-filter .chip { margin-bottom: 8rpx; }
+.ord-kw {
+  width: 100%; box-sizing: border-box;
+  padding: 16rpx 20rpx; margin-bottom: 12rpx;
+  border: 2rpx solid var(--border); border-radius: 18rpx;
+  background: var(--card); color: var(--ink); font-size: 25rpx;
+}
+.ord-hit {
+  display: flex; align-items: center; gap: 20rpx;
+  font-size: 23rpx; color: var(--ink-light); margin-bottom: 20rpx;
+}
+.ord-clear {
+  padding: 4rpx 18rpx; border: 2rpx solid var(--border); border-radius: 1998rpx;
+  color: var(--cinnabar);
+}
+.ord-hint { color: var(--muted); }
+
+.is-tablet .flt-label { width: 92rpx; font-size: 34rpx; }
+.is-tablet .ord-filter .chip { font-size: 38rpx; padding: 16rpx 34rpx; }
+.is-tablet .ord-kw { font-size: 40rpx; padding: 22rpx 28rpx; }
+.is-tablet .ord-hit { font-size: 34rpx; }
+.is-tablet .ord-clear { font-size: 32rpx; }
