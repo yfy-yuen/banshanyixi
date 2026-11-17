@@ -1,55 +1,86 @@
-    <view>
-      <view class="subseg">
-        <view class="subseg-btn {{orderSub==='book'?'on':''}}" data-sub="book" bindtap="switchOrderSub">订餐菜品</view>
-        <view class="subseg-btn {{orderSub==='live'?'on':''}}" data-sub="live" bindtap="switchOrderSub">现场下单菜品</view>
-      </view>
+<view>
+  <view class="subseg">
+    <view class="subseg-btn {{orderSub==='book'?'on':''}}" data-sub="book" bindtap="switchOrderSub">订餐菜品</view>
+    <view class="subseg-btn {{orderSub==='live'?'on':''}}" data-sub="live" bindtap="switchOrderSub">现场下单菜品</view>
+  </view>
 
-      <!-- 订餐菜品（预售排席） -->
-      <view wx:if="{{orderSub==='book'}}">
-        <view wx:if="{{mBookings.length===0}}" class="card muted">暂无订餐排席</view>
-        <view class="card" wx:for="{{mBookings}}" wx:key="id">
+  <!-- 订餐菜品（预售排席）：按日期分组，今天 / 明天默认展开 -->
+  <view wx:if="{{orderSub==='book'}}">
+    <view wx:if="{{bookingGroups.length===0}}" class="card muted">暂无订餐排席</view>
+    <view class="grp-wrap" wx:for="{{bookingGroups}}" wx:for-item="g" wx:for-index="gi" wx:key="key">
+      <view class="grp-head" bindtap="toggleBookingGroup" data-gi="{{gi}}">
+        <text class="grp-name">{{g.dateText}}</text>
+        <text class="grp-meta">{{g.count}} 席</text>
+        <text class="grp-arrow">{{g.collapsed ? '展开 ▼' : '收起 ▲'}}</text>
+      </view>
+      <view wx:if="{{!g.collapsed}}">
+        <view class="card" wx:for="{{g.items}}" wx:for-item="b" wx:key="id">
           <view class="o-row">
-            <text><text class="price-red">{{item.roomName}}</text> · {{item.date}}</text>
-            <text class="pill">{{item.label}}</text>
+            <text><text class="price-red">{{b.roomName}}</text> · {{b.date}}</text>
+            <text class="pill">{{b.label}}</text>
           </view>
-          <view class="o-items">{{item.dishList}}</view>
-          <view class="muted">客人：{{item.guestText}}</view>
+          <view class="o-items">{{b.dishList}}</view>
+          <view class="muted">客人：{{b.guestText}}</view>
         </view>
       </view>
+    </view>
+  </view>
 
-      <!-- 现场下单菜品 -->
-      <view wx:if="{{orderSub==='live'}}">
-        <view wx:if="{{mOrders.length===0}}" class="card muted">暂无现场下单</view>
-        <view class="card" wx:for="{{mOrders}}" wx:key="id">
-          <view class="o-row"><text><text class="price-red">{{item.room_name}}</text>（{{item.room_no}}号）</text>
-            <text class="pill {{item.status==='paid'?'paid':'unpaid'}}">{{item.paidText}}</text></view>
-          <view wx:if="{{item.pendingCount}}" class="price-pending-bar">待定价 {{item.pendingCount}} 项 · 结账前请先定价</view>
-          <view class="o-items"><text wx:for="{{item.items}}" wx:for-item="i" wx:key="k" class="{{i.pricePending ? 'pending-item' : ''}}">{{i.name}}{{i.selText}} ×{{i.qty}}{{i.pricePending ? '（待店员确认）' : ''}}　</text></view>
-          <view wx:if="{{item.noteText}}" class="o-note">备注：{{item.noteText}}</view>
-          <view wx:if="{{!item.closed}}" class="o-actions">
-            <view class="o-btn" bindtap="openPrice" data-id="{{item.id}}">定价</view>
-            <view class="o-btn main" bindtap="openPriceAdd" data-id="{{item.id}}">＋ 加时价项</view>
+  <!-- 现场下单菜品：按包厢分组，卡片默认只露一行摘要，点开才看明细与操作 -->
+  <view wx:if="{{orderSub==='live'}}">
+    <view wx:if="{{orderGroups.length===0}}" class="card muted">暂无现场下单</view>
+    <view class="grp-wrap" wx:for="{{orderGroups}}" wx:for-item="g" wx:for-index="gi" wx:key="key">
+      <view class="grp-head" bindtap="toggleOrderGroup" data-gi="{{gi}}">
+        <text class="grp-name">{{g.roomName}}（{{g.roomNo}}号）</text>
+        <text class="grp-meta">{{g.count}} 单 · {{g.totalText}}</text>
+        <text class="grp-arrow">{{g.collapsed ? '展开 ▼' : '收起 ▲'}}</text>
+      </view>
+      <view wx:if="{{!g.collapsed}}">
+        <view class="card ord-card" wx:for="{{g.orders}}" wx:for-item="o" wx:for-index="oi" wx:key="id">
+          <view class="ord-sum" bindtap="toggleOrderCard" data-gi="{{gi}}" data-oi="{{oi}}">
+            <text class="ord-time">{{o.timeText}}</text>
+            <text class="price-red ord-total">{{o.totalText}}</text>
+            <text class="pill {{o.status==='paid'?'paid':'unpaid'}}">{{o.paidText}}</text>
+            <text wx:if="{{o.pendingCount}}" class="ord-badge">待定价 {{o.pendingCount}}</text>
+            <text class="ord-arrow">{{o.expanded ? '▲' : '▼'}}</text>
           </view>
-          <view class="o-row">
-            <text class="price-red">{{item.totalText}}</text>
-            <view wx:if="{{!item.closed}}" class="btn" style="padding:6px 14px;" bindtap="settleOrder" data-id="{{item.id}}">结账</view>
-            <view wx:else class="pill paid">{{item.paidText}}</view>
+          <view wx:if="{{o.expanded}}" class="ord-detail">
+            <view wx:if="{{o.pendingCount}}" class="price-pending-bar">待定价 {{o.pendingCount}} 项 · 结账前请先定价</view>
+            <view class="o-items"><text wx:for="{{o.items}}" wx:for-item="i" wx:key="k" class="{{i.pricePending ? 'pending-item' : ''}}">{{i.name}}{{i.selText}} ×{{i.qty}}{{i.pricePending ? '（待店员确认）' : ''}}　</text></view>
+            <view wx:if="{{o.noteText}}" class="o-note">备注：{{o.noteText}}</view>
+            <view wx:if="{{!o.closed}}" class="o-actions">
+              <view class="o-btn" bindtap="openPrice" data-id="{{o.id}}">定价</view>
+              <view class="o-btn main" bindtap="openPriceAdd" data-id="{{o.id}}">＋ 加时价项</view>
+              <view class="o-btn main" bindtap="settleOrder" data-id="{{o.id}}">结账</view>
+            </view>
+            <view wx:else class="pill paid">{{o.paidText}}</view>
           </view>
         </view>
+      </view>
+    </view>
 
-        <!-- 已清台归档（历史，点开查看） -->
-        <view wx:if="{{mClosed.length}}" class="closed-wrap">
-          <view class="closed-toggle" bindtap="toggleClosed">
-            <text>已清台（{{mClosed.length}}）</text>
-            <text class="closed-arrow">{{showClosed ? '收起 ▲' : '展开 ▼'}}</text>
+    <!-- 已清台归档（历史）：总开关收起，展开后按日期分组查看 -->
+    <view wx:if="{{mClosed.length}}" class="closed-wrap">
+      <view class="closed-toggle" bindtap="toggleClosed">
+        <text>已清台（{{mClosed.length}}）</text>
+        <text class="closed-arrow">{{showClosed ? '收起 ▲' : '展开 ▼'}}</text>
+      </view>
+      <view wx:if="{{showClosed}}">
+        <view class="grp-wrap" wx:for="{{closedGroups}}" wx:for-item="g" wx:for-index="gi" wx:key="key">
+          <view class="grp-head sub" bindtap="toggleClosedGroup" data-gi="{{gi}}">
+            <text class="grp-name">{{g.dateText}}</text>
+            <text class="grp-meta">{{g.count}} 单 · {{g.totalText}}</text>
+            <text class="grp-arrow">{{g.collapsed ? '展开 ▼' : '收起 ▲'}}</text>
           </view>
-          <view wx:if="{{showClosed}}">
-            <view class="card muted" wx:for="{{mClosed}}" wx:key="id">
-              <view class="o-row"><text><text class="price-red">{{item.room_name}}</text>（{{item.room_no}}号）</text><text class="pill paid">{{item.paidText}}</text></view>
-              <view class="o-items"><text wx:for="{{item.items}}" wx:for-item="i" wx:key="k">{{i.name}}{{i.selText}} ×{{i.qty}}　</text></view>
-              <view class="o-row"><text class="price-red">{{item.totalText}}</text></view>
+          <view wx:if="{{!g.collapsed}}">
+            <view class="card muted" wx:for="{{g.items}}" wx:for-item="o" wx:key="id">
+              <view class="o-row"><text><text class="price-red">{{o.room_name}}</text>（{{o.room_no}}号）</text><text class="pill paid">{{o.paidText}}</text></view>
+              <view class="o-items"><text wx:for="{{o.items}}" wx:for-item="i" wx:key="k">{{i.name}}{{i.selText}} ×{{i.qty}}　</text></view>
+              <view class="o-row"><text class="price-red">{{o.totalText}}</text><text class="ord-time">{{o.timeText}}</text></view>
             </view>
           </view>
         </view>
       </view>
     </view>
+  </view>
+</view>

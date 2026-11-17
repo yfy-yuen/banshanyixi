@@ -356,3 +356,40 @@
 .is-tablet .mp-name { font-size: 46rpx; }
 .is-tablet .mp-cat { font-size: 36rpx; }
 .is-tablet .mp-input { width: 300rpx; font-size: 46rpx; padding: 20rpx 26rpx; }
+
+/* ===== 订单分组与折叠（2026-11-17）：组标题 + 一行摘要 + 展开明细 ===== */
+.grp-wrap { margin-bottom: 28rpx; }
+.grp-head {
+  display: flex; align-items: center; gap: 12rpx;
+  padding: 18rpx 20rpx; margin-bottom: 14rpx;
+  background: #f2e6e2; border: 2rpx solid #ead5ce; border-radius: 18rpx;
+}
+.grp-head.sub { background: var(--card-soft); border-color: var(--border-light); }
+.grp-name {
+  flex: 0 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  font-size: 28rpx; color: var(--cinnabar); font-weight: 500; letter-spacing: 1rpx;
+}
+.grp-meta { flex: 1 0 auto; text-align: right; font-size: 23rpx; color: var(--ink-light); }
+.grp-arrow { flex-shrink: 0; font-size: 23rpx; color: var(--muted); }
+.card.ord-card { padding: 22rpx 24rpx; margin-bottom: 16rpx; border-radius: 24rpx; }
+.ord-sum { display: flex; align-items: center; gap: 12rpx; min-height: 52rpx; }
+.ord-time { flex-shrink: 0; font-size: 24rpx; color: var(--ink-light); }
+.ord-sum .ord-total { flex: 1; font-size: 32rpx; }
+.ord-badge {
+  flex-shrink: 0; padding: 4rpx 14rpx; border-radius: 1998rpx;
+  background: var(--cinnabar); color: #fff; font-size: 21rpx;
+}
+.ord-arrow { flex-shrink: 0; width: 26rpx; text-align: right; font-size: 22rpx; color: var(--muted); }
+.ord-detail { margin-top: 18rpx; padding-top: 18rpx; border-top: 2rpx dashed var(--border-light); }
+.ord-detail .o-actions { margin-bottom: 0; }
+.ord-detail .o-items { margin-bottom: 12rpx; }
+
+.is-tablet .grp-head { padding: 26rpx 30rpx; gap: 18rpx; }
+.is-tablet .grp-name { font-size: 46rpx; }
+.is-tablet .grp-meta, .is-tablet .grp-arrow { font-size: 36rpx; }
+.is-tablet .card.ord-card { padding: 32rpx 36rpx; }
+.is-tablet .ord-sum { min-height: 76rpx; gap: 18rpx; }
+.is-tablet .ord-time { font-size: 36rpx; }
+.is-tablet .ord-sum .ord-total { font-size: 48rpx; }
+.is-tablet .ord-badge { font-size: 32rpx; padding: 6rpx 20rpx; }
+.is-tablet .ord-arrow { font-size: 32rpx; width: 34rpx; }

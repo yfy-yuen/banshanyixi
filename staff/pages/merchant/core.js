@@ -4,6 +4,22 @@ const {
   getMerchantOrders, settleOrder, clearOrder, setOrderItemPrice, listReceipts, pushReminders, resetDailyFlags, getDishesAdmin, saveDish, batchSetPrices, deleteDish, getPaymentQrcodes, saveQr, callApi, sweepPending,
 } = require('../../../utils/api');
 
+// 云函数读出的 serverDate 经 JSON 序列化是 UTC ISO，直接切字符串会比北京时间慢 8 小时；
+// 仅在带明确时区的 ISO 串上做 +8h 换算，老数据里的本地格式串保持原样。
+function bjTimeText(v) {
+  const s = String(v || '');
+  if (!s) return '—';
+  if (/T\d{2}:\d{2}/.test(s) && /(Z|[+-]\d{2}:\d{2})$/.test(s)) {
+    const t = Date.parse(s);
+    if (isFinite(t)) {
+      const d = new Date(t + 8 * 3600 * 1000);
+      const p = (n) => (n < 10 ? '0' + n : '' + n);
+      return p(d.getUTCMonth() + 1) + '-' + p(d.getUTCDate()) + ' ' + p(d.getUTCHours()) + ':' + p(d.getUTCMinutes());
+    }
+  }
+  return s.replace('T', ' ').slice(5, 16) || '—';
+}
+
 function decorateOrder(o) {
   const items = (o.items || []).map((i) => ({
     ...i,
@@ -16,7 +32,8 @@ function decorateOrder(o) {
     ...o, items, totalText: fmt(o.total),
     pendingCount: items.filter((i) => i.pricePending).length,
     paidText: o.status === 'paid' ? '已支付' : '未支付',
-    createdText: (o.created_at || '').replace('T', ' ').slice(0, 16),
+    createdText: String(o.created_at || '').replace('T', ' ').slice(0, 16),
+    timeText: bjTimeText(o.created_at),
     noteText: (o.note || '').trim(),
   };
 }
@@ -25,6 +42,81 @@ function decorateOrder(o) {
 function bookingLabel(b) {
   if (b.type === 'game') return b.slot === 'lunch' ? '午间棋牌' : '晚间棋牌';
   return b.slot === 'lunch' ? '午餐订餐' : '晚餐订餐';
+}
+
+/* ===== 订单分组与折叠（2026-11-17）=====
+   只重组前端渲染结构，不写库、不改金额、不改结账逻辑。
+   mOrders / mBookings / mClosed 原数组一律保留（openPrice / openPriceAdd 仍从 mOrders 取单）。 */
+function bjDateStr(offsetDays) {
+  return new Date(Date.now() + 8 * 3600 * 1000 + (offsetDays || 0) * 86400000).toISOString().slice(0, 10);
+}
+function dateTextOf(date) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '')) return date || '未定日期';
+  const w = ['日', '一', '二', '三', '四', '五', '六'][new Date(date + 'T12:00:00Z').getUTCDay()];
+  return date.slice(5) + ' 周' + w;
+}
+// 现场单按包厢分组；待定价的急单默认展开，其余只露一行
+function buildOrderGroups(orders) {
+  const map = {}, keys = [];
+  (orders || []).forEach((o) => {
+    const key = 'r' + (o.room_no || o.room_name || 'other');
+    if (!map[key]) {
+      map[key] = {
+        key, roomNo: o.room_no || '', roomName: o.room_name || ('包厢 ' + (o.room_no || '')),
+        count: 0, total: 0, collapsed: false, orders: [],
+      };
+      keys.push(key);
+    }
+    const g = map[key];
+    g.count += 1;
+    g.total += Number(o.total) || 0;
+    g.orders.push({ ...o, expanded: !!o.pendingCount });
+  });
+  return keys.map((k) => map[k])
+    .sort((a, b) => (Number(a.roomNo) || 999) - (Number(b.roomNo) || 999))
+    .map((g) => ({ ...g, totalText: fmt(g.total) }));
+}
+// 订餐排期按日期分组；只默认展开今天 / 明天，午市排在晚市前
+function buildBookingGroups(bookings) {
+  const map = {}, keys = [];
+  (bookings || []).forEach((b) => {
+    const key = b.date || '未定日期';
+    if (!map[key]) {
+      map[key] = { key, date: key, dateText: dateTextOf(key), count: 0, collapsed: true, items: [] };
+      keys.push(key);
+    }
+    map[key].count += 1;
+    map[key].items.push(b);
+  });
+  const today = bjDateStr(0), tomorrow = bjDateStr(1);
+  return keys.sort().map((k) => {
+    const g = map[k];
+    g.collapsed = !(k === today || k === tomorrow);
+    g.items.sort((a, b) => (a.slot === 'dinner' ? 1 : 0) - (b.slot === 'dinner' ? 1 : 0));
+    g.dateText = (k === today ? '今天 · ' : k === tomorrow ? '明天 · ' : '') + g.dateText;
+    return g;
+  });
+}
+// 已清台按日期归档（最近日期在前）；外层「已清台」总开关仍负责整体收起
+function buildClosedGroups(orders) {
+  const map = {}, keys = [];
+  (orders || []).forEach((o) => {
+    const raw = String(o.created_at || '');
+    const key = /^\d{4}-\d{2}-\d{2}/.test(raw) ? raw.slice(0, 10) : '早期';
+    if (!map[key]) {
+      map[key] = { key, date: key, dateText: dateTextOf(key), count: 0, total: 0, collapsed: false, items: [] };
+      keys.push(key);
+    }
+    const g = map[key];
+    g.count += 1;
+    g.total += Number(o.total) || 0;
+    g.items.push(o);
+  });
+  return keys.sort((a, b) => {
+    if (a === '早期') return 1;
+    if (b === '早期') return -1;
+    return b.localeCompare(a);
+  }).map((k) => ({ ...map[k], totalText: fmt(map[k].total) }));
 }
 
 // 商家后台共享核心：5 个 tab 拆成 5 个独立分包页面，全部 Page 复用本对象
@@ -37,6 +129,8 @@ module.exports = {
     orderSub: 'book',
     mOrders: [], mBookings: [], mDishes: [],
     mClosed: [], showClosed: false,
+    // 订单分组 / 折叠：只控制渲染，原数组保留供定价弹窗取单
+    orderGroups: [], bookingGroups: [], closedGroups: [],
     repMode: 'day', repDate: '', repRows: [], repTotalText: '', repCount: 0,
     mReceipts: [], receiptDetail: false,
     qrMap: {},
@@ -161,22 +255,25 @@ module.exports = {
       const raw = await getMerchantOrders();
       const all = (raw || []).map(decorateOrder);
       const mOrders = all.filter((o) => !o.closed);
-      const mClosed = all.filter((o) => o.closed).slice(0, 20); // 最近 20 笔已清台，作历史归档
-      this.setData({ mOrders, mClosed });
+      const mClosed = all.filter((o) => o.closed); // 全量归档，按日期分组后由总开关收起，不再硬截 20 笔
+      this.setData({
+        mOrders, mClosed,
+        orderGroups: buildOrderGroups(mOrders),
+        closedGroups: buildClosedGroups(mClosed),
+      });
     } catch (e) { wx.showToast({ title: '加载失败', icon: 'none' }); }
   },
   async loadBookings() {
     try {
       const b = await callApi('bookings');
-      this.setData({
-        mBookings: (b || []).map((x) => ({
-          ...x,
-          roomName: ROOMS[x.room_id] || x.room_id,
-          label: bookingLabel(x),
-          dishList: (x.dishes || []).map((d) => d.name + ' ×' + (d.qty || 1)).join('、') || '—',
-          guestText: x.guest_name ? ('尊客' + x.guest_name + (x.guest_phone ? ' ' + x.guest_phone : '')) : '—',
-        })),
-      });
+      const mBookings = (b || []).map((x) => ({
+        ...x,
+        roomName: ROOMS[x.room_id] || x.room_id,
+        label: bookingLabel(x),
+        dishList: (x.dishes || []).map((d) => d.name + ' ×' + (d.qty || 1)).join('、') || '—',
+        guestText: x.guest_name ? ('尊客' + x.guest_name + (x.guest_phone ? ' ' + x.guest_phone : '')) : '—',
+      }));
+      this.setData({ mBookings, bookingGroups: buildBookingGroups(mBookings) });
     } catch (e) { wx.showToast({ title: '加载失败', icon: 'none' }); }
   },
   // 一键结账：选支付方式后直接清台（支付+开收据+closed 一步到位，消除两步法口径分裂）
@@ -207,6 +304,36 @@ module.exports = {
     finally { wx.hideLoading(); }
   },
   toggleClosed() { this.setData({ showClosed: !this.data.showClosed }); },
+  // 折叠只改对应下标的布尔值，避免整组 setData 冲掉其它展开状态
+  toggleOrderGroup(e) {
+    const i = Number(e.currentTarget.dataset.gi);
+    const g = (this.data.orderGroups || [])[i];
+    if (!g) return;
+    const d = {}; d['orderGroups[' + i + '].collapsed'] = !g.collapsed;
+    this.setData(d);
+  },
+  toggleOrderCard(e) {
+    const gi = Number(e.currentTarget.dataset.gi), oi = Number(e.currentTarget.dataset.oi);
+    const g = (this.data.orderGroups || [])[gi];
+    const o = g && (g.orders || [])[oi];
+    if (!o) return;
+    const d = {}; d['orderGroups[' + gi + '].orders[' + oi + '].expanded'] = !o.expanded;
+    this.setData(d);
+  },
+  toggleBookingGroup(e) {
+    const i = Number(e.currentTarget.dataset.gi);
+    const g = (this.data.bookingGroups || [])[i];
+    if (!g) return;
+    const d = {}; d['bookingGroups[' + i + '].collapsed'] = !g.collapsed;
+    this.setData(d);
+  },
+  toggleClosedGroup(e) {
+    const i = Number(e.currentTarget.dataset.gi);
+    const g = (this.data.closedGroups || [])[i];
+    if (!g) return;
+    const d = {}; d['closedGroups[' + i + '].collapsed'] = !g.collapsed;
+    this.setData(d);
+  },
 
   /* 时价菜：定价 / 追加时价项（2026-11-16） */
   openPrice(e) {
